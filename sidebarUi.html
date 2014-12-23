@@ -1,0 +1,682 @@
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+<!-- The CSS package above applies Google styling to buttons and other elements. -->
+
+<style>
+
+.wait, .wait * {
+  cursor: wait !important;
+}
+
+input[type=text] {
+  height: 29px;
+  border-radius: 2px;
+}
+
+.col-contain {
+  overflow: hidden;
+}
+
+.col-half {
+  float: left;
+  width: 50%;
+}
+
+.col-third {
+  float: left;
+  width: 30%;
+}
+
+.col-twothird {
+  float: left;
+  width: 66%;
+}
+
+.logo {
+  vertical-align: middle;
+}
+
+.spacer {
+  height: 20px;
+}
+
+.divider {
+  margin: 10px 0;
+}
+
+.width-100 {
+  width: 100%;
+}
+
+.gray a {
+  color: inherit;
+}
+
+#text-objective-cell {
+  width: 35%;
+  vertical-align: middle;
+}
+
+#text-objective-sense-target-value {
+  width: 84%;
+  margin-left: 20px;
+  float: right;
+}
+
+#select-variable-cells, #select-constraint-cells {
+  width: 100%;
+  margin: 10px 0;
+  text-align: left;
+}
+
+.objective-button {
+  margin-left: 12px;
+  width: 25%;
+  vertical-align: middle;
+  float: right;
+}
+
+.variable-button-container, .constraint-button-container {
+  padding-left: 10px;
+}
+
+.variable-button, .constraint-button {
+  margin-top: 10px;
+  float: right;
+}
+
+.text-constraint {
+  width: 32%;
+}
+
+#select-constraint-rel {
+  width: 28%;
+}
+
+#select-constraint-rel, #text-constraint-rhs {
+  margin-left: 6px;
+}
+
+.edit-constraint-button-container, .solve-button-container {
+  width: 47%;
+}
+
+.edit-constraint-button-container {
+  margin-top: 10px;
+}
+
+#edit-constraint-button-rhs-container, #text-constraint-rhs, #reset-model-button-container {
+  float: right;
+}
+
+.edit-constraint-button, .solve-button {
+  width: 100%;
+}
+
+#solve-button-container {
+  margin-bottom: 10px;
+}
+
+input[disabled] {
+  cursor: not-allowed;
+  background-color: #eee;
+  opacity: 1;
+  color: #777;
+}
+
+input[disabled].text-range {
+  cursor: default;
+  background-color: #fff;
+  opacity: 1;
+  color: #000;
+}
+
+.clearfix:after {
+  content: '.';
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0px;
+  height: 0px;
+}
+
+
+.clearfix {
+  display: inline-block;
+}
+
+html[xmlns] .clearfix {
+  display: block;
+}
+
+* html .clearfix {
+  height: 1%;
+}
+</style>
+
+<div id="main" class="sidebar branding-below wait">
+  <form>
+    <div class="block col-contain">
+      <b>Objective Cell:</b>
+      <div id="objective-cell">
+        <input type="text" id="text-objective-cell" class="text-range" disabled>
+        <button id="button-clear-objective" class="objective-button">Clear</button>
+        <button id="button-update-objective" class="objective-button">Update</button>
+      </div>
+      <div class="spacer error" id="error-objective-cell"></div>
+      <b>Objective Sense:</b>
+      <div class="clearfix">
+        <div class="col-half">
+          <div>
+            <input type="radio" name="objective-sense" id="radio-objective-sense-min" value="2" checked="checked">
+            <label for="radio-objective-sense-min">minimise</label>
+          </div>
+          <div>
+            <input type="radio" name="objective-sense" id="radio-objective-sense-max" value="1">
+            <label for="radio-objective-sense-max">maximise</label>
+          </div>
+        </div>
+        <div class="col-half">
+          <div>
+            <input type="radio" name="objective-sense" id="radio-objective-sense-target" value="3">
+            <label for="radio-objective-sense-min">target value:</label>
+          </div>
+          <div>
+            <input type="number" id="text-objective-sense-target-value" val="0" step="any">
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <b>Variable Cells:</b>
+      <div class="clearfix  width-100">
+        <div class="col-twothird">
+          <select size="8" id="select-variable-cells"></select>
+        </div>
+        <div class="col-third variable-button-container">
+          <div>
+            <button id="button-add-variable" class="variable-button">Add</button>
+          </div>
+          <div>
+            <button id="button-update-variable" class="variable-button">Update</button>
+          </div>
+          <div>
+            <button id="button-delete-variable" class="variable-button">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="inline form-group">
+          <input type="checkbox" id="checkbox-non-negative" checked>
+          <label for="checkbox-non-negative">Unconstrained variables non-negative</label>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <b>Constraints:</b>
+      <div class="clearfix  width-100">
+        <div class="col-twothird">
+          <select size="8" id="select-constraint-cells"></select>
+        </div>
+        <div class="col-third constraint-button-container">
+          <div>
+            <button id="button-save-constraint" class="constraint-button">Save</button>
+          </div>
+          <div>
+            <button id="button-cancel-constraint" class="constraint-button">Cancel</button>
+          </div>
+          <div>
+            <button id="button-delete-constraint" class="constraint-button">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <input type="text" id="text-constraint-lhs" class="text-constraint text-range" disabled>
+        <select id="select-constraint-rel">
+          <option value="1">&lt;=</option>
+          <option value="2">==</option>
+          <option value="3">&gt;=</option>
+          <option value="4">int</option>
+          <option value="5">bin</option>
+        </select>
+        <input type="text" id="text-constraint-rhs" class="text-constraint text-range" disabled>
+      </div>
+      <div>
+        <div class="inline form-group edit-constraint-button-container">
+          <button id="button-edit-constraint-lhs" class="edit-constraint-button">Update Left Side</button>
+        </div>
+        <div class="inline form-group edit-constraint-button-container" id="edit-constraint-button-rhs-container">
+          <button id="button-edit-constraint-rhs" class="edit-constraint-button">Update Right Side</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div id="solve-button-container">
+      <div class="inline form-group solve-button-container">
+        <button id="button-solve" class="action solve-button">Solve Model</button>
+      </div>
+      <div class="inline form-group solve-button-container" id="reset-model-button-container">
+        <button id="button-reset" class="solve-button">Reset Model</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="inline form-group">
+        <input type="checkbox" id="checkbox-show-status">
+        <label for="checkbox-show-status">Show progress while solving</label>
+      </div>
+    </div>
+
+    <div>
+      <div class="inline form-group">
+        <input type="checkbox" id="checkbox-check-linear">
+        <label for="checkbox-check-linear">Check solution is linear</label>
+      </div>
+    </div>
+
+
+
+  </form>
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+</script>
+<script>
+  /**
+   * On document load, assign click handlers to each button and try to load the
+   * user's origin and destination language preferences if previously set.
+   */
+  $(function() {
+    $('#button-update-objective').click(updateObjective);
+    $('#button-clear-objective').click(deleteObjective);
+
+    $('input[type=radio][name=objective-sense]').change(updateObjectiveSense);
+    $('#text-objective-sense-target-value').change(updateObjectiveTarget);
+
+    $('#button-add-variable').click(addVariable);
+    $('#button-update-variable').click(updateVariable);
+    $('#button-delete-variable').click(deleteVariable);
+
+    $('#button-save-constraint').click(saveConstraint);
+    $('#button-delete-constraint').click(deleteConstraint);
+    $('#button-cancel-constraint').click(cancelConstraintChange);
+
+    $('#button-edit-constraint-lhs').click(editConstraintLHS);
+    $('#select-constraint-rel').change(changeConstraintREL);
+    $('#button-edit-constraint-rhs').click(editConstraintRHS);
+
+    $('#select-variable-cells').change(updateVariableButtons);
+
+    $('#select-constraint-cells').change(changeSelectedConstraint);
+
+    $('#checkbox-non-negative').change(updateAssumeNonNeg);
+
+    $('#button-solve').click(solveModel);
+    $('#button-reset').click(resetModel);
+    $('#checkbox-show-status').change(updateShowStatus);
+    $('#checkbox-check-linear').change(updateCheckLinear);
+
+    loadSidebarFromModel();
+  });
+
+  var curLHS;
+  var curREL;
+  var curRHS;
+
+  /**
+   * Inserts a div that contains an error message after a given element.
+   *
+   * @param msg The error message to display.
+   * @param element The element after which to display the error.
+   */
+  function showError(msg, element) {
+    var div = $('<div id="error" class="error">' + msg + '</div>');
+    $(element).after(div);
+  }
+
+  /**
+   * Runs a server-side function to save the selected range into the objective cell.
+   */
+  function updateObjective() {
+    $('#error-objective-cell').text('');
+    showWait();
+    google.script.run
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              $('#text-objective-cell').val(range);
+            }
+            hideWait();
+          })
+        .updateObjective();
+  }
+
+  function deleteObjective() {
+    $('#text-objective-cell').val('');
+    $('#error-objective-cell').text('');
+    google.script.run.deleteObjective();
+  }
+
+  function updateObjectiveSense() {
+    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+    enableObjectiveTarget();
+    google.script.run.updateObjectiveSense(objSense);
+  }
+
+  function enableObjectiveTarget() {
+    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+    $('#text-objective-sense-target-value').prop('disabled', objSense != 3);
+  }
+
+  function updateObjectiveTarget() {
+    var objVal = parseFloat($('#text-objective-sense-target-value').val(), 10);
+    google.script.run.updateObjectiveTarget(objVal);
+  }
+
+  function addVariable() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              var option = new Option(range, range);
+              $('#select-variable-cells').append($(option));
+            }
+            hideWait();
+          })
+        .addVariable();
+  }
+
+  function updateVariable() {
+    showWait();
+    var index = $('#select-variable-cells').prop('selectedIndex');
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              var option = $('#select-variable-cells option:selected');
+              option.text(range);
+              option.val(range);
+            }
+            hideWait();
+          })
+        .updateVariable(index);
+  }
+
+  function deleteVariable() {
+    var index = removeSelectedItemFromList($('#select-variable-cells'));
+    google.script.run.deleteVariable(index);
+  }
+
+  function updateVariableButtons() {
+    var disable = $('#select-variable-cells option:selected').length === 0;
+    $('#button-update-variable, #button-delete-variable').prop('disabled', disable);
+  }
+
+  function updateAssumeNonNeg() {
+    var nonNeg = $('#checkbox-non-negative').prop('checked');
+    google.script.run.updateAssumeNonNeg(nonNeg);
+  }
+
+  function editConstraintLHS() {
+    editConstraint($('#text-constraint-lhs'));
+  }
+
+  function editConstraintRHS() {
+    editConstraint($('#text-constraint-rhs'));
+  }
+
+  function changeConstraintREL() {
+    enableUi();
+  }
+
+  function changeSelectedConstraint() {
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    if (selected == 0) {
+      curLHS = '';
+      curREL = 0;
+      curRHS = '';
+    } else {
+      var values = $('#select-constraint-cells option:selected').val().split(';');
+      curLHS = values[0];
+      curREL = parseInt(values[1]);
+      curRHS = values[2];
+    }
+    $('#text-constraint-lhs').val(curLHS);
+    $('#select-constraint-rel').val(curREL);
+    if (curREL >= 4) {
+      curRHS = '';
+    }
+    $('#text-constraint-rhs').val(curRHS);
+    changeConstraintREL();
+    enableUi();
+  }
+
+  function editConstraint(textElem) {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            textElem.val(range);
+            enableUi();
+            hideWait();
+          })
+        .getSelectedRange();
+  }
+
+  function saveConstraint() {
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    var lhs = $('#text-constraint-lhs').val();
+    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rhs = $('#text-constraint-rhs').val();
+
+    showWait();
+
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(data, element) {
+            if (data) {
+              if (data.index === 0) {
+                var option = new Option(data.text, data.value);
+                $('#select-constraint-cells').append($(option));
+              } else {
+                var option = $('#select-constraint-cells option:selected');
+                option.text(data.text);
+                option.val(data.value);
+              }
+              changeSelectedConstraint();
+            }
+            hideWait();
+          })
+        .saveConstraint(lhs, rhs, rel, selected);
+
+  }
+
+  function deleteConstraint() {
+    var index = removeSelectedItemFromList($('#select-constraint-cells'));
+    changeSelectedConstraint();
+    google.script.run.deleteConstraint(index - 1);
+  }
+
+  function cancelConstraintChange() {
+    changeSelectedConstraint();
+  }
+
+  function removeSelectedItemFromList(selectElem) {
+    var selected = selectElem.prop('selectedIndex');
+    selectElem.find('option:selected').remove();
+
+    var length = selectElem.find('option').length;
+    if (length <= selected) {
+      selectElem.prop('selectedIndex', length - 1);
+    } else {
+      selectElem.prop('selectedIndex', selected);
+    }
+
+    return selected;
+  }
+
+  function checkConstraintChanged() {
+    var lhs = $('#text-constraint-lhs').val();
+    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rhs = $('#text-constraint-rhs').val();
+    return !((lhs === curLHS) && (rel === curREL || 0 === curREL) && (rhs === curRHS));
+  }
+
+  function enableUi(disableAll) {
+    disableAll = disableAll ? true : false;
+    var changed = checkConstraintChanged();
+
+    $('#button-save-constraint, #button-cancel-constraint').prop('disabled', !changed || disableAll);
+
+    $('#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
+      '#select-variable-cells, #button-add-variable, #button-update-variable, #button-delete-variable, ' +
+      '#checkbox-non-negative, #select-constraint-cells, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
+        .prop('disabled', changed || disableAll);
+
+    var disableRHS = $('#select-constraint-rel').val() >= 4;
+    if (disableRHS || disableAll) {
+      $('#text-constraint-rhs').removeClass('text-range');
+    } else {
+      $('#text-constraint-rhs').addClass('text-range');
+    }
+    if (disableAll) {
+      $('#text-constraint-lhs').removeClass('text-range');
+    } else {
+      $('#text-constraint-lhs').addClass('text-range');
+    }
+
+    $('#button-edit-constraint-rhs').prop('disabled', disableRHS || disableAll);
+    $('#select-constraint-rel, #button-edit-constraint-lhs').prop('disabled', disableAll);
+
+
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    $('#button-delete-constraint').prop('disabled', (selected == 0) || disableAll);
+
+    if (changed || disableAll) {
+      $('#text-objective-cell').removeClass('text-range');
+    } else {
+      $('#text-objective-cell').addClass('text-range');
+      enableObjectiveTarget();
+      updateVariableButtons();
+    }
+
+  }
+
+  function loadSidebarFromModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(model, element) {
+            loadModel(model);
+            hideWait();
+          })
+        .getModelData();
+
+  }
+
+  function solveModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .solveModel();
+  }
+
+  function resetModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(model, element) {
+            if (model) {
+              loadModel(model);
+            }
+            hideWait();
+          })
+        .clearModel();
+  }
+
+  function updateShowStatus() {
+    var showStatus = $('#checkbox-show-status').prop('checked');
+    google.script.run.updateShowStatus(showStatus);
+  }
+
+  function updateCheckLinear() {
+    var checkLinear = $('#checkbox-check-linear').prop('checked');
+    google.script.run.updateCheckLinear(checkLinear);
+  }
+
+  function showWait() {
+    $('#main').addClass('wait');
+    enableUi(true);
+  }
+
+  function hideWait() {
+    $('#main').removeClass('wait');
+    enableUi();
+  }
+
+  function loadModel(model) {
+    console.log(JSON.stringify(model));
+    var selectConstraints = $('#select-constraint-cells');
+    var defaultOption = new Option('<Add new constraint>', 0);
+    selectConstraints.find('option').remove().end().append(defaultOption).prop('selectedIndex', 0);
+    for (var i = 0; i < model.constraints.length; i++) {
+      var option = new Option(model.constraints[i].text, model.constraints[i].value);
+      selectConstraints.append($(option));
+    }
+    changeSelectedConstraint();
+
+    var selectVariables = $('#select-variable-cells');
+    selectVariables.find('option').remove();
+    for (var i = 0; i < model.variables.length; i++) {
+      var option = new Option(model.variables[i], model.variables[i]);
+      selectVariables.append($(option));
+    }
+
+    $('#text-objective-cell').val(model.objective);
+    if (model.objectiveSense) {
+      $('input[type=radio][name=objective-sense]').val([model.objectiveSense]);
+    }
+    $('#text-objective-sense-target-value').val(model.objectiveVal);
+    $('#text-objective-sense-target-value').prop('disabled', model.disableVal);
+
+    $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
+    $('#checkbox-show-status').prop('checked', model.showStatus);
+    $('#checkbox-check-linear').prop('checked', model.checkLinear);
+  }
+</script>
