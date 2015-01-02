@@ -531,10 +531,21 @@ OpenSolver.OpenSolver.prototype.validateEmptyConstraint = function(row) {
     var position = this.getArrayPositionFromConstraintInstance(constraint, instance);
     var i = position.i - 1;
     var j = position.j - 1;
-    var lhsValue = this.lhsOriginalValues[constraint][i][j];
-    var rhsValue = this.rhsOriginalValues[constraint][i][j];
-    var lhsRange = this.lhsRange[constraint].getCell(i + 1, j + 1);
-    var rhsRange = this.rhsRange[constraint].getCell(i + 1, j + 1);
+
+    if (this.lhsType[constraint] === OpenSolver.consts.solverInputType.MULTI_CELL_RANGE) {
+      var lhsRange = this.lhsRange[constraint].getCell(i + 1, j + 1);
+      var lhsValue = this.lhsOriginalValues[constraint][i][j];
+    } else {
+      var lhsRange = this.lhsRange[constraint].getCell(1, 1);
+      var lhsValue = this.lhsOriginalValues[constraint][0][0];
+    }
+    if (this.rhsType[constraint] === OpenSolver.consts.solverInputType.MULTI_CELL_RANGE) {
+      var rhsRange = this.rhsRange[constraint].getCell(i + 1, j + 1);
+      var rhsValue = this.rhsOriginalValues[constraint][i][j];
+    } else {
+      var rhsRange = this.rhsRange[constraint].getCell(1, 1);
+      var rhsValue = this.rhsOriginalValues[constraint][0][0];
+    }
 
     this.solveStatusComment = 'The model contains a constraint in the group ' + this.constraintSummary[constraint] +
                               ' which does not depend on the decision variables and is not satisfied.\n\n' +
