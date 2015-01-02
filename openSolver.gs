@@ -521,6 +521,7 @@ OpenSolver.OpenSolver.prototype.reportAnySubOptimality = function() {
 };
 
 OpenSolver.OpenSolver.prototype.validateEmptyConstraint = function(row) {
+  Logger.log('Validate: row ' + row + ' relation ' + this.relation[row] + ' rhs ' + this.rhs[row])
   if ((this.relation[row] === OpenSolver.consts.relation.GE && this.rhs[row] > OpenSolver.consts.EPSILON) ||
       (this.relation[row] === OpenSolver.consts.relation.LE && this.rhs[row] < -OpenSolver.consts.EPSILON) ||
       (this.relation[row] === OpenSolver.consts.relation.EQ && Math.abs(this.rhs[row]) > OpenSolver.consts.EPSILON)) {
@@ -625,6 +626,9 @@ OpenSolver.OpenSolver.prototype.quickLinearityCheck = function() {
   if (nonLinearCount > 10) {
     nonLinearInfo += '\n' + 'and ' + (nonLinearCount - 10) + ' other constraints.';
   }
+  if (nonLinearInfo) {
+    nonLinearInfo += '\n\n';
+  }
 
   var observedObj = this.getObjectiveValue();
   var expectedObj = this.calculateObjectiveValue(this.varValues);
@@ -632,7 +636,7 @@ OpenSolver.OpenSolver.prototype.quickLinearityCheck = function() {
   Logger.log('here');
   var objNonLinear = Math.abs(observedObj - expectedObj) / (1 + Math.abs(expectedObj)) > OpenSolver.consts.EPSILON;
   if (objNonLinear) {
-    nonLinearInfo = 'The objective function is not linear.\n\n' + nonLinearInfo;
+    nonLinearInfo = 'The objective function is not linear. Expected ' + expectedObj.toPrecision(4) + ', got ' + observedObj.toPrecision(4) + '\n\n' + nonLinearInfo;
   }
 
   if (nonLinearInfo) {
@@ -640,8 +644,8 @@ OpenSolver.OpenSolver.prototype.quickLinearityCheck = function() {
     if (!this.minimiseUserInteraction) {
       var ui = SpreadsheetApp.getUi();
       var response = ui.alert('OpenSolver Quick Linearity Check',
-                              nonLinearInfo + '\n\n' + 'Would you like to run a full linearity check? This will ' +
-                                                       'destroy the current solution.',
+                              nonLinearInfo + 'Would you like to run a full linearity check? This will ' +
+                                              'destroy the current solution.',
                               ui.ButtonSet.YES_NO);
       if (response === ui.Button.YES) {
         this.fullLinearityCheck();
@@ -754,7 +758,10 @@ OpenSolver.OpenSolver.prototype.fullLinearityCheck = function() {
       var varName = this.varNames[i];
       if (!objNonLinear) {
         objNonLinear = true;
-        nonLinearInfo += '\n\n' + 'The objective function appears to be non-linear in variable(s): ' + varName;
+        if (nonLinearInfo !== "") {
+          nonLinearInfo += '\n\n'
+        }
+        nonLinearInfo += 'The objective function appears to be non-linear in variable(s): ' + varName;
       } else {
         nonLinearInfo += ', ' + varName;
       }
