@@ -658,6 +658,7 @@ OpenSolver.OpenSolver.prototype.calculateObjectiveValue = function(values) {
   for (var i = 0; i < this.numVars; i++) {
     total += this.costCoeffs[i] * values[i];
   }
+  total += this.objectiveValue;
   return total;
 };
 
