@@ -262,7 +262,12 @@ OpenSolver.Model.prototype.deleteVariable = function(index) {
 };
 
 OpenSolver.Model.prototype.updateSavedVariables = function() {
-  OpenSolver.util.setSolverProperty('adj', this.variables.join(','));
+  varstring = this.variables.join(',');
+  if (varstring) {
+    OpenSolver.util.setSolverProperty('adj', varstring);
+  } else {
+    OpenSolver.util.deleteSolverProperty('adj');
+  }
 };
 
 OpenSolver.Model.prototype.updateAssumeNonNeg = function(nonNeg) {
