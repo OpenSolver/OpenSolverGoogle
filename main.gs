@@ -32,7 +32,8 @@ function onInstall(e) {
  */
 function showSidebar() {
   var ui = HtmlService.createHtmlOutputFromFile('sidebarUi')
-      .setTitle('OpenSolver');
+      .setTitle('OpenSolver')
+      .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
 }
 
