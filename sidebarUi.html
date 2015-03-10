@@ -3,6 +3,11 @@
 
 <style>
 
+#main {
+  position: initial;
+  padding: 6px;
+}
+
 .wait, .wait * {
   cursor: wait !important;
 }
@@ -69,7 +74,7 @@ input[type=text] {
 }
 
 .objective-button {
-  margin-left: 12px;
+  margin-left: 10px;
   width: 25%;
   vertical-align: middle;
   float: right;
@@ -106,6 +111,10 @@ input[type=text] {
 
 #edit-constraint-button-rhs-container, #text-constraint-rhs, #reset-model-button-container {
   float: right;
+}
+
+#edit-constraint-button-lhs-container, #solve-model-button-container {
+  float: left;
 }
 
 .edit-constraint-button, .solve-button {
@@ -244,7 +253,7 @@ html[xmlns] .clearfix {
         <input type="text" id="text-constraint-rhs" class="text-constraint text-range" disabled>
       </div>
       <div>
-        <div class="inline form-group edit-constraint-button-container">
+        <div class="inline form-group edit-constraint-button-container" id="edit-constraint-button-lhs-container">
           <button id="button-edit-constraint-lhs" class="edit-constraint-button">Update Left Side</button>
         </div>
         <div class="inline form-group edit-constraint-button-container" id="edit-constraint-button-rhs-container">
@@ -256,7 +265,7 @@ html[xmlns] .clearfix {
     <hr class="divider">
 
     <div id="solve-button-container">
-      <div class="inline form-group solve-button-container">
+      <div class="inline form-group solve-button-container" id="solve-model-button-container">
         <button id="button-solve" class="action solve-button">Solve Model</button>
       </div>
       <div class="inline form-group solve-button-container" id="reset-model-button-container">
