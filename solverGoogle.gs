@@ -3,6 +3,7 @@ var OpenSolver = OpenSolver || {};
 
 OpenSolver.SolverGoogle = function() {
   OpenSolver.Solver.call(this);
+  this.solution = LinearOptimizationService.Status.NOT_SOLVED;
 };
 
 OpenSolver.SolverGoogle.prototype = Object.create(OpenSolver.Solver.prototype);

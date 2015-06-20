@@ -19,7 +19,7 @@ OpenSolver.IndexedCoeffs.prototype.coeff = function(i) {
   return this.values[i];
 };
 
-OpenSolver.IndexedCoeffs.prototype.count = function(i) {
+OpenSolver.IndexedCoeffs.prototype.count = function() {
   return this.indices.length;
 };
 
