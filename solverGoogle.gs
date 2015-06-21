@@ -3,7 +3,7 @@ var OpenSolver = OpenSolver || {};
 
 OpenSolver.SolverGoogle = function() {
   OpenSolver.Solver.call(this);
-  this.solution = LinearOptimizationService.Status.NOT_SOLVED;
+  this.solution = null;
 };
 
 OpenSolver.SolverGoogle.prototype = Object.create(OpenSolver.Solver.prototype);
@@ -12,41 +12,46 @@ OpenSolver.SolverGoogle.prototype.constructor = OpenSolver.SolverGoogle;
 OpenSolver.SolverGoogle.prototype.getStatus = function() {
   var result;
   var solveString;
-  switch (this.solution.getStatus()) {
-    case LinearOptimizationService.Status.ABNORMAL:
-      result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
-      solveString = 'The solver failed to find a solution for unknown reasons.';
-      break;
-    case LinearOptimizationService.Status.FEASIBLE:
-      result = OpenSolver.consts.openSolverResult.TIME_LIMITED_SUB_OPTIMAL;
-      solveString = 'An optimal solution was not found. A feasible solution was loaded instead.';
-      break;
-    case LinearOptimizationService.Status.INFEASIBLE:
-      result = OpenSolver.consts.openSolverResult.INFEASIBLE;
-      solveString = 'No feasible solution was found.';
-      break;
-    case LinearOptimizationService.Status.MODEL_INVALID:
-      result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
-      solveString = 'The solver failed to find a solution because the model was invalid.';
-      break;
-    case LinearOptimizationService.Status.NOT_SOLVED:
-      result = OpenSolver.consts.openSolverResult.UNSOLVED;
-      solveString = 'The model has not yet been solved.';
-      break;
-    case LinearOptimizationService.Status.OPTIMAL:
-      result = OpenSolver.consts.openSolverResult.OPTIMAL;
-      solveString = 'Optimal';
-      break;
-    case LinearOptimizationService.Status.UNBOUNDED:
-      result = OpenSolver.consts.openSolverResult.UNBOUNDED;
-      solveString = 'No solution found (Unbounded)';
-      break;
+  if (this.solution == null) {
+    result = OpenSolver.consts.openSolverResult.UNSOLVED;
+    solveString = 'The model has not yet been solved.';
+  } else {
+    switch (this.solution.getStatus()) {
+      case LinearOptimizationService.Status.ABNORMAL:
+        result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
+        solveString = 'The solver failed to find a solution for unknown reasons.';
+        break;
+      case LinearOptimizationService.Status.FEASIBLE:
+        result = OpenSolver.consts.openSolverResult.TIME_LIMITED_SUB_OPTIMAL;
+        solveString = 'An optimal solution was not found. A feasible solution was loaded instead.';
+        break;
+      case LinearOptimizationService.Status.INFEASIBLE:
+        result = OpenSolver.consts.openSolverResult.INFEASIBLE;
+        solveString = 'No feasible solution was found.';
+        break;
+      case LinearOptimizationService.Status.MODEL_INVALID:
+        result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
+        solveString = 'The solver failed to find a solution because the model was invalid.';
+        break;
+      case LinearOptimizationService.Status.NOT_SOLVED:
+        result = OpenSolver.consts.openSolverResult.UNSOLVED;
+        solveString = 'The model has not yet been solved.';
+        break;
+      case LinearOptimizationService.Status.OPTIMAL:
+        result = OpenSolver.consts.openSolverResult.OPTIMAL;
+        solveString = 'Optimal';
+        break;
+      case LinearOptimizationService.Status.UNBOUNDED:
+        result = OpenSolver.consts.openSolverResult.UNBOUNDED;
+        solveString = 'No solution found (Unbounded)';
+        break;
+    }
   }
 
   return {
     solveStatus: result,
     solveStatusString: solveString,
-    loadSolution: this.solution.isValid()
+    loadSolution: this.solution ? this.solution.isValid() : false
   };
 };
 
