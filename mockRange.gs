@@ -26,5 +26,5 @@ OpenSolver.MockRange.prototype.getCell = function(i, j) {
 };
 
 OpenSolver.MockRange.prototype.getA1Notation = function() {
-  return 'DummyCell';
+  return '';
 };

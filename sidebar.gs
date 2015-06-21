@@ -5,7 +5,7 @@ var openSolver
 
 function getModelData() {
   currentModel = currentModel || OpenSolver.loadModel();
-  return currentModel.getUiData();
+  return currentModel.getSidebarData();
 }
 
 function updateObjective() {
@@ -106,5 +106,5 @@ function clearModel() {
 //    return null;
 //  };
 
-  return OpenSolver.clearModel();
+  return OpenSolver.clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
 }

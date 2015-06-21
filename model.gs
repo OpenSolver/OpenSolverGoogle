@@ -1,10 +1,14 @@
 // Global namespace for OpenSolver
 var OpenSolver = OpenSolver || {};
 
-OpenSolver.Model = function() {
+OpenSolver.Model = function(sheet) {
+  if (!sheet) {
+    return null;
+  }
+  this.sheet = sheet;
   this.constraints = [];
   this.variables = [];
-  this.objective = '';
+  this.objective = new OpenSolver.MockRange([[0]]);  // empty objective cell that returns value zero
   this.objectiveSense = OpenSolver.consts.objectiveSenseType.MINIMISE;
   this.objectiveVal = 0;
   this.assumeNonNeg = true;
@@ -13,9 +17,8 @@ OpenSolver.Model = function() {
 };
 
 OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
-  var sheet = SpreadsheetApp.getActiveSheet();
   try {
-    var lhsRange = sheet.getRange(lhs);
+    var lhsRange = this.sheet.getRange(lhs);
   } catch (e) {
     OpenSolver.util.showMessage(e.message);
     return;
@@ -39,7 +42,7 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
       break;
     default:
       try {
-        rhsRange = sheet.getRange(rhs);
+        rhsRange = this.sheet.getRange(rhs);
       } catch (e) {
         OpenSolver.util.showMessage(e.message);
         return;
@@ -64,7 +67,7 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
   if (!rhsRange) {
     valid = false;
     for (var i = 0; i < this.variables.length; i++) {
-      var varRange = sheet.getRange(this.variables[i]);
+      var varRange = this.sheet.getRange(this.variables[i]);
       var intersectRange = OpenSolver.util.getRangeIntersect(lhsRange, varRange);
       if (intersectRange &&
           OpenSolver.util.getRangeSize(intersectRange) === OpenSolver.util.getRangeSize(lhsRange)) {
@@ -85,7 +88,7 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
   } else {
     this.constraints[index - 1] = constraint;
   }
-  this.updateSavedConstraints();
+  OpenSolver.updateSavedConstraints(this.constraints);
 
   return {
     text: constraint.displayText(),
@@ -96,34 +99,16 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
 
 OpenSolver.Model.prototype.deleteConstraint = function(index) {
   this.constraints.splice(index, 1);
-  this.updateSavedConstraints();
+  OpenSolver.updateSavedConstraints(this.constraints);
 };
 
-OpenSolver.Model.prototype.updateSavedConstraints = function() {
-  var currentNum = parseInt(OpenSolver.util.getSolverProperty('num'), 10);
-
-  properties = {};
-  for (var i = 0; i < this.constraints.length; i++) {
-    properties['lhs'.concat(i)] = this.constraints[i].lhs;
-    properties['rhs'.concat(i)] = this.constraints[i].rhs;
-    properties['rel'.concat(i)] = this.constraints[i].rel.toString();
+OpenSolver.loadModel = function(sheet) {
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSheet();
   }
-  properties['num'] = this.constraints.length.toString();
-  OpenSolver.util.setSolverProperties(properties);
-
-  // Clean up old constraint info
-  for (var i = this.constraints.length; i < currentNum; i++) {
-    OpenSolver.util.deleteSolverProperty('lhs'.concat(i));
-    OpenSolver.util.deleteSolverProperty('rhs'.concat(i));
-    OpenSolver.util.deleteSolverProperty('rel'.concat(i));
-  }
-};
-
-OpenSolver.loadModel = function() {
-  var sheet = SpreadsheetApp.getActiveSheet();
 
   var properties = OpenSolver.util.getAllProperties();
-  var model = new OpenSolver.Model();
+  var model = new OpenSolver.Model(sheet);
 
   if (properties['solver_num']) {
     for (var i = 0; i < properties['solver_num']; i++) {
@@ -139,7 +124,7 @@ OpenSolver.loadModel = function() {
   }
 
   if (properties['solver_opt'] !== undefined) {
-    model.objective = properties['solver_opt'];
+    model.objective = sheet.getRange(properties['solver_opt']);
   }
 
   if (properties['solver_typ'] !== undefined) {
@@ -162,30 +147,13 @@ OpenSolver.loadModel = function() {
 
   if (properties['openSolver_checkLinear'] !== undefined) {
     model.checkLinear = (properties['openSolver_checkLinear'] === 'true');
-    Logger.log(model.checkLinear)
   }
   return model;
 };
 
-OpenSolver.clearModel = function() {
-  var model = new OpenSolver.Model();
-
-  model.updateSavedConstraints();
-  model.updateSavedVariables();
-  model.updateSavedObjective();
-  model.updateSavedObjectiveSense();
-  model.updateSavedObjectiveTarget();
-  model.updateSavedAssumeNonNeg();
-  model.updateSavedShowStatus();
-  model.updateSavedCheckLinear();
-
-  return model.getUiData();
-};
-
 OpenSolver.Model.prototype.updateObjective = function() {
-  var sheet = SpreadsheetApp.getActiveSheet();
   try {
-    var objRange = sheet.getActiveRange();
+    var objRange = this.sheet.getActiveRange();
   } catch (e) {
     OpenSolver.util.showMessage(e.message);
     return;
@@ -197,41 +165,24 @@ OpenSolver.Model.prototype.updateObjective = function() {
     return;
   }
 
-  var objString = objRange.getA1Notation();
-  this.objective = objString;
-  this.updateSavedObjective();
-  return objString;
+  this.objective = objRange;
+  OpenSolver.updateSavedObjective(this.objective);
+  return this.objective.getA1Notation();
 };
 
 OpenSolver.Model.prototype.deleteObjective = function() {
-  this.objective = '';
-  this.updateSavedObjective();
+  this.objective = new OpenSolver.MockRange([[0]]);
+  OpenSolver.updateSavedObjective(this.objective);
 };
 
 OpenSolver.Model.prototype.updateObjectiveSense = function(objSense) {
   this.objectiveSense = objSense;
-  this.updateSavedObjectiveSense();
-};
-
-OpenSolver.Model.prototype.updateSavedObjectiveSense = function() {
-  OpenSolver.util.setSolverProperty('typ', this.objectiveSense.toString());
+  OpenSolver.updateSavedObjectiveSense(this.objectiveSense);
 };
 
 OpenSolver.Model.prototype.updateObjectiveTarget = function(objVal) {
   this.objectiveVal = objVal;
-  this.updateSavedObjectiveTarget();
-};
-
-OpenSolver.Model.prototype.updateSavedObjectiveTarget = function() {
-  OpenSolver.util.setSolverProperty('val', this.objectiveVal);
-};
-
-OpenSolver.Model.prototype.updateSavedObjective = function() {
-  if (this.objective) {
-    OpenSolver.util.setSolverProperty('opt', this.objective);
-  } else {
-    OpenSolver.util.deleteSolverProperty('opt');
-  }
+  OpenSolver.updateSavedObjectiveTarget(this.objectiveVal);
 };
 
 OpenSolver.Model.prototype.addVariable = function() {
@@ -239,9 +190,8 @@ OpenSolver.Model.prototype.addVariable = function() {
 };
 
 OpenSolver.Model.prototype.updateVariable = function(index) {
-  var sheet = SpreadsheetApp.getActiveSheet();
   try {
-    var varRange = sheet.getActiveRange();
+    var varRange = this.sheet.getActiveRange();
   } catch (e) {
     OpenSolver.util.showMessage(e.message);
     return;
@@ -252,71 +202,46 @@ OpenSolver.Model.prototype.updateVariable = function(index) {
   } else {
     this.variables.push(varString);
   }
-  this.updateSavedVariables();
+  OpenSolver.updateSavedVariables(this.variables);
   return varString;
 };
 
 OpenSolver.Model.prototype.deleteVariable = function(index) {
   this.variables.splice(index, 1);
-  this.updateSavedVariables();
-};
-
-OpenSolver.Model.prototype.updateSavedVariables = function() {
-  varstring = this.variables.join(',');
-  if (varstring) {
-    OpenSolver.util.setSolverProperty('adj', varstring);
-  } else {
-    OpenSolver.util.deleteSolverProperty('adj');
-  }
+  OpenSolver.updateSavedVariables(this.variables);
 };
 
 OpenSolver.Model.prototype.updateAssumeNonNeg = function(nonNeg) {
   this.assumeNonNeg = nonNeg;
-  this.updateSavedAssumeNonNeg();
-};
-
-OpenSolver.Model.prototype.updateSavedAssumeNonNeg = function() {
-  OpenSolver.util.setSolverProperty('neg', OpenSolver.util.assumeNonNegFromBoolean(this.assumeNonNeg).toString());
+  OpenSolver.updateSavedAssumeNonNeg(this.assumeNonNeg);
 };
 
 OpenSolver.Model.prototype.updateShowStatus = function(showStatus) {
   this.showStatus = showStatus;
-  this.updateSavedShowStatus();
-};
-
-OpenSolver.Model.prototype.updateSavedShowStatus = function() {
-  OpenSolver.util.setOpenSolverProperty('showStatus', this.showStatus);
+  OpenSolver.updateSavedShowStatus(this.showStatus);
 };
 
 OpenSolver.Model.prototype.updateCheckLinear = function(checkLinear) {
   this.checkLinear = checkLinear;
-  this.updateSavedCheckLinear();
+  OpenSolver.updateSavedCheckLinear(this.checkLinear);
 };
 
-OpenSolver.Model.prototype.updateSavedCheckLinear = function() {
-  OpenSolver.util.setOpenSolverProperty('checkLinear', this.checkLinear);
-};
-
-OpenSolver.Model.prototype.getUiData = function() {
-  var model = {
-    constraints: [],
-    variables: this.variables
+OpenSolver.Model.prototype.getSidebarData = function() {
+  return {
+    constraints: this.constraints.map(function(constraint) {
+      return {
+        text: constraint.displayText(),
+        value: constraint.displayValue()
+      };
+    }),
+    variables: this.variables,
+    objective: this.objective.getA1Notation(),
+    objectiveVal: this.objectiveVal,
+    objectiveSense: this.objectiveSense,
+    disableVal: this.objectiveSense != OpenSolver.consts.objectiveSenseType.TARGET,
+    assumeNonNeg: this.assumeNonNeg,
+    showStatus: this.showStatus,
+    checkLinear: this.checkLinear,
   };
-
-  for (i = 0; i < this.constraints.length; i++) {
-    model.constraints.push({
-      text: this.constraints[i].displayText(),
-      value: this.constraints[i].displayValue()
-    });
-  }
-
-  model.objective = this.objective;
-  model.objectiveVal = this.objectiveVal;
-  model.objectiveSense = this.objectiveSense;
-  model.disableVal = this.objectiveSense != OpenSolver.consts.objectiveSenseType.TARGET;
-  model.assumeNonNeg = this.assumeNonNeg;
-  model.showStatus = this.showStatus;
-  model.checkLinear = this.checkLinear;
-  return model;
-};
+}
 
