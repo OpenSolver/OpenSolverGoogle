@@ -4,68 +4,68 @@ var currentModel;
 var openSolver
 
 function getModelData() {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.getSidebarData();
 }
 
 function updateObjective() {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   test();
   return currentModel.updateObjective();
 }
 
 function deleteObjective() {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.deleteObjective();
 }
 
 function updateObjectiveSense(objSense) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.updateObjectiveSense(objSense);
 }
 
 function updateObjectiveTarget(objVal) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.updateObjectiveTarget(objVal);
 }
 
 function addVariable() {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.addVariable();
 }
 
 function updateVariable(index) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.updateVariable(index);
 }
 
 function deleteVariable(index) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.deleteVariable(index);
 }
 
 function saveConstraint(LHSstring, RHSstring, RELstring, index) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index);
 }
 
 function deleteConstraint(index) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.deleteConstraint(index);
 }
 
 function updateAssumeNonNeg(nonNeg) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.updateAssumeNonNeg(nonNeg);
 }
 
 function updateShowStatus(showStatus) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.updateShowStatus(showStatus);
 }
 
 function updateCheckLinear(checkLinear) {
-  currentModel = currentModel || OpenSolver.loadModel();
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.updateCheckLinear(checkLinear);
 }
 
@@ -106,5 +106,5 @@ function clearModel() {
 //    return null;
 //  };
 
-  return OpenSolver.clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
+  return OpenSolver.API.clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
 }

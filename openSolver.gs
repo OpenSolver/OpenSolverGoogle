@@ -79,7 +79,7 @@ OpenSolver.OpenSolver.prototype.buildModelFromSolverData = function(linearityOff
 
   // TODO get solver from user selection
 
-  var model = OpenSolver.loadModel();
+  var model = OpenSolver.API.loadModelFromSheet(this.sheet);
   this.showStatus = model.showStatus;
   this.checkLinear = model.checkLinear;
 
