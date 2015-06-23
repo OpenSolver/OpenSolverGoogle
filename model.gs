@@ -105,7 +105,7 @@ OpenSolver.Model.prototype.deleteConstraint = function(index) {
 OpenSolver.Model.prototype.load = function() {
   Logger.log(this.objective)
   this.constraints = OpenSolver.API.getConstraints();
-  this.variables = OpenSolver.API.getVariables();
+  this.variables = OpenSolver.API.getVariables(this.sheet);
   this.objective = OpenSolver.API.getObjective(this.sheet);
   this.objectiveSense = OpenSolver.API.getObjectiveSense();
   this.objectiveVal = OpenSolver.API.getObjectiveTargetValue();
@@ -160,14 +160,13 @@ OpenSolver.Model.prototype.updateVariable = function(index) {
     OpenSolver.util.showMessage(e.message);
     return;
   }
-  var varString = varRange.getA1Notation();
   if (index >= 0) {
-    this.variables[index] = varString;
+    this.variables[index] = varRange;
   } else {
-    this.variables.push(varString);
+    this.variables.push(varRange);
   }
   OpenSolver.API.setVariables(this.variables);
-  return varString;
+  return varRange.getA1Notation();
 };
 
 OpenSolver.Model.prototype.deleteVariable = function(index) {
@@ -199,7 +198,7 @@ OpenSolver.Model.prototype.getSidebarData = function() {
         value: constraint.displayValue()
       };
     }),
-    variables:      this.variables,
+    variables:      this.variables.map(function(varRange) { return varRange.getA1Notation(); }),
     objective:      this.objective.getA1Notation(),
     objectiveVal:   this.objectiveVal,
     objectiveSense: this.objectiveSense,

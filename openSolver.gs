@@ -87,7 +87,6 @@ OpenSolver.OpenSolver.prototype.buildModelFromSolverData = function(linearityOff
     throw(OpenSolver.error.NO_VARS);
   }
 
-
   OpenSolver.util.updateStatus('Processing model', 'Solving Model', true);
   // Get decision variable ranges and set to offset value
   // TODO check for merged cells (check if this gives an error on Google?)
@@ -96,11 +95,12 @@ OpenSolver.OpenSolver.prototype.buildModelFromSolverData = function(linearityOff
   this.varRangeSizes = [];
   var variable = 0;
   for (var i = 0; i < this.numVariableAreas; i++) {
-    try {
-      var variableArea = this.sheet.getRange(model.variables[i]);
-    } catch(e) { // Error getting range
-      throw(OpenSolver.error.VAR_RANGE_ERROR(model.variables[i]));
-    }
+//    try {
+//      var variableArea = this.sheet.getRange(model.variables[i]);
+//    } catch(e) { // Error getting range
+//      throw(OpenSolver.error.VAR_RANGE_ERROR(model.variables[i]));
+//    }
+    var variableArea = model.variables[i];
     variableArea.setValue(this.linearityOffset);
     this.variableAreas.push(variableArea);
 

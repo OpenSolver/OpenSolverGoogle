@@ -34,7 +34,8 @@ OpenSolver.API = {
   },
 
   setVariables: function(variables) {
-    var varstring = variables.join(',');
+    var varstring = variables.map(function(varRange) { return varRange.getA1Notation(); })
+                             .join(',');
     if (varstring) {
       OpenSolver.util.setSolverProperty('adj', varstring);
     } else {
@@ -42,10 +43,11 @@ OpenSolver.API = {
     }
   },
 
-  getVariables: function() {
+  getVariables: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
     if (properties['solver_adj'] !== undefined) {
-      return properties['solver_adj'].split(',');
+      var varStrings = properties['solver_adj'].split(',');
+      return varStrings.map(function(v) { return sheet.getRange(v); });
     } else {
       return [];
     }
