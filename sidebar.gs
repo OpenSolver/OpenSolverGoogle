@@ -16,7 +16,9 @@ function updateObjective() {
 
 function deleteObjective() {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
-  return currentModel.deleteObjective();
+  // Delete the objective and return the new text for the obj cell,
+  // which should be '' if deleted successfully.
+  return currentModel.deleteObjective().getA1Notation();
 }
 
 function updateObjectiveSense(objSense) {
@@ -42,6 +44,7 @@ function updateVariable(index) {
 function deleteVariable(index) {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.deleteVariable(index);
+  return index;  // Return the index to delete. Set to -1 to abort.
 }
 
 function saveConstraint(LHSstring, RHSstring, RELstring, index) {
@@ -52,6 +55,7 @@ function saveConstraint(LHSstring, RHSstring, RELstring, index) {
 function deleteConstraint(index) {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   currentModel.deleteConstraint(index);
+  return index;  // Return the index to delete. Set to -1 to abort.
 }
 
 function updateAssumeNonNeg(nonNeg) {

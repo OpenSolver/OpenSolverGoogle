@@ -351,7 +351,6 @@ html[xmlns] .clearfix {
    * Runs a server-side function to save the selected range into the objective cell.
    */
   function updateObjective() {
-    $('#error-objective-cell').text('');
     showWait();
     google.script.run
         .withSuccessHandler(
@@ -365,9 +364,14 @@ html[xmlns] .clearfix {
   }
 
   function deleteObjective() {
-    $('#text-objective-cell').val('');
-    $('#error-objective-cell').text('');
-    google.script.run.deleteObjective();
+    showWait();
+    google.script.run
+      .withSuccessHandler(
+        function(range, element) {
+          $('#text-objective-cell').val(range);
+          hideWait();
+        })
+      .deleteObjective();
   }
 
   function updateObjectiveSense() {
@@ -425,8 +429,16 @@ html[xmlns] .clearfix {
   }
 
   function deleteVariable() {
-    var index = removeSelectedItemFromList($('#select-variable-cells'));
-    google.script.run.deleteVariable(index);
+    showWait();
+    var index = getSelectedItemFromList($('#select-variable-cells'));
+    google.script.run
+      .withSuccessHandler(
+        function(index, element) {
+          // Delete the returned index
+          removeItemFromList($('#select-variable-cells'), index);
+          hideWait();
+        })
+      .deleteVariable(index);
   }
 
   function updateVariableButtons() {
@@ -522,27 +534,41 @@ html[xmlns] .clearfix {
   }
 
   function deleteConstraint() {
-    var index = removeSelectedItemFromList($('#select-constraint-cells'));
-    changeSelectedConstraint();
-    google.script.run.deleteConstraint(index - 1);
+    showWait();
+    var index = getSelectedItemFromList($('#select-constraint-cells'));
+    google.script.run
+      .withSuccessHandler(
+        function(index, element) {
+          // Delete the returned index
+          removeItemFromList($('#select-constraint-cells'), index);
+          changeSelectedConstraint();
+          hideWait();
+        })
+      .deleteConstraint(index);
   }
 
   function cancelConstraintChange() {
     changeSelectedConstraint();
   }
 
-  function removeSelectedItemFromList(selectElem) {
-    var selected = selectElem.prop('selectedIndex');
-    selectElem.find('option:selected').remove();
+  function getSelectedItemFromList(selectElem) {
+    return selectElem.prop('selectedIndex');
+  }
 
-    var length = selectElem.find('option').length;
-    if (length <= selected) {
-      selectElem.prop('selectedIndex', length - 1);
-    } else {
-      selectElem.prop('selectedIndex', selected);
+  function removeItemFromList(selectElem, index) {
+    var length = selectElem.children('option').length;
+    if (index < 0 || index > length) {
+      return;
     }
 
-    return selected;
+    selectElem.children('option')[index].remove();
+    length -= 1;
+
+    if (length <= index) {
+      selectElem.prop('selectedIndex', length - 1);
+    } else {
+      selectElem.prop('selectedIndex', index);
+    }
   }
 
   function checkConstraintChanged() {
