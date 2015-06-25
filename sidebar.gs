@@ -10,15 +10,19 @@ function getModelData() {
 
 function updateObjective() {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
-  test();
-  return currentModel.updateObjective();
+  var objRange = getSelectedRange();
+  if (objRange) {
+    return currentModel.updateObjective(objRange);
+  } else {
+    return null;
+  }
 }
 
 function deleteObjective() {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
   // Delete the objective and return the new text for the obj cell,
   // which should be '' if deleted successfully.
-  return currentModel.deleteObjective().getA1Notation();
+  return currentModel.deleteObjective();
 }
 
 function updateObjectiveSense(objSense) {
@@ -33,12 +37,22 @@ function updateObjectiveTarget(objVal) {
 
 function addVariable() {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
-  return currentModel.addVariable();
+  var varRange = getSelectedRange();
+  if (varRange) {
+    return currentModel.addVariable(varRange);
+  } else {
+    return null;
+  }
 }
 
 function updateVariable(index) {
   currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
-  return currentModel.updateVariable(index);
+  var varRange = getSelectedRange();
+  if (varRange) {
+    return currentModel.updateVariable(index, varRange);
+  } else {
+    return null;
+  }
 }
 
 function deleteVariable(index) {
@@ -73,19 +87,17 @@ function updateCheckLinear(checkLinear) {
   currentModel.updateCheckLinear(checkLinear);
 }
 
-/**
- * Gets the text the user has selected. If there is no selection,
- * this function displays an error message.
- *
- * @return {Array.<string>} The selected text.
- */
 function getSelectedRange() {
-  var selection = SpreadsheetApp.getActiveRange();
-  if (selection) {
-    return selection.getA1Notation();
-  } else {
-    throw 'Please select a cell.';
+  try {
+    return SpreadsheetApp.getActiveRange();
+  } catch (e) {
+    OpenSolver.util.showMessage(e.message);
+    return;
   }
+}
+
+function getSelectedRangeNotation() {
+  return getSelectedRange().getA1Notation();
 }
 
 function solveModel() {

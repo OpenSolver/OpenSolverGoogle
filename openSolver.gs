@@ -100,7 +100,7 @@ OpenSolver.OpenSolver.prototype.buildModelFromSolverData = function(linearityOff
 //    } catch(e) { // Error getting range
 //      throw(OpenSolver.error.VAR_RANGE_ERROR(model.variables[i]));
 //    }
-    var variableArea = model.variables[i];
+    var variableArea = this.sheet.getRange(model.variables[i]);
     variableArea.setValue(this.linearityOffset);
     this.variableAreas.push(variableArea);
 
@@ -129,17 +129,16 @@ OpenSolver.OpenSolver.prototype.buildModelFromSolverData = function(linearityOff
     this.objectiveTarget = model.objectiveVal;
   }
 
-//  if (model.objective) {
-//    try {
-//      this.objective = this.sheet.getRange(model.objective);
-//    } catch (e) {
-//      throw(OpenSolver.error.OBJ_RANGE_ERROR(model.variables[i]));
-//    }
-//  } else {
-//    // If there is no objective, we set a mock range that has value 0
-//    this.objective = new OpenSolver.MockRange([[0]]);
-//  }
-  this.objective = model.objective;
+  if (model.objective) {
+    try {
+      this.objective = this.sheet.getRange(model.objective);
+    } catch (e) {
+      throw(OpenSolver.error.OBJ_RANGE_ERROR(model.variables[i]));
+    }
+  } else {
+    // If there is no objective, we set a mock range that has value 0
+    this.objective = new OpenSolver.MockRange([[0]]);
+  }
 
   // Check that objective is a single cell
   if (this.objective.getNumColumns() !== 1 || this.objective.getNumRows() !== 1) {

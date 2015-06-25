@@ -34,10 +34,8 @@ OpenSolver.API = {
   },
 
   setVariables: function(variables) {
-    var varstring = variables.map(function(varRange) { return varRange.getA1Notation(); })
-                             .join(',');
-    if (varstring) {
-      OpenSolver.util.setSolverProperty('adj', varstring);
+    if (variables.length > 0) {
+      OpenSolver.util.setSolverProperty('adj', variables.join(','));
     } else {
       OpenSolver.util.deleteSolverProperty('adj');
     }
@@ -47,16 +45,15 @@ OpenSolver.API = {
     var properties = OpenSolver.util.getAllProperties();
     if (properties['solver_adj'] !== undefined) {
       var varStrings = properties['solver_adj'].split(',');
-      return varStrings.map(function(v) { return sheet.getRange(v); });
+      return varStrings;
     } else {
       return [];
     }
   },
 
-  setObjective: function(objectiveRange) {
-    var objString = objectiveRange.getA1Notation();
-    if (objString) {
-      OpenSolver.util.setSolverProperty('opt', objString);
+  setObjective: function(objectiveString) {
+    if (objectiveString) {
+      OpenSolver.util.setSolverProperty('opt', objectiveString);
     } else {
       OpenSolver.util.deleteSolverProperty('opt');
     }
@@ -65,9 +62,9 @@ OpenSolver.API = {
   getObjective: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
     try {
-      return sheet.getRange(properties['solver_opt']);
+      return properties['solver_opt'];
     } catch(e) {
-      return new OpenSolver.MockRange([[0]]);
+      return '';
     }
   },
 
@@ -146,5 +143,11 @@ OpenSolver.API = {
     var model = new OpenSolver.Model(sheet);
     model.load();
     return model;
-  }
+  },
+
+  // Converts a range parameter into the proper string for storage
+  getRangeNotation: function(sheet, range) {
+    // TODO add in sheet prefixing here
+    return range.getA1Notation();
+  },
 };

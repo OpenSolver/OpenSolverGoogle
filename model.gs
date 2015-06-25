@@ -103,7 +103,6 @@ OpenSolver.Model.prototype.deleteConstraint = function(index) {
 };
 
 OpenSolver.Model.prototype.load = function() {
-  Logger.log(this.objective)
   this.constraints = OpenSolver.API.getConstraints();
   this.variables = OpenSolver.API.getVariables(this.sheet);
   this.objective = OpenSolver.API.getObjective(this.sheet);
@@ -112,31 +111,23 @@ OpenSolver.Model.prototype.load = function() {
   this.assumeNonNeg = OpenSolver.API.getAssumeNonNegative();
   this.showStatus = OpenSolver.API.getShowStatus();
   this.checkLinear = OpenSolver.API.getCheckLinear();
-  Logger.log(this.objective)
 };
 
-OpenSolver.Model.prototype.updateObjective = function() {
-  try {
-    var objRange = this.sheet.getActiveRange();
-  } catch (e) {
-    OpenSolver.util.showMessage(e.message);
-    return;
-  }
-
+OpenSolver.Model.prototype.updateObjective = function(objRange) {
   // Make sure objective cell is a single cell
   if (objRange.getNumColumns() !== 1 || objRange.getNumRows() !== 1) {
     OpenSolver.util.showError(OpenSolver.error.OBJ_NOT_SINGLE_CELL);
     return;
   }
 
-  this.objective = objRange;
+  this.objective = OpenSolver.API.getRangeNotation(this.sheet, objRange);
   OpenSolver.API.setObjective(this.objective);
-  return this.objective.getA1Notation();
+  return objRange.getA1Notation();
 };
 
 OpenSolver.Model.prototype.deleteObjective = function() {
-  this.objective = new OpenSolver.MockRange([[0]]);
-  OpenSolver.API.setObjective(this.objective);
+  this.updateObjective(new OpenSolver.MockRange([[0]]));
+  return this.objective;
 };
 
 OpenSolver.Model.prototype.updateObjectiveSense = function(objSense) {
@@ -149,21 +140,16 @@ OpenSolver.Model.prototype.updateObjectiveTarget = function(objVal) {
   OpenSolver.API.setObjectiveTargetValue(this.objectiveVal);
 };
 
-OpenSolver.Model.prototype.addVariable = function() {
-  return this.updateVariable(-1);
+OpenSolver.Model.prototype.addVariable = function(varRange) {
+  return this.updateVariable(-1, varRange);
 };
 
-OpenSolver.Model.prototype.updateVariable = function(index) {
-  try {
-    var varRange = this.sheet.getActiveRange();
-  } catch (e) {
-    OpenSolver.util.showMessage(e.message);
-    return;
-  }
+OpenSolver.Model.prototype.updateVariable = function(index, varRange) {
+  var varString = OpenSolver.API.getRangeNotation(this.sheet, varRange);
   if (index >= 0) {
-    this.variables[index] = varRange;
+    this.variables[index] = varString;
   } else {
-    this.variables.push(varRange);
+    this.variables.push(varString);
   }
   OpenSolver.API.setVariables(this.variables);
   return varRange.getA1Notation();
@@ -198,8 +184,8 @@ OpenSolver.Model.prototype.getSidebarData = function() {
         value: constraint.displayValue()
       };
     }),
-    variables:      this.variables.map(function(varRange) { return varRange.getA1Notation(); }),
-    objective:      this.objective.getA1Notation(),
+    variables:      this.variables,
+    objective:      this.objective,
     objectiveVal:   this.objectiveVal,
     objectiveSense: this.objectiveSense,
     disableVal:     this.objectiveSense != OpenSolver.consts.objectiveSenseType.TARGET,
