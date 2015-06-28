@@ -31,10 +31,17 @@ function onInstall(e) {
  * Opens a sidebar in the document containing the add-on's user interface.
  */
 function showSidebar() {
-  var ui = HtmlService.createHtmlOutputFromFile('sidebarUi')
+  var ui = HtmlService.createTemplateFromFile('sidebarUi').evaluate()
       .setTitle('OpenSolver')
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
+}
+
+/**
+ * Used for include() in HTML file
+ */
+function include(filename) {
+  return HtmlService.createTemplateFromFile(filename).getRawContent();
 }
 
 function showProperties() {

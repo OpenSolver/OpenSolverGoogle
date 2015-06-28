@@ -1,0 +1,420 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<script>
+  // Script to run once loaded
+  $(function() {
+    $('#button-update-objective').click(updateObjective);
+    $('#button-clear-objective').click(deleteObjective);
+
+    $('input[type=radio][name=objective-sense]').change(updateObjectiveSense);
+    $('#text-objective-sense-target-value').change(updateObjectiveTarget);
+
+    $('#button-add-variable').click(addVariable);
+    $('#button-update-variable').click(updateVariable);
+    $('#button-delete-variable').click(deleteVariable);
+
+    $('#button-save-constraint').click(saveConstraint);
+    $('#button-delete-constraint').click(deleteConstraint);
+    $('#button-cancel-constraint').click(cancelConstraintChange);
+
+    $('#button-edit-constraint-lhs').click(editConstraintLHS);
+    $('#select-constraint-rel').change(changeConstraintREL);
+    $('#button-edit-constraint-rhs').click(editConstraintRHS);
+
+    $('#select-variable-cells').change(updateVariableButtons);
+
+    $('#select-constraint-cells').change(changeSelectedConstraint);
+
+    $('#checkbox-non-negative').change(updateAssumeNonNeg);
+
+    $('#button-solve').click(solveModel);
+    $('#button-reset').click(resetModel);
+    $('#checkbox-show-status').change(updateShowStatus);
+    $('#checkbox-check-linear').change(updateCheckLinear);
+
+    loadSidebarFromModel();
+  });
+
+  var curLHS;
+  var curREL;
+  var curRHS;
+
+  /**
+   * Inserts a div that contains an error message after a given element.
+   *
+   * @param msg The error message to display.
+   * @param element The element after which to display the error.
+   */
+  function showError(msg, element) {
+    var div = $('<div id="error" class="error">' + msg + '</div>');
+    $(element).after(div);
+  }
+
+  /**
+   * Runs a server-side function to save the selected range into the objective cell.
+   */
+  function updateObjective() {
+    showWait();
+    google.script.run
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              $('#text-objective-cell').val(range);
+            }
+            hideWait();
+          })
+        .updateObjective();
+  }
+
+  function deleteObjective() {
+    showWait();
+    google.script.run
+      .withSuccessHandler(
+        function(range, element) {
+          $('#text-objective-cell').val(range);
+          hideWait();
+        })
+      .deleteObjective();
+  }
+
+  function updateObjectiveSense() {
+    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+    enableObjectiveTarget();
+    google.script.run.updateObjectiveSense(objSense);
+  }
+
+  function enableObjectiveTarget() {
+    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+    $('#text-objective-sense-target-value').prop('disabled', objSense != 3);
+  }
+
+  function updateObjectiveTarget() {
+    var objVal = parseFloat($('#text-objective-sense-target-value').val(), 10);
+    google.script.run.updateObjectiveTarget(objVal);
+  }
+
+  function addVariable() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              var option = new Option(range, range);
+              $('#select-variable-cells').append($(option));
+            }
+            hideWait();
+          })
+        .addVariable();
+  }
+
+  function updateVariable() {
+    showWait();
+    var index = $('#select-variable-cells').prop('selectedIndex');
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            if (range) {
+              var option = $('#select-variable-cells option:selected');
+              option.text(range);
+              option.val(range);
+            }
+            hideWait();
+          })
+        .updateVariable(index);
+  }
+
+  function deleteVariable() {
+    showWait();
+    var index = getSelectedItemFromList($('#select-variable-cells'));
+    google.script.run
+      .withSuccessHandler(
+        function(index, element) {
+          // Delete the returned index
+          removeItemFromList($('#select-variable-cells'), index);
+          hideWait();
+        })
+      .deleteVariable(index);
+  }
+
+  function updateVariableButtons() {
+    var disable = $('#select-variable-cells option:selected').length === 0;
+    $('#button-update-variable, #button-delete-variable').prop('disabled', disable);
+  }
+
+  function updateAssumeNonNeg() {
+    var nonNeg = $('#checkbox-non-negative').prop('checked');
+    google.script.run.updateAssumeNonNeg(nonNeg);
+  }
+
+  function editConstraintLHS() {
+    editConstraint($('#text-constraint-lhs'));
+  }
+
+  function editConstraintRHS() {
+    editConstraint($('#text-constraint-rhs'));
+  }
+
+  function changeConstraintREL() {
+    enableUi();
+  }
+
+  function changeSelectedConstraint() {
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    if (selected == 0) {
+      curLHS = '';
+      curREL = 0;
+      curRHS = '';
+    } else {
+      var values = $('#select-constraint-cells option:selected').val().split(';');
+      curLHS = values[0];
+      curREL = parseInt(values[1]);
+      curRHS = values[2];
+    }
+    $('#text-constraint-lhs').val(curLHS);
+    $('#select-constraint-rel').val(curREL);
+    if (curREL >= 4) {
+      curRHS = '';
+    }
+    $('#text-constraint-rhs').val(curRHS);
+    changeConstraintREL();
+    enableUi();
+  }
+
+  function editConstraint(textElem) {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(range, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(range, element) {
+            textElem.val(range);
+            enableUi();
+            hideWait();
+          })
+        .getSelectedRangeNotation();
+  }
+
+  function saveConstraint() {
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    var lhs = $('#text-constraint-lhs').val();
+    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rhs = $('#text-constraint-rhs').val();
+
+    showWait();
+
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(data, element) {
+            if (data) {
+              if (data.index === 0) {
+                var option = new Option(data.text, data.value);
+                $('#select-constraint-cells').append($(option));
+              } else {
+                var option = $('#select-constraint-cells option:selected');
+                option.text(data.text);
+                option.val(data.value);
+              }
+              changeSelectedConstraint();
+            }
+            hideWait();
+          })
+        .saveConstraint(lhs, rhs, rel, selected);
+
+  }
+
+  function deleteConstraint() {
+    showWait();
+    var index = getSelectedItemFromList($('#select-constraint-cells'));
+    google.script.run
+      .withSuccessHandler(
+        function(index, element) {
+          // Delete the returned index
+          removeItemFromList($('#select-constraint-cells'), index);
+          changeSelectedConstraint();
+          hideWait();
+        })
+      .deleteConstraint(index);
+  }
+
+  function cancelConstraintChange() {
+    changeSelectedConstraint();
+  }
+
+  function getSelectedItemFromList(selectElem) {
+    return selectElem.prop('selectedIndex');
+  }
+
+  function removeItemFromList(selectElem, index) {
+    var length = selectElem.children('option').length;
+    if (index < 0 || index > length) {
+      return;
+    }
+
+    selectElem.children('option')[index].remove();
+    length -= 1;
+
+    if (length <= index) {
+      selectElem.prop('selectedIndex', length - 1);
+    } else {
+      selectElem.prop('selectedIndex', index);
+    }
+  }
+
+  function checkConstraintChanged() {
+    var lhs = $('#text-constraint-lhs').val();
+    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rhs = $('#text-constraint-rhs').val();
+    return !((lhs === curLHS) && (rel === curREL || 0 === curREL) && (rhs === curRHS));
+  }
+
+  function enableUi(disableAll) {
+    disableAll = disableAll ? true : false;
+    var changed = checkConstraintChanged();
+
+    $('#button-save-constraint, #button-cancel-constraint').prop('disabled', !changed || disableAll);
+
+    $('#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
+      '#select-variable-cells, #button-add-variable, #button-update-variable, #button-delete-variable, ' +
+      '#checkbox-non-negative, #select-constraint-cells, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
+        .prop('disabled', changed || disableAll);
+
+    var disableRHS = $('#select-constraint-rel').val() >= 4;
+    if (disableRHS || disableAll) {
+      $('#text-constraint-rhs').removeClass('text-range');
+    } else {
+      $('#text-constraint-rhs').addClass('text-range');
+    }
+    if (disableAll) {
+      $('#text-constraint-lhs').removeClass('text-range');
+    } else {
+      $('#text-constraint-lhs').addClass('text-range');
+    }
+
+    $('#button-edit-constraint-rhs').prop('disabled', disableRHS || disableAll);
+    $('#select-constraint-rel, #button-edit-constraint-lhs').prop('disabled', disableAll);
+
+
+    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    $('#button-delete-constraint').prop('disabled', (selected == 0) || disableAll);
+
+    if (changed || disableAll) {
+      $('#text-objective-cell').removeClass('text-range');
+    } else {
+      $('#text-objective-cell').addClass('text-range');
+      enableObjectiveTarget();
+      updateVariableButtons();
+    }
+
+  }
+
+  function loadSidebarFromModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(model, element) {
+            loadModel(model);
+            hideWait();
+          })
+        .getModelData();
+
+  }
+
+  function solveModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .solveModel();
+  }
+
+  function resetModel() {
+    showWait();
+    google.script.run
+        .withFailureHandler(
+          function(data, element) {
+            hideWait();
+          })
+        .withSuccessHandler(
+          function(model, element) {
+            if (model) {
+              loadModel(model);
+            }
+            hideWait();
+          })
+        .clearModel();
+  }
+
+  function updateShowStatus() {
+    var showStatus = $('#checkbox-show-status').prop('checked');
+    google.script.run.updateShowStatus(showStatus);
+  }
+
+  function updateCheckLinear() {
+    var checkLinear = $('#checkbox-check-linear').prop('checked');
+    google.script.run.updateCheckLinear(checkLinear);
+  }
+
+  function showWait() {
+    $('#main').addClass('wait');
+    enableUi(true);
+  }
+
+  function hideWait() {
+    $('#main').removeClass('wait');
+    enableUi();
+  }
+
+  function loadModel(model) {
+    console.log(JSON.stringify(model));
+    var selectConstraints = $('#select-constraint-cells');
+    var defaultOption = new Option('<Add new constraint>', 0);
+    selectConstraints.find('option').remove().end().append(defaultOption).prop('selectedIndex', 0);
+    for (var i = 0; i < model.constraints.length; i++) {
+      var option = new Option(model.constraints[i].text, model.constraints[i].value);
+      selectConstraints.append($(option));
+    }
+    changeSelectedConstraint();
+
+    var selectVariables = $('#select-variable-cells');
+    selectVariables.find('option').remove();
+    for (var i = 0; i < model.variables.length; i++) {
+      var option = new Option(model.variables[i], model.variables[i]);
+      selectVariables.append($(option));
+    }
+
+    $('#text-objective-cell').val(model.objective);
+    if (model.objectiveSense) {
+      $('input[type=radio][name=objective-sense]').val([model.objectiveSense]);
+    }
+    $('#text-objective-sense-target-value').val(model.objectiveVal);
+    $('#text-objective-sense-target-value').prop('disabled', model.disableVal);
+
+    $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
+    $('#checkbox-show-status').prop('checked', model.showStatus);
+    $('#checkbox-check-linear').prop('checked', model.checkLinear);
+  }
+</script>
