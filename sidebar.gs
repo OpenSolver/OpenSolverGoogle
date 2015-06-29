@@ -3,9 +3,33 @@ var OpenSolver = OpenSolver || {};
 var currentModel;
 var openSolver
 
-function getModelData() {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
-  return currentModel.getSidebarData();
+function getSidebarData(sheetId) {
+  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+
+  var currentSheet;
+  if (sheetId) {
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getSheetId() == sheetId) {
+        currentSheet = sheets[i];
+        break;
+      }
+    }
+  }
+  currentSheet = currentSheet || SpreadsheetApp.getActiveSheet();
+
+  var sheetData = sheets
+    .filter(function(sheet) { return !sheet.isSheetHidden(); })
+    .map(function(sheet) { return { name: sheet.getName(), id: sheet.getSheetId() }; });
+
+  currentModel = currentModel || OpenSolver.API.loadModelFromSheet(currentSheet);
+
+  var sheetIndex = sheetData.map(function(sheet) { return sheet.id; }).indexOf(currentSheet.getSheetId());
+
+  return {
+    model: currentModel.getSidebarData(),
+    sheets: sheetData,
+    sheetIndex: sheetIndex
+  };
 }
 
 function updateObjective() {

@@ -3,6 +3,9 @@
 <script>
   // Script to run once loaded
   $(function() {
+    $('#select-sheet').change(changeSheet);
+    $('#button-sheet-current').click(useCurrentSheet);
+
     $('#button-update-objective').click(updateObjective);
     $('#button-clear-objective').click(deleteObjective);
 
@@ -32,12 +35,13 @@
     $('#checkbox-show-status').change(updateShowStatus);
     $('#checkbox-check-linear').change(updateCheckLinear);
 
-    loadSidebarFromModel();
+    loadSidebar();
   });
 
   var curLHS;
   var curREL;
   var curRHS;
+  var curSheetId;
 
   /**
    * Inserts a div that contains an error message after a given element.
@@ -50,9 +54,33 @@
     $(element).after(div);
   }
 
-  /**
-   * Runs a server-side function to save the selected range into the objective cell.
-   */
+  function useCurrentSheet() {
+    curSheetId = null;
+    loadSidebar();
+  }
+
+  function populateSheetSelect(sheets) {
+    var sheetSelect = $('#select-sheet');
+    sheetSelect.find('option').remove();
+    for (var i = 0; i < sheets.length; i++) {
+      var option = new Option(sheets[i].name, sheets[i].id);
+      sheetSelect.append($(option));
+    }
+  }
+
+  function selectSheet(sheetIndex) {
+    $('#select-sheet').prop('selectedIndex', sheetIndex);
+    curSheetId = $('#select-sheet option:selected').val();
+  };
+
+  function changeSheet() {
+    var selectedSheetId = $('#select-sheet option:selected').val();
+    if (curSheetId !== selectedSheetId || overrideSelectedSheet === true) {
+      curSheetId = selectedSheetId;
+      loadSidebar();
+    }
+  };
+
   function updateObjective() {
     showWait();
     google.script.run
@@ -287,7 +315,8 @@
 
     $('#button-save-constraint, #button-cancel-constraint').prop('disabled', !changed || disableAll);
 
-    $('#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
+    $('#select-sheet, #button-sheet-current, ' +
+      '#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
       '#select-variable-cells, #button-add-variable, #button-update-variable, #button-delete-variable, ' +
       '#checkbox-non-negative, #select-constraint-cells, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
         .prop('disabled', changed || disableAll);
@@ -321,7 +350,7 @@
 
   }
 
-  function loadSidebarFromModel() {
+  function loadSidebar() {
     showWait();
     google.script.run
         .withFailureHandler(
@@ -329,11 +358,14 @@
             hideWait();
           })
         .withSuccessHandler(
-          function(model, element) {
-            loadModel(model);
+          function(data, element) {
+            console.log(JSON.stringify(data));
+            populateSheetSelect(data.sheets);
+            selectSheet(data.sheetIndex);
+            loadModel(data.model);
             hideWait();
           })
-        .getModelData();
+        .getSidebarData(curSheetId);
 
   }
 
@@ -389,7 +421,6 @@
   }
 
   function loadModel(model) {
-    console.log(JSON.stringify(model));
     var selectConstraints = $('#select-constraint-cells');
     var defaultOption = new Option('<Add new constraint>', 0);
     selectConstraints.find('option').remove().end().append(defaultOption).prop('selectedIndex', 0);

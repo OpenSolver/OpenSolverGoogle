@@ -1,8 +1,19 @@
+<!DOCTYPE html>
+
 <?!= include('sidebarCss'); ?>
 
 <div id="main" class="sidebar branding-below wait">
   <form>
     <div class="block col-contain">
+      <b>Sheet:</b>
+      <div class="clearfix width-100">
+        <select id="select-sheet">
+        </select>
+        <button id="button-sheet-current">Use Current Sheet</button>
+      </div>
+
+      <hr class="divider">
+
       <b>Objective Cell:</b>
       <div id="objective-cell">
         <input type="text" id="text-objective-cell" class="text-range" disabled>
