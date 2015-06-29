@@ -2,102 +2,105 @@
 var OpenSolver = OpenSolver || {};
 
 OpenSolver.API = {
-  setCheckLinear: function(checkLinear) {
-    OpenSolver.util.setOpenSolverProperty('checkLinear', checkLinear);
+  setCheckLinear: function(checkLinear, sheet) {
+    OpenSolver.util.setOpenSolverProperty(sheet, 'checkLinear', checkLinear);
   },
 
-  getCheckLinear: function() {
+  getCheckLinear: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    return properties['openSolver_checkLinear'] === 'true';
+    return properties[sheet.getSheetId() + '!openSolver_checkLinear'] === 'true';
   },
 
-  setShowStatus: function(showStatus) {
-    OpenSolver.util.setOpenSolverProperty('showStatus', showStatus);
+  setShowStatus: function(showStatus, sheet) {
+    OpenSolver.util.setOpenSolverProperty(sheet, 'showStatus', showStatus);
   },
 
-  getShowStatus: function() {
+  getShowStatus: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    return properties['openSolver_showStatus'] === 'true';
+    return properties[sheet.getSheetId() + '!openSolver_showStatus'] === 'true';
   },
 
-  setAssumeNonNegative: function(assumeNonNeg) {
-    OpenSolver.util.setSolverProperty('neg', OpenSolver.util.assumeNonNegFromBoolean(assumeNonNeg).toString());
+  setAssumeNonNegative: function(assumeNonNeg, sheet) {
+    OpenSolver.util.setSolverProperty(sheet, 'neg', OpenSolver.util.assumeNonNegFromBoolean(assumeNonNeg).toString());
   },
 
-  getAssumeNonNegative: function() {
+  getAssumeNonNegative: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    if (properties['solver_neg'] !== undefined) {
-      return OpenSolver.util.assumeNonNegToBoolean(properties['solver_neg']);
+    var nonNeg = properties[sheet.getSheetId() + '!solver_neg']
+    if (nonNeg !== undefined) {
+      return OpenSolver.util.assumeNonNegToBoolean(nonNeg);
     } else {
       return true;
     }
   },
 
-  setVariables: function(variables) {
+  setVariables: function(variables, sheet) {
     if (variables.length > 0) {
-      OpenSolver.util.setSolverProperty('adj', variables.join(','));
+      OpenSolver.util.setSolverProperty(sheet, 'adj', variables.join(','));
     } else {
-      OpenSolver.util.deleteSolverProperty('adj');
+      OpenSolver.util.deleteSolverProperty(sheet, 'adj');
     }
   },
 
   getVariables: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    if (properties['solver_adj'] !== undefined) {
-      var varStrings = properties['solver_adj'].split(',');
-      return varStrings;
+    var varString = properties[sheet.getSheetId() + '!solver_adj'];
+    if (varString !== undefined) {
+      return varString.split(',');
     } else {
       return [];
     }
   },
 
-  setObjective: function(objectiveString) {
+  setObjective: function(objectiveString, sheet) {
     if (objectiveString) {
-      OpenSolver.util.setSolverProperty('opt', objectiveString);
+      OpenSolver.util.setSolverProperty(sheet, 'opt', objectiveString);
     } else {
-      OpenSolver.util.deleteSolverProperty('opt');
+      OpenSolver.util.deleteSolverProperty(sheet, 'opt');
     }
   },
 
   getObjective: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
     try {
-      return properties['solver_opt'];
+      return properties[sheet.getSheetId() + '!solver_opt'];
     } catch(e) {
       return '';
     }
   },
 
-  setObjectiveTargetValue: function(objectiveTargetValue) {
-    OpenSolver.util.setSolverProperty('val', objectiveTargetValue);
+  setObjectiveTargetValue: function(objectiveTargetValue, sheet) {
+    OpenSolver.util.setSolverProperty(sheet, 'val', objectiveTargetValue);
   },
 
-  getObjectiveTargetValue: function() {
+  getObjectiveTargetValue: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    if (properties['solver_val'] !== undefined) {
-      return properties['solver_val'];
+    var targetVal = properties[sheet.getSheetId() + '!solver_val'];
+    if (targetVal !== undefined) {
+      return targetVal;
     } else {
       return 0.0;
     }
   },
 
-  setObjectiveSense: function(objectiveSense) {
-    OpenSolver.util.setSolverProperty('typ', objectiveSense.toString());
+  setObjectiveSense: function(objectiveSense, sheet) {
+    OpenSolver.util.setSolverProperty(sheet, 'typ', objectiveSense.toString());
   },
 
-  getObjectiveSense: function() {
+  getObjectiveSense: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    if (properties['solver_typ'] !== undefined) {
-      return properties['solver_typ'];
+    var objSense = properties[sheet.getSheetId() + '!solver_typ'];
+    if (objSense !== undefined) {
+      return objSense;
     } else {
-      var defaultSense = OpenSolver.consts.objectiveSenseType.MINIMIZE;
-      OpenSolver.API.setObjectiveSense(defaultSense);
+      var defaultSense = OpenSolver.consts.objectiveSenseType.MINIMISE;
+      OpenSolver.API.setObjectiveSense(defaultSense, sheet);
       return defaultSense;
     }
   },
 
-  setConstraints: function(constraints) {
-    var currentNum = parseInt(OpenSolver.util.getSolverProperty('num'), 10);
+  setConstraints: function(constraints, sheet) {
+    var currentNum = parseInt(OpenSolver.util.getSolverProperty(sheet, 'num'), 10);
 
     properties = {};
     for (var i = 0; i < constraints.length; i++) {
@@ -106,24 +109,24 @@ OpenSolver.API = {
       properties['rel'.concat(i)] = constraints[i].rel.toString();
     }
     properties['num'] = constraints.length.toString();
-    OpenSolver.util.setSolverProperties(properties);
+    OpenSolver.util.setSolverProperties(sheet, properties);
 
     // Clean up old constraint info
     for (var i = constraints.length; i < currentNum; i++) {
-      OpenSolver.util.deleteSolverProperty('lhs'.concat(i));
-      OpenSolver.util.deleteSolverProperty('rhs'.concat(i));
-      OpenSolver.util.deleteSolverProperty('rel'.concat(i));
+      OpenSolver.util.deleteSolverProperty(sheet, 'lhs'.concat(i));
+      OpenSolver.util.deleteSolverProperty(sheet, 'rhs'.concat(i));
+      OpenSolver.util.deleteSolverProperty(sheet, 'rel'.concat(i));
     }
   },
 
-  getConstraints: function() {
+  getConstraints: function(sheet) {
     var constraints = [];
     var properties = OpenSolver.util.getAllProperties();
-    if (properties['solver_num']) {
-      for (var i = 0; i < properties['solver_num']; i++) {
-        var lhs = properties['solver_lhs'.concat(i)];
-        var rhs = properties['solver_rhs'.concat(i)];
-        var rel = parseInt(properties['solver_rel'.concat(i)]);
+    if (properties[sheet.getSheetId() + '!solver_num']) {
+      for (var i = 0; i < properties[sheet.getSheetId() + '!solver_num']; i++) {
+        var lhs = properties[sheet.getSheetId() + '!solver_lhs'.concat(i)];
+        var rhs = properties[sheet.getSheetId() + '!solver_rhs'.concat(i)];
+        var rel = parseInt(properties[sheet.getSheetId() + '!solver_rel'.concat(i)]);
         constraints.push(new OpenSolver.Constraint(lhs, rhs, rel));
       }
     }

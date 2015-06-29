@@ -80,30 +80,30 @@ OpenSolver.util = {
     }
   },
 
-  setSolverProperty: function(key, value) {
+  setSolverProperty: function(sheet, key, value) {
     props = props || PropertiesService.getDocumentProperties();
-    props.setProperty('solver_'.concat(key), value);
+    props.setProperty(sheet.getSheetId() + '!solver_'.concat(key), value);
   },
 
-  setOpenSolverProperty: function(key, value) {
+  setOpenSolverProperty: function(sheet, key, value) {
     props = props || PropertiesService.getDocumentProperties();
-    props.setProperty('openSolver_'.concat(key), value);
+    props.setProperty(sheet.getSheetId() + '!openSolver_'.concat(key), value);
   },
 
-  setSolverProperties: function(properties) {
+  setSolverProperties: function(sheet, properties) {
     props = props || PropertiesService.getDocumentProperties();
     var solverProps = {};
     for (var key in properties) {
       if (properties.hasOwnProperty(key)) {
-        solverProps['solver_'.concat(key)] = properties[key];
+        solverProps[sheet.getSheetId() + '!solver_'.concat(key)] = properties[key];
       }
     }
     props.setProperties(solverProps);
   },
 
-  getSolverProperty: function(key) {
+  getSolverProperty: function(sheet, key) {
     props = props || PropertiesService.getDocumentProperties();
-    return props.getProperty('solver_'.concat(key));
+    return props.getProperty(sheet.getSheetId() + '!solver_'.concat(key));
   },
 
   getAllProperties: function() {
@@ -116,9 +116,9 @@ OpenSolver.util = {
     props.deleteAllProperties();
   },
 
-  deleteSolverProperty: function(key) {
+  deleteSolverProperty: function(sheet, key) {
     props = props || PropertiesService.getDocumentProperties();
-    props.deleteProperty('solver_'.concat(key))
+    props.deleteProperty(sheet.getSheetId() + '!solver_'.concat(key))
   },
 
   showMessage: function(message, title) {

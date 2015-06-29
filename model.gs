@@ -88,7 +88,7 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
   } else {
     this.constraints[index - 1] = constraint;
   }
-  OpenSolver.API.setConstraints(this.constraints);
+  OpenSolver.API.setConstraints(this.constraints, this.sheet);
 
   return {
     text: constraint.displayText(),
@@ -99,18 +99,18 @@ OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
 
 OpenSolver.Model.prototype.deleteConstraint = function(index) {
   this.constraints.splice(index, 1);
-  OpenSolver.API.setConstraints(this.constraints);
+  OpenSolver.API.setConstraints(this.constraints, this.sheet);
 };
 
 OpenSolver.Model.prototype.load = function() {
-  this.constraints = OpenSolver.API.getConstraints();
+  this.constraints = OpenSolver.API.getConstraints(this.sheet);
   this.variables = OpenSolver.API.getVariables(this.sheet);
   this.objective = OpenSolver.API.getObjective(this.sheet);
-  this.objectiveSense = OpenSolver.API.getObjectiveSense();
-  this.objectiveVal = OpenSolver.API.getObjectiveTargetValue();
-  this.assumeNonNeg = OpenSolver.API.getAssumeNonNegative();
-  this.showStatus = OpenSolver.API.getShowStatus();
-  this.checkLinear = OpenSolver.API.getCheckLinear();
+  this.objectiveSense = OpenSolver.API.getObjectiveSense(this.sheet);
+  this.objectiveVal = OpenSolver.API.getObjectiveTargetValue(this.sheet);
+  this.assumeNonNeg = OpenSolver.API.getAssumeNonNegative(this.sheet);
+  this.showStatus = OpenSolver.API.getShowStatus(this.sheet);
+  this.checkLinear = OpenSolver.API.getCheckLinear(this.sheet);
 };
 
 OpenSolver.Model.prototype.updateObjective = function(objRange) {
@@ -121,7 +121,7 @@ OpenSolver.Model.prototype.updateObjective = function(objRange) {
   }
 
   this.objective = OpenSolver.API.getRangeNotation(this.sheet, objRange);
-  OpenSolver.API.setObjective(this.objective);
+  OpenSolver.API.setObjective(this.objective, this.sheet);
   return objRange.getA1Notation();
 };
 
@@ -132,12 +132,12 @@ OpenSolver.Model.prototype.deleteObjective = function() {
 
 OpenSolver.Model.prototype.updateObjectiveSense = function(objSense) {
   this.objectiveSense = objSense;
-  OpenSolver.API.setObjectiveSense(this.objectiveSense);
+  OpenSolver.API.setObjectiveSense(this.objectiveSense, this.sheet);
 };
 
 OpenSolver.Model.prototype.updateObjectiveTarget = function(objVal) {
   this.objectiveVal = objVal;
-  OpenSolver.API.setObjectiveTargetValue(this.objectiveVal);
+  OpenSolver.API.setObjectiveTargetValue(this.objectiveVal, this.sheet);
 };
 
 OpenSolver.Model.prototype.addVariable = function(varRange) {
@@ -151,28 +151,28 @@ OpenSolver.Model.prototype.updateVariable = function(index, varRange) {
   } else {
     this.variables.push(varString);
   }
-  OpenSolver.API.setVariables(this.variables);
+  OpenSolver.API.setVariables(this.variables, this.sheet);
   return varRange.getA1Notation();
 };
 
 OpenSolver.Model.prototype.deleteVariable = function(index) {
   this.variables.splice(index, 1);
-  OpenSolver.API.setVariables(this.variables);
+  OpenSolver.API.setVariables(this.variables, this.sheet);
 };
 
 OpenSolver.Model.prototype.updateAssumeNonNeg = function(nonNeg) {
   this.assumeNonNeg = nonNeg;
-  OpenSolver.API.setAssumeNonNegative(this.assumeNonNeg);
+  OpenSolver.API.setAssumeNonNegative(this.assumeNonNeg, this.sheet);
 };
 
 OpenSolver.Model.prototype.updateShowStatus = function(showStatus) {
   this.showStatus = showStatus;
-  OpenSolver.API.setShowStatus(this.showStatus);
+  OpenSolver.API.setShowStatus(this.showStatus, this.sheet);
 };
 
 OpenSolver.Model.prototype.updateCheckLinear = function(checkLinear) {
   this.checkLinear = checkLinear;
-  OpenSolver.API.setCheckLinear(this.checkLinear);
+  OpenSolver.API.setCheckLinear(this.checkLinear, this.sheet);
 };
 
 OpenSolver.Model.prototype.getSidebarData = function() {
@@ -196,13 +196,13 @@ OpenSolver.Model.prototype.getSidebarData = function() {
 };
 
 OpenSolver.Model.prototype.save = function() {
-  OpenSolver.API.setConstraints(this.constraints);
-  OpenSolver.API.setVariables(this.variables);
-  OpenSolver.API.setObjective(this.objective);
-  OpenSolver.API.setObjectiveSense(this.objectiveSense);
-  OpenSolver.API.setObjectiveTargetValue(this.objectiveTarget);
-  OpenSolver.API.setAssumeNonNegative(this.assumeNonNeg);
-  OpenSolver.API.setShowStatus(this.showStatus);
-  OpenSolver.API.setCheckLinear(this.checkLinear);
+  OpenSolver.API.setConstraints(this.constraints, this.sheet);
+  OpenSolver.API.setVariables(this.variables, this.sheet);
+  OpenSolver.API.setObjective(this.objective, this.sheet);
+  OpenSolver.API.setObjectiveSense(this.objectiveSense, this.sheet);
+  OpenSolver.API.setObjectiveTargetValue(this.objectiveTarget, this.sheet);
+  OpenSolver.API.setAssumeNonNegative(this.assumeNonNeg, this.sheet);
+  OpenSolver.API.setShowStatus(this.showStatus, this.sheet);
+  OpenSolver.API.setCheckLinear(this.checkLinear, this.sheet);
 };
 
