@@ -1,6 +1,10 @@
 // Global namespace for OpenSolver
 var OpenSolver = OpenSolver || {};
 
+var CURRENT_VERSION = 10;
+var VERSION_KEY = 'OpenSolver_CurrentVersion';
+
+
 /**
  * Creates a menu entry in the Google Sheets UI when the document is opened.
  *
@@ -35,6 +39,7 @@ function showSidebar() {
       .setTitle('OpenSolver')
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
+  showChangelog();
 }
 
 /**
@@ -50,4 +55,26 @@ function showProperties() {
 
 function clearProperties() {
   OpenSolver.util.clearAllProperties();
+}
+
+function showChangelog() {
+  var props = PropertiesService.getDocumentProperties();
+  var previousVersion = props.getProperty(VERSION_KEY);
+
+  var versionIsCurrent = parseInt(previousVersion, 10) >= CURRENT_VERSION;
+  if (!versionIsCurrent) {
+      var changelogUi = HtmlService.createTemplateFromFile('changelog')
+        .evaluate()
+        .setHeight(200)
+        .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+      SpreadsheetApp.getUi()
+        .showModalDialog(changelogUi, 'OpenSolver has been updated!');
+
+    // Save current version to know we have shown this changelog
+    props.setProperty(VERSION_KEY, CURRENT_VERSION);
+  }
+}
+
+function detetePreviousVersion() {
+  PropertiesService.getDocumentProperties().deleteProperty(VERSION_KEY);
 }
