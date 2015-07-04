@@ -1,7 +1,7 @@
 // Global namespace for OpenSolver
 var OpenSolver = OpenSolver || {};
 var currentModel;
-var openSolver
+var openSolver;
 
 function getSidebarData(sheetId) {
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();

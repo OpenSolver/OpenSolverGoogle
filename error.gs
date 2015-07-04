@@ -27,7 +27,7 @@ OpenSolver.error = {
       message: 'The constraint ' + constraintSummary + ' has a different cell ' +
                'count on the left and the right. The model cannot be built. ' +
                'Please fix this and try again.'
-    }
+    };
   },
 
   CONSTRAINT_CELL_IS_ERROR: function(constraintSummary, cellName) {
@@ -36,7 +36,7 @@ OpenSolver.error = {
       message: 'The cell ' + cellName + ' in constraint ' + constraintSummary +
                ' contains an error (eg #DIV/0! or #VALUE!). Please fix this ' +
                'and try again.'
-    }
+    };
   },
 
   CONSTRAINT_CELL_NOT_NUMERIC: function(constraintSummary, cellName) {
@@ -44,7 +44,7 @@ OpenSolver.error = {
       title: 'OpenSolver Build Error',
       message: 'The cell ' + cellName + ' in constraint ' + constraintSummary +
                ' has a value which is not numeric. Please fix this and try again.'
-    }
+    };
   },
 
   MODEL_NOT_BUILT: {
@@ -81,7 +81,7 @@ OpenSolver.error = {
       message: 'A model was found but the decision variable cells (' + errorRange +
                ') could not be interpreted. Please redefine the decision variable ' +
                'cells, and try again.'
-    }
+    };
 
   },
 
@@ -91,7 +91,7 @@ OpenSolver.error = {
       message: 'A model was found but the objective cell (' + errorRange +
                ') could not be interpreted. Please redefine the objective ' +
                'cell, and try again.'
-    }
+    };
 
   },
 
@@ -101,7 +101,7 @@ OpenSolver.error = {
       message: 'A model was found but the constraint range ' + errorRange +
                ' could not be interpreted. Please redefine the constraint ' +
                'cells, and try again.'
-    }
+    };
 
   },
 
@@ -110,7 +110,7 @@ OpenSolver.error = {
       title: 'OpenSolver Model Error',
       message: 'The cell ' + cellName + ' in constraint "' + constraintSummary +
                '" is not a decision variable. Please fix this and try again.'
-    }
+    };
   }
 
-}
+};

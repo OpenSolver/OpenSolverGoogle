@@ -26,7 +26,7 @@ OpenSolver.API = {
 
   getAssumeNonNegative: function(sheet) {
     var properties = OpenSolver.util.getAllProperties();
-    var nonNeg = properties[sheet.getSheetId() + '!solver_neg']
+    var nonNeg = properties[sheet.getSheetId() + '!solver_neg'];
     if (nonNeg !== undefined) {
       return OpenSolver.util.assumeNonNegToBoolean(nonNeg);
     } else {

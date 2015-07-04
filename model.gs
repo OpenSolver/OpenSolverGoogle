@@ -17,8 +17,9 @@ OpenSolver.Model = function(sheet) {
 };
 
 OpenSolver.Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
+  var lhsRange;
   try {
-    var lhsRange = this.sheet.getRange(lhs);
+    lhsRange = this.sheet.getRange(lhs);
   } catch (e) {
     OpenSolver.util.showMessage(e.message);
     return;
@@ -176,7 +177,6 @@ OpenSolver.Model.prototype.updateCheckLinear = function(checkLinear) {
 };
 
 OpenSolver.Model.prototype.getSidebarData = function() {
-  Logger.log(this.objective)
   return {
     constraints: this.constraints.map(function(constraint) {
       return {

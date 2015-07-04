@@ -253,7 +253,7 @@ OpenSolver.util = {
                              var cellName = range.getCell(i + 1, j + 1).getA1Notation();
                              return errorNotNumeric(cellName);
                            }
-        )
+        );
       }
     }
     return values;

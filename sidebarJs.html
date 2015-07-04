@@ -71,7 +71,7 @@
   function selectSheet(sheetIndex) {
     $('#select-sheet').prop('selectedIndex', sheetIndex);
     curSheetId = $('#select-sheet option:selected').val();
-  };
+  }
 
   function changeSheet() {
     var selectedSheetId = $('#select-sheet option:selected').val();
@@ -79,7 +79,7 @@
       curSheetId = selectedSheetId;
       loadSidebar();
     }
-  };
+  }
 
   function updateObjective() {
     showWait();
@@ -196,7 +196,7 @@
 
   function changeSelectedConstraint() {
     var selected = $('#select-constraint-cells').prop('selectedIndex');
-    if (selected == 0) {
+    if (selected === 0) {
       curLHS = '';
       curREL = 0;
       curRHS = '';
@@ -338,7 +338,7 @@
 
 
     var selected = $('#select-constraint-cells').prop('selectedIndex');
-    $('#button-delete-constraint').prop('disabled', (selected == 0) || disableAll);
+    $('#button-delete-constraint').prop('disabled', (selected === 0) || disableAll);
 
     if (changed || disableAll) {
       $('#text-objective-cell').removeClass('text-range');

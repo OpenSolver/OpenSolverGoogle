@@ -78,7 +78,7 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
       if (openSolver.lowerBoundedVariables[i] !== true && openSolver.assumeNonNegativeVars) {
         tempLowerBound = 0;
       }
-      Logger.log(openSolver.lowerBoundedVariables[i] !== true)
+      Logger.log(openSolver.lowerBoundedVariables[i] !== true);
       Logger.log('adding var ' + i + ' with lower bound ' + tempLowerBound);
 
       if (openSolver.varTypes[i] === OpenSolver.consts.variableType.INTEGER) {
@@ -117,9 +117,9 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
       } else if (openSolver.relation[row] == OpenSolver.consts.relation.LE) {
         lowerBound = -Infinity;
       }
-      Logger.log(openSolver.rhs)
-      Logger.log(lowerBound)
-      Logger.log(upperBound)
+      Logger.log(openSolver.rhs);
+      Logger.log(lowerBound);
+      Logger.log(upperBound);
       var constraint = this.engine.addConstraint(lowerBound, upperBound);
       for (var i = 0; i < currConstraint.count(); i++) {
         var index = currConstraint.index(i);
@@ -131,7 +131,7 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
 
   // Add constraint forcing objective == target if we are seeking a value
   if (openSolver.objectiveSense == OpenSolver.consts.objectiveSenseType.TARGET) {
-    Logger.log(openSolver.objectiveTarget)
+    Logger.log(openSolver.objectiveTarget);
     var constraint = this.engine.addConstraint(openSolver.objectiveTarget, openSolver.objectiveTarget);
     for (var i = 0; i < openSolver.numVars; i++) {
       constraint.setCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);

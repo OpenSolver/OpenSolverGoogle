@@ -64,8 +64,8 @@ QUnit.test('createArray', 4, function(assert) {
 });
 
 QUnit.test('checkValueIsNumeric', 3 + errorValues.length, function(assert) {
-  var errorNotNumeric = function() { return 'numeric' };
-  var errorInvalid = function() { return 'invalid' };
+  var errorNotNumeric = function() { return 'numeric'; };
+  var errorInvalid = function() { return 'invalid'; };
 
   assert.equal(OpenSolver.util.checkValueIsNumeric(10, errorInvalid, errorNotNumeric),
                10,
@@ -79,19 +79,22 @@ QUnit.test('checkValueIsNumeric', 3 + errorValues.length, function(assert) {
                 /numeric/,
                 'Non-numeric cell throws error');
 
+  var checkValue = function(errorValue) {
+    return function() {
+      OpenSolver.util.checkValueIsNumeric(errorValue, errorInvalid, errorNotNumeric);
+    };
+  };
   for (var i = 0; i < errorValues.length; i++) {
     var errorValue = errorValues[i];
-    assert.throws(function () {
-                    OpenSolver.util.checkValueIsNumeric(errorValue, errorInvalid, errorNotNumeric);
-                  },
+    assert.throws(checkValue(errorValue),
                   /invalid/,
                   'Error cell (' + errorValue + ') throws error');
   }
 });
 
 QUnit.test('checkRangeValuesNumeric', 4, function(assert) {
-  var errorNotNumeric = function(cellName) { return 'numeric' };
-  var errorInvalid = function(cellName) { return 'invalid' };
+  var errorNotNumeric = function(cellName) { return 'numeric'; };
+  var errorInvalid = function(cellName) { return 'invalid'; };
 
   var values1 = [[1, 2, 3], [4, 5, 6]];
   var range1 = new OpenSolver.MockRange(values1);
