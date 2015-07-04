@@ -1,7 +1,4 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
-
-function solverGoogleTest() {
+function testSolverGoogle() {
 
 QUnit.module('solverGoogle');
 
@@ -35,28 +32,22 @@ var loadSolutions = [
   false
 ];
 
-OpenSolver.MockLinearOptimizationSolution = function(status) {
-  this.status = status;
-};
-
-OpenSolver.MockLinearOptimizationSolution.prototype.getStatus = function() { return this.status; };
-OpenSolver.MockLinearOptimizationSolution.prototype.isValid = function() {
-  return this.status === LinearOptimizationService.Status.FEASIBLE ||
-         this.status === LinearOptimizationService.Status.OPTIMAL;
-};
-
 QUnit.test('getStatus', googleStatuses.length * 2, function(assert) {
   for (var i = 0; i < googleStatuses.length; i++) {
-    var solver = new OpenSolver.SolverGoogle();
-    solver.solution = new OpenSolver.MockLinearOptimizationSolution(LinearOptimizationService.Status[googleStatuses[i]]);
+    var googleStatus = googleStatuses[i];
+    var status = openSolverStatuses[i];
+    var loadSol = loadSolutions[i];
+
+    var solver = new SolverGoogle();
+    solver.solution = new MockLinearOptimizationSolution(googleStatus);
     var result = solver.getStatus();
 
     assert.equal(result.solveStatus,
-                 OpenSolver.consts.openSolverResult[openSolverStatuses[i]],
-                 'solveStatus: ' + googleStatuses[i] + rightArrow + openSolverStatuses[i]);
+                 OpenSolverResult[status],
+                 'solveStatus: ' + googleStatus + rightArrow + status);
     assert.equal(result.loadSolution,
-                 loadSolutions[i],
-                 'loadSolution: ' + googleStatuses[i] + rightArrow + loadSolutions[i]);
+                 loadSol,
+                 'loadSolution: ' + googleStatus + rightArrow + loadSol);
   }
 });
 

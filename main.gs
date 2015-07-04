@@ -1,6 +1,3 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
-
 var CURRENT_VERSION = 10;
 var VERSION_KEY = 'OpenSolver_CurrentVersion';
 
@@ -50,11 +47,11 @@ function include(filename) {
 }
 
 function showProperties() {
-  OpenSolver.util.showMessage(JSON.stringify(OpenSolver.util.getAllProperties(), null, 4));
+  showMessage(JSON.stringify(getAllProperties(), null, 4));
 }
 
 function clearProperties() {
-  OpenSolver.util.clearAllProperties();
+  clearAllProperties();
 }
 
 function showChangelog() {

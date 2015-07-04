@@ -1,5 +1,3 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
 var currentModel;
 var openSolver;
 
@@ -21,7 +19,7 @@ function getSidebarData(sheetId) {
     .filter(function(sheet) { return !sheet.isSheetHidden(); })
     .map(function(sheet) { return { name: sheet.getName(), id: sheet.getSheetId() }; });
 
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet(currentSheet);
+  currentModel = currentModel || loadModelFromSheet(currentSheet);
 
   var sheetIndex = sheetData.map(function(sheet) { return sheet.id; }).indexOf(currentSheet.getSheetId());
 
@@ -33,7 +31,7 @@ function getSidebarData(sheetId) {
 }
 
 function updateObjective() {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   var objRange = getSelectedRange();
   if (objRange) {
     return currentModel.updateObjective(objRange);
@@ -43,24 +41,24 @@ function updateObjective() {
 }
 
 function deleteObjective() {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   // Delete the objective and return the new text for the obj cell,
   // which should be '' if deleted successfully.
   return currentModel.deleteObjective();
 }
 
 function updateObjectiveSense(objSense) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.updateObjectiveSense(objSense);
 }
 
 function updateObjectiveTarget(objVal) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   return currentModel.updateObjectiveTarget(objVal);
 }
 
 function addVariable() {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   var varRange = getSelectedRange();
   if (varRange) {
     return currentModel.addVariable(varRange);
@@ -70,7 +68,7 @@ function addVariable() {
 }
 
 function updateVariable(index) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   var varRange = getSelectedRange();
   if (varRange) {
     return currentModel.updateVariable(index, varRange);
@@ -80,34 +78,34 @@ function updateVariable(index) {
 }
 
 function deleteVariable(index) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.deleteVariable(index);
   return index;  // Return the index to delete. Set to -1 to abort.
 }
 
 function saveConstraint(LHSstring, RHSstring, RELstring, index) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index);
 }
 
 function deleteConstraint(index) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.deleteConstraint(index);
   return index;  // Return the index to delete. Set to -1 to abort.
 }
 
 function updateAssumeNonNeg(nonNeg) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.updateAssumeNonNeg(nonNeg);
 }
 
 function updateShowStatus(showStatus) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.updateShowStatus(showStatus);
 }
 
 function updateCheckLinear(checkLinear) {
-  currentModel = currentModel || OpenSolver.API.loadModelFromSheet();
+  currentModel = currentModel || loadModelFromSheet();
   currentModel.updateCheckLinear(checkLinear);
 }
 
@@ -115,7 +113,7 @@ function getSelectedRange() {
   try {
     return SpreadsheetApp.getActiveRange();
   } catch (e) {
-    OpenSolver.util.showMessage(e.message);
+    showMessage(e.message);
     return;
   }
 }
@@ -125,7 +123,7 @@ function getSelectedRangeNotation() {
 }
 
 function solveModel() {
-  openSolver = new OpenSolver.OpenSolver();
+  openSolver = new OpenSolver();
   return openSolver.solveModel();
 }
 
@@ -133,6 +131,7 @@ function clearModel() {
   // This alert doesn't seem to be blocking: the client side executes the success
   // handler before the response is provided. This means we can't update the
   // sidebar correctly if the model is deleted, so we can't show a confirmation prompt.
+  // TODO: try this https://github.com/googlesamples/apps-script-dialog2sidebar
 
 //  var ui = SpreadsheetApp.getUi();
 //  var result = ui.alert(
@@ -141,10 +140,10 @@ function clearModel() {
 //      ui.ButtonSet.OK_CANCEL
 //  );
 //  if (result == ui.Button.OK)
-//    return OpenSolver.clearModel();
+//    return clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
 //  else {
 //    return null;
 //  };
 
-  return OpenSolver.API.clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
+  return clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
 }

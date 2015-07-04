@@ -1,9 +1,21 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
+Solver = function() {};
 
-OpenSolver.Solver = function() {};
+Solver.prototype.getStatus = function() {
+  return {
+    solveStatus: OpenSolverResult.NOT_SOLVED,
+    solveStatusString: 'The model has not yet been solved.',
+    loadSolution: false
+  };
+};
 
-OpenSolver.Solver.prototype.getStatus = function() {};
-OpenSolver.Solver.prototype.getObjectiveValue = function() {};
-OpenSolver.Solver.prototype.getVariableValue = function(varKey) {};
-OpenSolver.Solver.prototype.solve = function(openSolver) {};
+Solver.prototype.getObjectiveValue = function() {
+  return NaN;
+};
+
+Solver.prototype.getVariableValue = function(varKey) {
+  return NaN;
+};
+
+Solver.prototype.solve = function(openSolver) {
+  return this.getStatus;
+};

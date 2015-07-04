@@ -1,51 +1,43 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
-
-OpenSolver.SolverGoogle = function() {
-  OpenSolver.Solver.call(this);
-  this.solution = null;
+SolverGoogle = function() {
+  Solver.call(this);
+  this.solution = new MockLinearOptimizationSolution('NOT_SOLVED');
 };
 
-OpenSolver.SolverGoogle.prototype = Object.create(OpenSolver.Solver.prototype);
-OpenSolver.SolverGoogle.prototype.constructor = OpenSolver.SolverGoogle;
+SolverGoogle.prototype = Object.create(Solver.prototype);
+SolverGoogle.prototype.constructor = SolverGoogle;
 
-OpenSolver.SolverGoogle.prototype.getStatus = function() {
+SolverGoogle.prototype.getStatus = function() {
   var result;
   var solveString;
-  if (this.solution == null) {
-    result = OpenSolver.consts.openSolverResult.UNSOLVED;
-    solveString = 'The model has not yet been solved.';
-  } else {
-    switch (this.solution.getStatus()) {
-      case LinearOptimizationService.Status.ABNORMAL:
-        result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
-        solveString = 'The solver failed to find a solution for unknown reasons.';
-        break;
-      case LinearOptimizationService.Status.FEASIBLE:
-        result = OpenSolver.consts.openSolverResult.TIME_LIMITED_SUB_OPTIMAL;
-        solveString = 'An optimal solution was not found. A feasible solution was loaded instead.';
-        break;
-      case LinearOptimizationService.Status.INFEASIBLE:
-        result = OpenSolver.consts.openSolverResult.INFEASIBLE;
-        solveString = 'No feasible solution was found.';
-        break;
-      case LinearOptimizationService.Status.MODEL_INVALID:
-        result = OpenSolver.consts.openSolverResult.ERROR_OCCURRED;
-        solveString = 'The solver failed to find a solution because the model was invalid.';
-        break;
-      case LinearOptimizationService.Status.NOT_SOLVED:
-        result = OpenSolver.consts.openSolverResult.UNSOLVED;
-        solveString = 'The model has not yet been solved.';
-        break;
-      case LinearOptimizationService.Status.OPTIMAL:
-        result = OpenSolver.consts.openSolverResult.OPTIMAL;
-        solveString = 'Optimal';
-        break;
-      case LinearOptimizationService.Status.UNBOUNDED:
-        result = OpenSolver.consts.openSolverResult.UNBOUNDED;
-        solveString = 'No solution found (Unbounded)';
-        break;
-    }
+  switch (this.solution.getStatus()) {
+    case LinearOptimizationService.Status.ABNORMAL:
+      result = OpenSolverResult.ERROR_OCCURRED;
+      solveString = 'The solver failed to find a solution for unknown reasons.';
+      break;
+    case LinearOptimizationService.Status.FEASIBLE:
+      result = OpenSolverResult.TIME_LIMITED_SUB_OPTIMAL;
+      solveString = 'An optimal solution was not found. A feasible solution was loaded instead.';
+      break;
+    case LinearOptimizationService.Status.INFEASIBLE:
+      result = OpenSolverResult.INFEASIBLE;
+      solveString = 'No feasible solution was found.';
+      break;
+    case LinearOptimizationService.Status.MODEL_INVALID:
+      result = OpenSolverResult.ERROR_OCCURRED;
+      solveString = 'The solver failed to find a solution because the model was invalid.';
+      break;
+    case LinearOptimizationService.Status.NOT_SOLVED:
+      result = OpenSolverResult.UNSOLVED;
+      solveString = 'The model has not yet been solved.';
+      break;
+    case LinearOptimizationService.Status.OPTIMAL:
+      result = OpenSolverResult.OPTIMAL;
+      solveString = 'Optimal';
+      break;
+    case LinearOptimizationService.Status.UNBOUNDED:
+      result = OpenSolverResult.UNBOUNDED;
+      solveString = 'No solution found (Unbounded)';
+      break;
   }
 
   return {
@@ -55,22 +47,22 @@ OpenSolver.SolverGoogle.prototype.getStatus = function() {
   };
 };
 
-OpenSolver.SolverGoogle.prototype.getObjectiveValue = function() {
+SolverGoogle.prototype.getObjectiveValue = function() {
   return this.solution ? this.solution.getObjectiveValue() : null;
 };
 
-OpenSolver.SolverGoogle.prototype.getVariableValue = function(varKey) {
+SolverGoogle.prototype.getVariableValue = function(varKey) {
   return this.solution ? this.solution.getVariableValue(varKey) : null;
 };
 
-OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
+SolverGoogle.prototype.solve = function(openSolver) {
   this.engine = LinearOptimizationService.createEngine();
 
   var lowerBound = -Infinity;
   var upperBound = Infinity;
 
   for (var i = 0; i < openSolver.numVars; i++) {
-    if (openSolver.varTypes[i] === OpenSolver.consts.variableType.BINARY) {
+    if (openSolver.varTypes[i] === VariableType.BINARY) {
       this.engine.addVariable(openSolver.varKeys[i], 0, 1, LinearOptimizationService.VariableType.INTEGER);
     } else {
       // Check if explicit lower bound is present
@@ -81,21 +73,21 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
       Logger.log(openSolver.lowerBoundedVariables[i] !== true);
       Logger.log('adding var ' + i + ' with lower bound ' + tempLowerBound);
 
-      if (openSolver.varTypes[i] === OpenSolver.consts.variableType.INTEGER) {
+      if (openSolver.varTypes[i] === VariableType.INTEGER) {
         Logger.log(openSolver.varKeys[i] + ' ' + tempLowerBound + ' ' + upperBound);
         this.engine.addVariable(openSolver.varKeys[i], tempLowerBound, upperBound, LinearOptimizationService.VariableType.INTEGER);
-      } else { // OpenSolver.consts.variableType.CONTINUOUS:
+      } else { // VariableType.CONTINUOUS:
         this.engine.addVariable(openSolver.varKeys[i], tempLowerBound, upperBound);
       }
     }
 
     // Add in objective coefficients unless we are seeking a target value
-    if (!(openSolver.objectiveSense == OpenSolver.consts.objectiveSenseType.TARGET)) {
+    if (!(openSolver.objectiveSense == ObjectiveSenseType.TARGET)) {
       this.engine.setObjectiveCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
     }
   }
 
-  if (openSolver.objectiveSense == OpenSolver.consts.objectiveSenseType.MAXIMISE) {
+  if (openSolver.objectiveSense == ObjectiveSenseType.MAXIMISE) {
     this.engine.setMaximization();
   } else {
     this.engine.setMinimization();
@@ -112,9 +104,9 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
     } else {
       var lowerBound = openSolver.rhs[row];
       var upperBound = openSolver.rhs[row];
-      if (openSolver.relation[row] == OpenSolver.consts.relation.GE) {
+      if (openSolver.relation[row] == Relation.GE) {
         upperBound = Infinity;
-      } else if (openSolver.relation[row] == OpenSolver.consts.relation.LE) {
+      } else if (openSolver.relation[row] == Relation.LE) {
         lowerBound = -Infinity;
       }
       Logger.log(openSolver.rhs);
@@ -130,7 +122,7 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
   }
 
   // Add constraint forcing objective == target if we are seeking a value
-  if (openSolver.objectiveSense == OpenSolver.consts.objectiveSenseType.TARGET) {
+  if (openSolver.objectiveSense == ObjectiveSenseType.TARGET) {
     Logger.log(openSolver.objectiveTarget);
     var constraint = this.engine.addConstraint(openSolver.objectiveTarget, openSolver.objectiveTarget);
     for (var i = 0; i < openSolver.numVars; i++) {
@@ -139,8 +131,21 @@ OpenSolver.SolverGoogle.prototype.solve = function(openSolver) {
     }
   }
 
-  OpenSolver.util.updateStatus('Solving model...', 'Solving Model');
+  updateStatus('Solving model...', 'Solving Model');
 
   this.solution = this.engine.solve();
   return this.getStatus();
+};
+
+MockLinearOptimizationSolution = function(status) {
+  this.status = LinearOptimizationService.Status[status];
+};
+
+MockLinearOptimizationSolution.prototype.getStatus = function() {
+  return this.status;
+};
+
+MockLinearOptimizationSolution.prototype.isValid = function() {
+  return this.status === LinearOptimizationService.Status.FEASIBLE ||
+         this.status === LinearOptimizationService.Status.OPTIMAL;
 };

@@ -15,10 +15,10 @@ var TOL = 1e-6;
 
 function tests() {
   console = Logger;
-  utilTest();
-  constraintTest();
-  mockRangeTest();
-  solverGoogleTest();
+  testUtil();
+  testConstraint();
+  testMockRange();
+  testSolverGoogle();
 }
 
 function doGet( e ) {

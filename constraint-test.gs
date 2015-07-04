@@ -1,7 +1,4 @@
-// Global namespace for OpenSolver
-var OpenSolver = OpenSolver || {};
-
-function constraintTest() {
+function testConstraint() {
 
 QUnit.module('constraint');
 
@@ -16,7 +13,7 @@ QUnit.test('display', relations.length * 2, function(assert) {
     var relation = relations[i];
     var text = texts[i];
     var value = values[i];
-    var constraint = new OpenSolver.Constraint(LHS, RHS, OpenSolver.consts.relation[relation]);
+    var constraint = new Constraint(LHS, RHS, Relation[relation]);
     assert.equal(constraint.displayText(), text, 'Text: ' + relation + rightArrow + text);
     assert.equal(constraint.displayValue(), value, 'Value: ' + relation + rightArrow + value);
   }
