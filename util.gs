@@ -232,3 +232,13 @@ function checkRangeValuesNumeric(range, errorInvalid, errorNotNumeric) {
   }
   return values;
 }
+
+function removeSheetNameFromRange(rangeNotation, sheetName) {
+  if (sheetName + '') {
+    var searchString = sheetName + '!';
+    if (rangeNotation.indexOf(searchString) === 0) {
+      return rangeNotation.substr(searchString.length);
+    }
+  }
+  return rangeNotation;
+}

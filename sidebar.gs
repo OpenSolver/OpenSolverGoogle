@@ -30,7 +30,10 @@ function getSidebarData(sheetId) {
         })
       .map(
         function(sheet) {
-          return { name: sheet.getName(), id: sheet.getSheetId() };
+          return {
+            name: sheet.getName(),
+            id: sheet.getSheetId()
+          };
         });
 
   var currentSheet = getSheetFromIdWithDefault(sheetId);
@@ -42,25 +45,19 @@ function getSidebarData(sheetId) {
   return {
     model: currentModel.getSidebarData(),
     sheets: sheetData,
-    sheetIndex: sheetIndex
+    sheetIndex: sheetIndex,
+    escapedSheetName: escapeSheetName(currentSheet)
   };
 }
 
 function updateObjective(sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  var objRange = getSelectedRange();
-  if (objRange) {
-    return currentModel.updateObjective(objRange);
-  } else {
-    return null;
-  }
+  return currentModel.updateObjective(getSelectedRange()).getSidebarData();
 }
 
 function deleteObjective(sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  // Delete the objective and return the new text for the obj cell,
-  // which should be '' if deleted successfully.
-  return currentModel.deleteObjective();
+  return currentModel.deleteObjective().getSidebarData();
 }
 
 function updateObjectiveSense(objSense, sheetId) {
@@ -70,44 +67,32 @@ function updateObjectiveSense(objSense, sheetId) {
 
 function updateObjectiveTarget(objVal, sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.updateObjectiveTarget(objVal);
+  currentModel.updateObjectiveTarget(objVal);
 }
 
 function addVariable(sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  var varRange = getSelectedRange();
-  if (varRange) {
-    return currentModel.addVariable(varRange);
-  } else {
-    return null;
-  }
+  return currentModel.addVariable(getSelectedRange()).getSidebarData();
 }
 
 function updateVariable(index, sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  var varRange = getSelectedRange();
-  if (varRange) {
-    return currentModel.updateVariable(index, varRange);
-  } else {
-    return null;
-  }
+  return currentModel.updateVariable(index, getSelectedRange()).getSidebarData();
 }
 
 function deleteVariable(index, sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.deleteVariable(index);
-  return index;  // Return the index to delete. Set to -1 to abort.
+  return currentModel.deleteVariable(index).getSidebarData();
 }
 
 function saveConstraint(LHSstring, RHSstring, RELstring, index, sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index);
+  return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index).getSidebarData();
 }
 
 function deleteConstraint(index, sheetId) {
   currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.deleteConstraint(index);
-  return index;  // Return the index to delete. Set to -1 to abort.
+  return currentModel.deleteConstraint(index).getSidebarData();
 }
 
 function updateAssumeNonNeg(nonNeg, sheetId) {
@@ -130,12 +115,12 @@ function getSelectedRange() {
     return SpreadsheetApp.getActiveRange();
   } catch (e) {
     showMessage(e.message);
-    return;
+    return null;
   }
 }
 
 function getSelectedRangeNotation() {
-  return getSelectedRange().getA1Notation();
+  return getRangeNotation(SpreadsheetApp.getActiveSheet(), getSelectedRange());
 }
 
 function solveModel(sheetId) {
@@ -160,6 +145,5 @@ function clearModel(sheetId) {
 //  else {
 //    return null;
 //  };
-
-  return clearModel(getSheetFromIdWithDefault(sheetId)).getSidebarData();
+  return resetModel(getSheetFromIdWithDefault(sheetId)).getSidebarData();
 }

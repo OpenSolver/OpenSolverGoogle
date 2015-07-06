@@ -42,6 +42,7 @@
   var curREL;
   var curRHS;
   var curSheetId;
+  var curEscapedSheetName;
 
   /**
    * Inserts a div that contains an error message after a given element.
@@ -84,24 +85,16 @@
   function updateObjective() {
     showWait();
     google.script.run
-        .withSuccessHandler(
-          function(range, element) {
-            if (range) {
-              $('#text-objective-cell').val(range);
-            }
-            hideWait();
-          })
-        .updateObjective(curSheetId);
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .updateObjective(curSheetId);
   }
 
   function deleteObjective() {
     showWait();
     google.script.run
-      .withSuccessHandler(
-        function(range, element) {
-          $('#text-objective-cell').val(range);
-          hideWait();
-        })
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
       .deleteObjective(curSheetId);
   }
 
@@ -124,51 +117,26 @@
   function addVariable() {
     showWait();
     google.script.run
-        .withFailureHandler(
-          function(range, element) {
-            hideWait();
-          })
-        .withSuccessHandler(
-          function(range, element) {
-            if (range) {
-              var option = new Option(range, range);
-              $('#select-variable-cells').append($(option));
-            }
-            hideWait();
-          })
-        .addVariable(curSheetId);
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .addVariable(curSheetId);
   }
 
   function updateVariable() {
     showWait();
     var index = $('#select-variable-cells').prop('selectedIndex');
     google.script.run
-        .withFailureHandler(
-          function(range, element) {
-            hideWait();
-          })
-        .withSuccessHandler(
-          function(range, element) {
-            if (range) {
-              var option = $('#select-variable-cells option:selected');
-              option.text(range);
-              option.val(range);
-            }
-            hideWait();
-          })
-        .updateVariable(index, curSheetId);
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .updateVariable(index, curSheetId);
   }
 
   function deleteVariable() {
     showWait();
-    var index = getSelectedItemFromList($('#select-variable-cells'));
+    var index = getSelectedIndexFromList($('#select-variable-cells'));
     google.script.run
-      .withSuccessHandler(
-        function(index, element) {
-          // Delete the returned index
-          removeItemFromList($('#select-variable-cells'), index);
-          hideWait();
-        })
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
       .deleteVariable(index, curSheetId);
   }
 
@@ -216,16 +184,13 @@
     enableUi();
   }
 
-  function editConstraint(textElem) {
+  function editConstraint($textElem) {
     showWait();
     google.script.run
-        .withFailureHandler(
-          function(range, element) {
-            hideWait();
-          })
+        .withFailureHandler(hideWait)
         .withSuccessHandler(
           function(range, element) {
-            textElem.val(range);
+            $textElem.val(range);
             enableUi();
             hideWait();
           })
@@ -233,48 +198,24 @@
   }
 
   function saveConstraint() {
-    var index = getSelectedItemFromList($('#select-constraint-cells'))  - 1;
+    var index = getSelectedIndexFromList($('#select-constraint-cells'))  - 1;
     var lhs = $('#text-constraint-lhs').val();
     var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
     var rhs = $('#text-constraint-rhs').val();
 
     showWait();
-
     google.script.run
-        .withFailureHandler(
-          function(data, element) {
-            hideWait();
-          })
-        .withSuccessHandler(
-          function(data, element) {
-            if (data) {
-              if (data.index === -1) {
-                var option = new Option(data.text, data.value);
-                $('#select-constraint-cells').append($(option));
-              } else {
-                var option = $('#select-constraint-cells option:selected');
-                option.text(data.text);
-                option.val(data.value);
-              }
-              changeSelectedConstraint();
-            }
-            hideWait();
-          })
-        .saveConstraint(lhs, rhs, rel, index, curSheetId);
-
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .saveConstraint(lhs, rhs, rel, index, curSheetId);
   }
 
   function deleteConstraint() {
     showWait();
-    var index = getSelectedItemFromList($('#select-constraint-cells')) - 1;
+    var index = getSelectedIndexFromList($('#select-constraint-cells')) - 1;
     google.script.run
-      .withSuccessHandler(
-        function(index, element) {
-          // Delete the returned index (+1 for "<Add new constraint>")
-          removeItemFromList($('#select-constraint-cells'), index + 1);
-          changeSelectedConstraint();
-          hideWait();
-        })
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
       .deleteConstraint(index, curSheetId);
   }
 
@@ -282,7 +223,7 @@
     changeSelectedConstraint();
   }
 
-  function getSelectedItemFromList(selectElem) {
+  function getSelectedIndexFromList(selectElem) {
     return selectElem.prop('selectedIndex');
   }
 
@@ -302,11 +243,21 @@
     }
   }
 
+  function removeCurrentSheetName(range) {
+    var searchString = curEscapedSheetName + '!';
+    if (range.indexOf(searchString) === 0) {
+      return range.substr(searchString.length);
+    }
+    return range;
+  }
+
   function checkConstraintChanged() {
     var lhs = $('#text-constraint-lhs').val();
     var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
     var rhs = $('#text-constraint-rhs').val();
-    return !((lhs === curLHS) && (rel === curREL || 0 === curREL) && (rhs === curRHS));
+    return !((removeCurrentSheetName(lhs) === curLHS) &&
+             (rel === curREL || 0 === curREL) &&
+             (removeCurrentSheetName(rhs) === curRHS));
   }
 
   function enableUi(disableAll) {
@@ -353,17 +304,14 @@
   function loadSidebar() {
     showWait();
     google.script.run
-        .withFailureHandler(
-          function(data, element) {
-            hideWait();
-          })
+        .withFailureHandler(hideWait)
         .withSuccessHandler(
           function(data, element) {
             console.log(JSON.stringify(data));
+            curEscapedSheetName = data.escapedSheetName;
             populateSheetSelect(data.sheets);
             selectSheet(data.sheetIndex);
             loadModel(data.model);
-            hideWait();
           })
         .getSidebarData(curSheetId);
 
@@ -372,32 +320,17 @@
   function solveModel() {
     showWait();
     google.script.run
-        .withFailureHandler(
-          function(data, element) {
-            hideWait();
-          })
-        .withSuccessHandler(
-          function(data, element) {
-            hideWait();
-          })
-        .solveModel(curSheetId);
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(hideWait)
+      .solveModel(curSheetId);
   }
 
   function resetModel() {
     showWait();
     google.script.run
-        .withFailureHandler(
-          function(data, element) {
-            hideWait();
-          })
-        .withSuccessHandler(
-          function(model, element) {
-            if (model) {
-              loadModel(model);
-            }
-            hideWait();
-          })
-        .clearModel(curSheetId);
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .clearModel(curSheetId);
   }
 
   function updateShowStatus() {
@@ -447,5 +380,7 @@
     $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
     $('#checkbox-show-status').prop('checked', model.showStatus);
     $('#checkbox-check-linear').prop('checked', model.checkLinear);
+
+    hideWait();
   }
 </script>

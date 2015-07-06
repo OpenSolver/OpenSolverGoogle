@@ -5,7 +5,7 @@ Model = function(sheet) {
   this.sheet = sheet;
   this.constraints = [];
   this.variables = [];
-  this.objective = new MockRange([[0]]);  // empty objective cell that returns value zero
+  this.objective = '';
   this.objectiveSense = ObjectiveSenseType.MINIMISE;
   this.objectiveVal = 0;
   this.assumeNonNeg = true;
@@ -99,17 +99,13 @@ Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
     this.constraints[index] = constraint;
   }
   setConstraints(this.constraints, this.sheet);
-
-  return {
-    text: constraint.displayText(),
-    value: constraint.displayValue(),
-    index: index
-  };
+  return this;
 };
 
 Model.prototype.deleteConstraint = function(index) {
   this.constraints.splice(index, 1);
   setConstraints(this.constraints, this.sheet);
+  return this;
 };
 
 Model.prototype.load = function() {
@@ -121,33 +117,34 @@ Model.prototype.load = function() {
   this.assumeNonNeg = getAssumeNonNegative(this.sheet);
   this.showStatus = getShowStatus(this.sheet);
   this.checkLinear = getCheckLinear(this.sheet);
+  return this;
 };
 
 Model.prototype.updateObjective = function(objRange) {
   // Make sure objective cell is a single cell
   if (objRange.getNumColumns() !== 1 || objRange.getNumRows() !== 1) {
     showError(ERR_OBJ_NOT_SINGLE_CELL());
-    return;
+  } else {
+    this.objective = getRangeNotation(this.sheet, objRange);
+    setObjective(this.objective, this.sheet);
   }
-
-  this.objective = getRangeNotation(this.sheet, objRange);
-  setObjective(this.objective, this.sheet);
-  return objRange.getA1Notation();
+  return this;
 };
 
 Model.prototype.deleteObjective = function() {
-  this.updateObjective(new MockRange([[0]]));
-  return this.objective;
+  return this.updateObjective(new MockRange([[0]]));
 };
 
 Model.prototype.updateObjectiveSense = function(objSense) {
   this.objectiveSense = objSense;
   setObjectiveSense(this.objectiveSense, this.sheet);
+  return this;
 };
 
 Model.prototype.updateObjectiveTarget = function(objVal) {
   this.objectiveVal = objVal;
   setObjectiveTargetValue(this.objectiveVal, this.sheet);
+  return this;
 };
 
 Model.prototype.addVariable = function(varRange) {
@@ -162,39 +159,46 @@ Model.prototype.updateVariable = function(index, varRange) {
     this.variables.push(varString);
   }
   setVariables(this.variables, this.sheet);
-  return varRange.getA1Notation();
+  return this;
 };
 
 Model.prototype.deleteVariable = function(index) {
   this.variables.splice(index, 1);
   setVariables(this.variables, this.sheet);
+  return this;
 };
 
 Model.prototype.updateAssumeNonNeg = function(nonNeg) {
   this.assumeNonNeg = nonNeg;
   setAssumeNonNegative(this.assumeNonNeg, this.sheet);
+  return this;
 };
 
 Model.prototype.updateShowStatus = function(showStatus) {
   this.showStatus = showStatus;
   setShowStatus(this.showStatus, this.sheet);
+  return this;
 };
 
 Model.prototype.updateCheckLinear = function(checkLinear) {
   this.checkLinear = checkLinear;
   setCheckLinear(this.checkLinear, this.sheet);
+  return this;
 };
 
 Model.prototype.getSidebarData = function() {
+  var escapedSheetName = escapeSheetName(this.sheet);
   return {
     constraints: this.constraints.map(function(constraint) {
       return {
-        text:  constraint.displayText(),
-        value: constraint.displayValue()
+        text:  constraint.displayText(escapedSheetName),
+        value: constraint.displayValue(escapedSheetName)
       };
     }),
-    variables:      this.variables,
-    objective:      this.objective,
+    variables: this.variables.map(function(variable) {
+      return removeSheetNameFromRange(variable, escapedSheetName);
+    }),
+    objective:      removeSheetNameFromRange(this.objective, escapedSheetName),
     objectiveVal:   this.objectiveVal,
     objectiveSense: this.objectiveSense,
     disableVal:     this.objectiveSense != ObjectiveSenseType.TARGET,
@@ -213,5 +217,6 @@ Model.prototype.save = function() {
   setAssumeNonNegative(this.assumeNonNeg, this.sheet);
   setShowStatus(this.showStatus, this.sheet);
   setCheckLinear(this.checkLinear, this.sheet);
+  return this;
 };
 

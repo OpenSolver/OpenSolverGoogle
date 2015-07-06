@@ -135,4 +135,19 @@ QUnit.test('checkRangeValuesNumeric', 4, function(assert) {
                 'Error cell anywhere in range throws error');
 });
 
+var ranges = ['abc!A1', 'abc!A1', "'abc'!A1", 'abc!A1', 'abc!A1', 'abc!A1'];
+var sheetNames = ['abc', 'abd', "'abc'", '', null, undefined];
+var shortenedRanges = ['A1', 'abc!A1', 'A1', 'abc!A1', 'abc!A1', 'abc!A1'];
+
+QUnit.test('removeSheetNameFromRange', ranges.length, function(assert) {
+  for (var i = 0; i < ranges.length; i++) {
+    var range = ranges[i];
+    var sheetName = sheetNames[i];
+    var result = shortenedRanges[i];
+    assert.equal(removeSheetNameFromRange(range, sheetName),
+                 result,
+                 range + ' - ' + sheetName + rightArrow + result);
+  }
+});
+
 }

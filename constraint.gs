@@ -4,14 +4,17 @@ function Constraint(lhs, rhs, rel) {
   this.rel = rel;
 }
 
-Constraint.prototype.displayText = function() {
-  var text = this.lhs.concat(' ', relationConstToString(this.rel));
+Constraint.prototype.displayText = function(sheetName) {
+  var text = removeSheetNameFromRange(this.lhs, sheetName) + ' ' +
+             relationConstToString(this.rel);
   if (relationConstHasRHS(this.rel)) {
-    text = text.concat(' ', this.rhs);
+    text += ' ' + removeSheetNameFromRange(this.rhs, sheetName);
   }
   return text;
 };
 
-Constraint.prototype.displayValue = function() {
-  return this.lhs.concat(';', this.rel, ';', this.rhs);
+Constraint.prototype.displayValue = function(sheetName) {
+  return removeSheetNameFromRange(this.lhs, sheetName) +
+         ';' + this.rel + ';' +
+         removeSheetNameFromRange(this.rhs, sheetName);
 };

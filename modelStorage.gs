@@ -86,13 +86,12 @@ function setObjectiveSense(objectiveSense, sheet) {
 function getObjectiveSense(sheet) {
   var properties = getAllProperties();
   var objSense = properties[sheet.getSheetId() + '!solver_typ'];
-  if (objSense !== undefined) {
-    return objSense;
-  } else {
-    var defaultSense = ObjectiveSenseType.MINIMISE;
-    setObjectiveSense(defaultSense, sheet);
-    return defaultSense;
+  // TODO validation
+  if (objSense === undefined) {
+    objSense = ObjectiveSenseType.MINIMISE;
+    setObjectiveSense(objSense, sheet);
   }
+  return objSense;
 }
 
 function setConstraints(constraints, sheet) {
@@ -129,21 +128,27 @@ function getConstraints(sheet) {
   return constraints;
 }
 
-function clearModel(sheet) {
-  var model = new Model(sheet);
-  model.save();
-  return model;
+function resetModel(sheet) {
+  // Save a blank model to the sheet to remove current model.
+  return new Model(sheet).save();
 }
 
 function loadModelFromSheet(sheet) {
   sheet = sheet || SpreadsheetApp.getActiveSheet();
-  var model = new Model(sheet);
-  model.load();
-  return model;
+  return new Model(sheet).load();
 }
 
-  // Converts a range parameter into the proper string for storage
+/**
+ * Returns the name of a sheet for use in a range expression (Sheet!Range)
+ *
+ * @param {Sheet} sheet the sheet to get the name from
+ * @return {String} the escaped name of the sheet
+ */
+function escapeSheetName(sheet) {
+  // TODO escape this. figure out which characters force quoting
+  return sheet.getSheetName();
+}
+
 function getRangeNotation(sheet, range) {
-  // TODO add in sheet prefixing here
-  return range.getA1Notation();
-};
+  return escapeSheetName(sheet) + '!' + range.getA1Notation();
+}
