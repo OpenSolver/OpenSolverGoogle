@@ -24,6 +24,20 @@ var ERR_NO_VARS = function() {
   );
 };
 
+var ERR_LHS_BLANK = function() {
+  return makeError(
+    'No left-hand side has been specified for the constraint. Please fix ' +
+    'this and try again.'
+  );
+};
+
+var ERR_RHS_BLANK = function() {
+  return makeError(
+    'No right-hand side has been specified for the constraint. Please fix ' +
+    'this and try again.'
+  );
+};
+
 var ERR_CON_WRONG_DIMS = function(constraintSummary) {
   return makeError(
     'The constraint ' + constraintSummary + ' has a different cell ' +

@@ -14,6 +14,13 @@ Model = function(sheet) {
 };
 
 Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
+  // TODO move validation logic into API
+
+  if (!lhs) {
+    showError(ERR_LHS_BLANK());
+    return;
+  }
+
   var lhsRange;
   try {
     lhsRange = this.sheet.getRange(lhs);
@@ -39,6 +46,11 @@ Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
       rhs = 'alldiff';
       break;
     default:
+      if (!rhs) {
+        showError(ERR_RHS_BLANK());
+        return;
+      }
+
       try {
         rhsRange = this.sheet.getRange(rhs);
       } catch (e) {
@@ -81,10 +93,10 @@ Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
   }
 
   var constraint = new Constraint(lhs, rhs, rel);
-  if (index === 0) {
+  if (index === -1) {
     this.constraints.push(constraint);
   } else {
-    this.constraints[index - 1] = constraint;
+    this.constraints[index] = constraint;
   }
   setConstraints(this.constraints, this.sheet);
 

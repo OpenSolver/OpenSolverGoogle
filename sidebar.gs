@@ -1,27 +1,43 @@
 var currentModel;
 var openSolver;
 
+function getSheetFromId(sheetId) {
+  // Force to NaN if not a number
+  sheetId = parseInt(sheetId, 10);
+  if (!isNaN(sheetId)) {
+    var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      Logger.log(sheets[i].getSheetId() + ' ' + sheets[i].getSheetName());
+      if (sheets[i].getSheetId() === sheetId) return sheets[i];
+    }
+  }
+  Logger.log("getSheetFromId(" + sheetId + "): no sheet found");
+  return null;
+}
+
+function getSheetFromIdWithDefault(sheetId) {
+  return getSheetFromId(sheetId) || SpreadsheetApp.getActiveSheet();
+}
+
+
 function getSidebarData(sheetId) {
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
 
-  var currentSheet;
-  if (sheetId) {
-    for (var i = 0; i < sheets.length; i++) {
-      if (sheets[i].getSheetId() == sheetId) {
-        currentSheet = sheets[i];
-        break;
-      }
-    }
-  }
-  currentSheet = currentSheet || SpreadsheetApp.getActiveSheet();
-
   var sheetData = sheets
-    .filter(function(sheet) { return !sheet.isSheetHidden(); })
-    .map(function(sheet) { return { name: sheet.getName(), id: sheet.getSheetId() }; });
+      .filter(
+        function(sheet) {
+          return !sheet.isSheetHidden();
+        })
+      .map(
+        function(sheet) {
+          return { name: sheet.getName(), id: sheet.getSheetId() };
+        });
 
-  currentModel = currentModel || loadModelFromSheet(currentSheet);
+  var currentSheet = getSheetFromIdWithDefault(sheetId);
+  currentModel = loadModelFromSheet(currentSheet);
 
-  var sheetIndex = sheetData.map(function(sheet) { return sheet.id; }).indexOf(currentSheet.getSheetId());
+  var sheetIndex = sheetData.map(function(sheet) { return sheet.id; })
+                            .indexOf(currentSheet.getSheetId());
 
   return {
     model: currentModel.getSidebarData(),
@@ -30,8 +46,8 @@ function getSidebarData(sheetId) {
   };
 }
 
-function updateObjective() {
-  currentModel = currentModel || loadModelFromSheet();
+function updateObjective(sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   var objRange = getSelectedRange();
   if (objRange) {
     return currentModel.updateObjective(objRange);
@@ -40,25 +56,25 @@ function updateObjective() {
   }
 }
 
-function deleteObjective() {
-  currentModel = currentModel || loadModelFromSheet();
+function deleteObjective(sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   // Delete the objective and return the new text for the obj cell,
   // which should be '' if deleted successfully.
   return currentModel.deleteObjective();
 }
 
-function updateObjectiveSense(objSense) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateObjectiveSense(objSense, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.updateObjectiveSense(objSense);
 }
 
-function updateObjectiveTarget(objVal) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateObjectiveTarget(objVal, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   return currentModel.updateObjectiveTarget(objVal);
 }
 
-function addVariable() {
-  currentModel = currentModel || loadModelFromSheet();
+function addVariable(sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   var varRange = getSelectedRange();
   if (varRange) {
     return currentModel.addVariable(varRange);
@@ -67,8 +83,8 @@ function addVariable() {
   }
 }
 
-function updateVariable(index) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateVariable(index, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   var varRange = getSelectedRange();
   if (varRange) {
     return currentModel.updateVariable(index, varRange);
@@ -77,35 +93,35 @@ function updateVariable(index) {
   }
 }
 
-function deleteVariable(index) {
-  currentModel = currentModel || loadModelFromSheet();
+function deleteVariable(index, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.deleteVariable(index);
   return index;  // Return the index to delete. Set to -1 to abort.
 }
 
-function saveConstraint(LHSstring, RHSstring, RELstring, index) {
-  currentModel = currentModel || loadModelFromSheet();
+function saveConstraint(LHSstring, RHSstring, RELstring, index, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index);
 }
 
-function deleteConstraint(index) {
-  currentModel = currentModel || loadModelFromSheet();
+function deleteConstraint(index, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.deleteConstraint(index);
   return index;  // Return the index to delete. Set to -1 to abort.
 }
 
-function updateAssumeNonNeg(nonNeg) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateAssumeNonNeg(nonNeg, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.updateAssumeNonNeg(nonNeg);
 }
 
-function updateShowStatus(showStatus) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateShowStatus(showStatus, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.updateShowStatus(showStatus);
 }
 
-function updateCheckLinear(checkLinear) {
-  currentModel = currentModel || loadModelFromSheet();
+function updateCheckLinear(checkLinear, sheetId) {
+  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
   currentModel.updateCheckLinear(checkLinear);
 }
 
@@ -122,12 +138,12 @@ function getSelectedRangeNotation() {
   return getSelectedRange().getA1Notation();
 }
 
-function solveModel() {
-  openSolver = new OpenSolver();
+function solveModel(sheetId) {
+  openSolver = new OpenSolver(getSheetFromIdWithDefault(sheetId));
   return openSolver.solveModel();
 }
 
-function clearModel() {
+function clearModel(sheetId) {
   // This alert doesn't seem to be blocking: the client side executes the success
   // handler before the response is provided. This means we can't update the
   // sidebar correctly if the model is deleted, so we can't show a confirmation prompt.
@@ -145,5 +161,5 @@ function clearModel() {
 //    return null;
 //  };
 
-  return clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
+  return clearModel(getSheetFromIdWithDefault(sheetId)).getSidebarData();
 }

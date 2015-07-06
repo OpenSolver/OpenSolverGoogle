@@ -70,12 +70,12 @@
 
   function selectSheet(sheetIndex) {
     $('#select-sheet').prop('selectedIndex', sheetIndex);
-    curSheetId = $('#select-sheet option:selected').val();
+    curSheetId = parseInt($('#select-sheet option:selected').val(), 10);
   }
 
   function changeSheet() {
-    var selectedSheetId = $('#select-sheet option:selected').val();
-    if (curSheetId !== selectedSheetId || overrideSelectedSheet === true) {
+    var selectedSheetId = parseInt($('#select-sheet option:selected').val(), 10);
+    if (curSheetId !== selectedSheetId) {
       curSheetId = selectedSheetId;
       loadSidebar();
     }
@@ -91,7 +91,7 @@
             }
             hideWait();
           })
-        .updateObjective();
+        .updateObjective(curSheetId);
   }
 
   function deleteObjective() {
@@ -102,13 +102,13 @@
           $('#text-objective-cell').val(range);
           hideWait();
         })
-      .deleteObjective();
+      .deleteObjective(curSheetId);
   }
 
   function updateObjectiveSense() {
     var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
     enableObjectiveTarget();
-    google.script.run.updateObjectiveSense(objSense);
+    google.script.run.updateObjectiveSense(objSense, curSheetId);
   }
 
   function enableObjectiveTarget() {
@@ -118,7 +118,7 @@
 
   function updateObjectiveTarget() {
     var objVal = parseFloat($('#text-objective-sense-target-value').val(), 10);
-    google.script.run.updateObjectiveTarget(objVal);
+    google.script.run.updateObjectiveTarget(objVal, curSheetId);
   }
 
   function addVariable() {
@@ -136,7 +136,7 @@
             }
             hideWait();
           })
-        .addVariable();
+        .addVariable(curSheetId);
   }
 
   function updateVariable() {
@@ -156,7 +156,7 @@
             }
             hideWait();
           })
-        .updateVariable(index);
+        .updateVariable(index, curSheetId);
   }
 
   function deleteVariable() {
@@ -169,7 +169,7 @@
           removeItemFromList($('#select-variable-cells'), index);
           hideWait();
         })
-      .deleteVariable(index);
+      .deleteVariable(index, curSheetId);
   }
 
   function updateVariableButtons() {
@@ -179,7 +179,7 @@
 
   function updateAssumeNonNeg() {
     var nonNeg = $('#checkbox-non-negative').prop('checked');
-    google.script.run.updateAssumeNonNeg(nonNeg);
+    google.script.run.updateAssumeNonNeg(nonNeg, curSheetId);
   }
 
   function editConstraintLHS() {
@@ -233,7 +233,7 @@
   }
 
   function saveConstraint() {
-    var selected = $('#select-constraint-cells').prop('selectedIndex');
+    var index = getSelectedItemFromList($('#select-constraint-cells'))  - 1;
     var lhs = $('#text-constraint-lhs').val();
     var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
     var rhs = $('#text-constraint-rhs').val();
@@ -248,7 +248,7 @@
         .withSuccessHandler(
           function(data, element) {
             if (data) {
-              if (data.index === 0) {
+              if (data.index === -1) {
                 var option = new Option(data.text, data.value);
                 $('#select-constraint-cells').append($(option));
               } else {
@@ -260,22 +260,22 @@
             }
             hideWait();
           })
-        .saveConstraint(lhs, rhs, rel, selected);
+        .saveConstraint(lhs, rhs, rel, index, curSheetId);
 
   }
 
   function deleteConstraint() {
     showWait();
-    var index = getSelectedItemFromList($('#select-constraint-cells'));
+    var index = getSelectedItemFromList($('#select-constraint-cells')) - 1;
     google.script.run
       .withSuccessHandler(
         function(index, element) {
-          // Delete the returned index
-          removeItemFromList($('#select-constraint-cells'), index);
+          // Delete the returned index (+1 for "<Add new constraint>")
+          removeItemFromList($('#select-constraint-cells'), index + 1);
           changeSelectedConstraint();
           hideWait();
         })
-      .deleteConstraint(index);
+      .deleteConstraint(index, curSheetId);
   }
 
   function cancelConstraintChange() {
@@ -380,7 +380,7 @@
           function(data, element) {
             hideWait();
           })
-        .solveModel();
+        .solveModel(curSheetId);
   }
 
   function resetModel() {
@@ -397,17 +397,17 @@
             }
             hideWait();
           })
-        .clearModel();
+        .clearModel(curSheetId);
   }
 
   function updateShowStatus() {
     var showStatus = $('#checkbox-show-status').prop('checked');
-    google.script.run.updateShowStatus(showStatus);
+    google.script.run.updateShowStatus(showStatus, curSheetId);
   }
 
   function updateCheckLinear() {
     var checkLinear = $('#checkbox-check-linear').prop('checked');
-    google.script.run.updateCheckLinear(checkLinear);
+    google.script.run.updateCheckLinear(checkLinear, curSheetId);
   }
 
   function showWait() {

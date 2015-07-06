@@ -1,4 +1,6 @@
-OpenSolver = function() {
+OpenSolver = function(sheet) {
+  this.sheet = sheet;
+
   this.showStatus = false;
   this.minimiseUserInteraction = false;
   this.assumeNonNegativeVars = false;
@@ -69,10 +71,6 @@ OpenSolver.prototype.solveModel = function() {
 OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimiseUserInteraction) {
   this.linearityOffset = linearityOffset || this.linearityOffset;
   this.minimiseUserInteraction = minimiseUserInteraction || this.minimiseUserInteraction;
-
-  // TODO incorporate sheet into name
-  // maybe we have one model per sheet, in a dropdown box on the sidebar?
-  this.sheet = SpreadsheetApp.getActiveSheet();
 
   // TODO get solver from user selection
 
