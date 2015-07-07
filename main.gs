@@ -36,7 +36,7 @@ function showSidebar() {
       .setTitle('OpenSolver')
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
-  showChangelog();
+  checkShowChangelog();
 }
 
 /**
@@ -55,17 +55,21 @@ function clearProperties() {
 }
 
 function showChangelog() {
+  var changelogUi = HtmlService.createTemplateFromFile('changelog')
+    .evaluate()
+    .setHeight(200)
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+  SpreadsheetApp.getUi()
+    .showModalDialog(changelogUi, 'OpenSolver has been updated!');
+}
+
+function checkShowChangelog() {
   var props = PropertiesService.getDocumentProperties();
   var previousVersion = props.getProperty(VERSION_KEY);
 
   var versionIsCurrent = parseInt(previousVersion, 10) >= CURRENT_VERSION;
   if (!versionIsCurrent) {
-      var changelogUi = HtmlService.createTemplateFromFile('changelog')
-        .evaluate()
-        .setHeight(200)
-        .setSandboxMode(HtmlService.SandboxMode.IFRAME);
-      SpreadsheetApp.getUi()
-        .showModalDialog(changelogUi, 'OpenSolver has been updated!');
+    showChangelog();
 
     // Save current version to know we have shown this changelog
     props.setProperty(VERSION_KEY, CURRENT_VERSION);
