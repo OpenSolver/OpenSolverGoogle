@@ -302,6 +302,10 @@
   }
 
   function loadSidebar() {
+    // Reset any selections in the lists
+    $('#select-constraint-cells').prop('selectedIndex', -1);
+    $('#select-variable-cells').prop('selectedIndex', -1);
+
     showWait();
     google.script.run
         .withFailureHandler(hideWait)
@@ -354,21 +358,29 @@
   }
 
   function loadModel(model) {
-    var selectConstraints = $('#select-constraint-cells');
+    var $selectConstraints = $('#select-constraint-cells');
+    var currentIndex = getSelectedIndexFromList($selectConstraints);
     var defaultOption = new Option('<Add new constraint>', 0);
-    selectConstraints.find('option').remove().end().append(defaultOption).prop('selectedIndex', 0);
+    $selectConstraints.find('option').remove().end().append(defaultOption);
     for (var i = 0; i < model.constraints.length; i++) {
       var option = new Option(model.constraints[i].text, model.constraints[i].value);
-      selectConstraints.append($(option));
+      $selectConstraints.append($(option));
     }
+    var newIndex = Math.min(Math.max(currentIndex, 0),
+                            $selectConstraints.find('option').length - 1);
+    $selectConstraints.prop('selectedIndex', newIndex);
     changeSelectedConstraint();
 
-    var selectVariables = $('#select-variable-cells');
-    selectVariables.find('option').remove();
+    var $selectVariables = $('#select-variable-cells') || 0;
+    var currentIndex = getSelectedIndexFromList($selectVariables);
+    $selectVariables.find('option').remove();
     for (var i = 0; i < model.variables.length; i++) {
       var option = new Option(model.variables[i], model.variables[i]);
-      selectVariables.append($(option));
+      $selectVariables.append($(option));
     }
+    var newIndex = Math.min(currentIndex,
+                            $selectVariables.find('option').length - 1);
+    $selectVariables.prop('selectedIndex', newIndex);
 
     $('#text-objective-cell').val(model.objective);
     if (model.objectiveSense) {
