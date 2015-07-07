@@ -31,7 +31,7 @@
     $('#checkbox-non-negative').change(updateAssumeNonNeg);
 
     $('#button-solve').click(solveModel);
-    $('#button-reset').click(resetModel);
+    $('#button-reset').click(checkResetModel);
     $('#checkbox-show-status').change(updateShowStatus);
     $('#checkbox-check-linear').change(updateCheckLinear);
 
@@ -314,8 +314,28 @@
       .solveModel(curSheetId);
   }
 
-  function resetModel() {
+  function checkResetModel() {
     showWait();
+    google.script.run
+      .withSuccessHandler(
+        function(dialogId) {
+          var intervalId = window.setInterval(function() {
+            checkDialog(dialogId, completeResetModel);
+          }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
+          intervalIds[dialogId] = intervalId;
+        })
+      .checkClearModel();
+  }
+
+  function completeResetModel(state) {
+    if (state === 'done') {
+      resetModel();
+    } else {
+      hideWait();
+    }
+  }
+
+  function resetModel() {
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(loadModel)
@@ -380,5 +400,35 @@
     }
 
     hideWait();
+  }
+
+  // CODE FOR DIALOG LISTENING
+  // Adapted from https://github.com/googlesamples/apps-script-dialog2sidebar
+
+  /**
+   * How often the sidebar should check the state of the dialog, in seconds.
+   */
+  var CHECK_DIALOG_INTERVAL_SECONDS = 1;
+  /**
+   * Holds a mapping from dialog ID to the ID of the interval that is used to
+   * check its status. This is needed so we can cancel the interval when the
+   * dialog is closed.
+   */
+  var intervalIds = {};
+
+  /**
+   * Checks the state of a dialog. Once it's closed the interval is cancelled
+   * and callback function invoked.
+   * @param {string} dialogId The ID of the dialog.
+   * @param {function} callback The function to invoke once dialog is done.
+   */
+  function checkDialog(dialogId, callback) {
+    google.script.run
+      .withSuccessHandler(function(state) {
+        if (state != 'open') {
+          window.clearInterval(intervalIds[dialogId]);
+          callback(state);
+        }})
+      .getDialogState(dialogId);
   }
 </script>

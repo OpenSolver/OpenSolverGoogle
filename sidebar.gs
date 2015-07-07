@@ -128,22 +128,10 @@ function solveModel(sheetId) {
   return openSolver.solveModel();
 }
 
-function clearModel(sheetId) {
-  // This alert doesn't seem to be blocking: the client side executes the success
-  // handler before the response is provided. This means we can't update the
-  // sidebar correctly if the model is deleted, so we can't show a confirmation prompt.
-  // TODO: try this https://github.com/googlesamples/apps-script-dialog2sidebar
+function checkClearModel(sheetId) {
+  return showDialog('dialogResetModel', 'Reset Model?', 75);
+}
 
-//  var ui = SpreadsheetApp.getUi();
-//  var result = ui.alert(
-//      'Reset model?',
-//      'This will clear all of the saved model information, and can\'t be undone.',
-//      ui.ButtonSet.OK_CANCEL
-//  );
-//  if (result == ui.Button.OK)
-//    return clearModel(SpreadsheetApp.getActiveSheet()).getSidebarData();
-//  else {
-//    return null;
-//  };
+function clearModel(sheetId) {
   return resetModel(getSheetFromIdWithDefault(sheetId)).getSidebarData();
 }
