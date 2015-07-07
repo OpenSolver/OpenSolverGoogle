@@ -44,40 +44,30 @@
   var curSheetId;
   var curEscapedSheetName;
 
-  /**
-   * Inserts a div that contains an error message after a given element.
-   *
-   * @param msg The error message to display.
-   * @param element The element after which to display the error.
-   */
-  function showError(msg, element) {
-    var div = $('<div id="error" class="error">' + msg + '</div>');
-    $(element).after(div);
-  }
-
   function useCurrentSheet() {
     curSheetId = null;
     loadSidebar();
   }
 
   function populateSheetSelect(sheets) {
-    var sheetSelect = $('#select-sheet');
-    sheetSelect.find('option').remove();
+    var $sheets = $('#select-sheet');
+    $sheets.find('option').remove();
     for (var i = 0; i < sheets.length; i++) {
       var option = new Option(sheets[i].name, sheets[i].id);
-      sheetSelect.append($(option));
+      $sheets.append($(option));
     }
   }
 
   function selectSheet(sheetIndex) {
-    $('#select-sheet').prop('selectedIndex', sheetIndex);
-    curSheetId = parseInt($('#select-sheet option:selected').val(), 10);
+    var $sheets = $('#select-sheet');
+    setSelectedIndex($sheets, sheetIndex);
+    curSheetId = parseInt(getSelectedOption($sheets).val(), 10);
   }
 
   function changeSheet() {
-    var selectedSheetId = parseInt($('#select-sheet option:selected').val(), 10);
-    if (curSheetId !== selectedSheetId) {
-      curSheetId = selectedSheetId;
+    var sheetId = parseInt(getSelectedOption($('#select-sheet')).val(), 10);
+    if (curSheetId !== sheetId) {
+      curSheetId = sheetId;
       loadSidebar();
     }
   }
@@ -98,14 +88,17 @@
       .deleteObjective(curSheetId);
   }
 
+  function getObjectiveSense() {
+    return parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+  }
+
   function updateObjectiveSense() {
-    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
-    enableObjectiveTarget();
+    var objSense = getObjectiveSense();
+    enableObjectiveTarget(objSense);
     google.script.run.updateObjectiveSense(objSense, curSheetId);
   }
 
-  function enableObjectiveTarget() {
-    var objSense = parseInt($('input[type=radio][name=objective-sense]:checked').val(), 10);
+  function enableObjectiveTarget(objSense) {
     $('#text-objective-sense-target-value').prop('disabled', objSense != 3);
   }
 
@@ -124,7 +117,7 @@
 
   function updateVariable() {
     showWait();
-    var index = $('#select-variable-cells').prop('selectedIndex');
+    var index = getSelectedIndex($('#select-variable-cells'));
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(loadModel)
@@ -133,7 +126,7 @@
 
   function deleteVariable() {
     showWait();
-    var index = getSelectedIndexFromList($('#select-variable-cells'));
+    var index = getSelectedIndex($('#select-variable-cells'));
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(loadModel)
@@ -141,7 +134,7 @@
   }
 
   function updateVariableButtons() {
-    var disable = $('#select-variable-cells option:selected').length === 0;
+    var disable = getSelectedIndex($('#select-variable-cells')) === -1;
     $('#button-update-variable, #button-delete-variable').prop('disabled', disable);
   }
 
@@ -163,13 +156,13 @@
   }
 
   function changeSelectedConstraint() {
-    var selected = $('#select-constraint-cells').prop('selectedIndex');
-    if (selected === 0) {
+    var $constraints = $('#select-constraint-cells');
+    if (getSelectedIndex($constraints) === 0) {
       curLHS = '';
       curREL = 0;
       curRHS = '';
     } else {
-      var values = $('#select-constraint-cells option:selected').val().split(';');
+      var values = getSelectedOption($constraints).val().split(';');
       curLHS = values[0];
       curREL = parseInt(values[1]);
       curRHS = values[2];
@@ -198,9 +191,9 @@
   }
 
   function saveConstraint() {
-    var index = getSelectedIndexFromList($('#select-constraint-cells'))  - 1;
+    var index = getSelectedIndex($('#select-constraint-cells'))  - 1;
     var lhs = $('#text-constraint-lhs').val();
-    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rel = parseInt(getSelectedOption($('#select-constraint-rel')).val(), 10);
     var rhs = $('#text-constraint-rhs').val();
 
     showWait();
@@ -212,7 +205,7 @@
 
   function deleteConstraint() {
     showWait();
-    var index = getSelectedIndexFromList($('#select-constraint-cells')) - 1;
+    var index = getSelectedIndex($('#select-constraint-cells')) - 1;
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(loadModel)
@@ -223,24 +216,16 @@
     changeSelectedConstraint();
   }
 
-  function getSelectedIndexFromList(selectElem) {
-    return selectElem.prop('selectedIndex');
+  function setSelectedIndex($selectElem, index) {
+    $selectElem.prop('selectedIndex', index);
   }
 
-  function removeItemFromList(selectElem, index) {
-    var length = selectElem.children('option').length;
-    if (index < 0 || index > length) {
-      return;
-    }
+  function getSelectedIndex($selectElem) {
+    return $selectElem.prop('selectedIndex');
+  }
 
-    selectElem.children('option')[index].remove();
-    length -= 1;
-
-    if (length <= index) {
-      selectElem.prop('selectedIndex', length - 1);
-    } else {
-      selectElem.prop('selectedIndex', index);
-    }
+  function getSelectedOption($selectElem) {
+    return $selectElem.find('option:selected');
   }
 
   function removeCurrentSheetName(range) {
@@ -253,7 +238,7 @@
 
   function checkConstraintChanged() {
     var lhs = $('#text-constraint-lhs').val();
-    var rel = parseInt($('#select-constraint-rel option:selected').val(), 10);
+    var rel = parseInt(getSelectedOption($('#select-constraint-rel')).val(), 10);
     var rhs = $('#text-constraint-rhs').val();
     return !((removeCurrentSheetName(lhs) === curLHS) &&
              (rel === curREL || 0 === curREL) &&
@@ -288,14 +273,14 @@
     $('#select-constraint-rel, #button-edit-constraint-lhs').prop('disabled', disableAll);
 
 
-    var selected = $('#select-constraint-cells').prop('selectedIndex');
-    $('#button-delete-constraint').prop('disabled', (selected === 0) || disableAll);
+    var firstCon = getSelectedIndex($('#select-constraint-cells')) === 0;
+    $('#button-delete-constraint').prop('disabled', firstCon || disableAll);
 
     if (changed || disableAll) {
       $('#text-objective-cell').removeClass('text-range');
     } else {
       $('#text-objective-cell').addClass('text-range');
-      enableObjectiveTarget();
+      enableObjectiveTarget(getObjectiveSense());
       updateVariableButtons();
     }
 
@@ -303,8 +288,8 @@
 
   function loadSidebar() {
     // Reset any selections in the lists
-    $('#select-constraint-cells').prop('selectedIndex', -1);
-    $('#select-variable-cells').prop('selectedIndex', -1);
+    setSelectedIndex($('#select-constraint-cells'), -1);
+    setSelectedIndex($('#select-variable-cells'), -1);
 
     showWait();
     google.script.run
@@ -358,29 +343,28 @@
   }
 
   function loadModel(model) {
-    var $selectConstraints = $('#select-constraint-cells');
-    var currentIndex = getSelectedIndexFromList($selectConstraints);
+    var $constraints = $('#select-constraint-cells');
+    var currentIndex = getSelectedIndex($constraints);
     var defaultOption = new Option('<Add new constraint>', 0);
-    $selectConstraints.find('option').remove().end().append(defaultOption);
+    $constraints.find('option').remove().end().append(defaultOption);
     for (var i = 0; i < model.constraints.length; i++) {
       var option = new Option(model.constraints[i].text, model.constraints[i].value);
-      $selectConstraints.append($(option));
+      $constraints.append($(option));
     }
     var newIndex = Math.min(Math.max(currentIndex, 0),
-                            $selectConstraints.find('option').length - 1);
-    $selectConstraints.prop('selectedIndex', newIndex);
+                            $constraints.find('option').length - 1);
+    setSelectedIndex($constraints, newIndex);
     changeSelectedConstraint();
 
-    var $selectVariables = $('#select-variable-cells') || 0;
-    var currentIndex = getSelectedIndexFromList($selectVariables);
-    $selectVariables.find('option').remove();
+    var $variables = $('#select-variable-cells') || 0;
+    var currentIndex = getSelectedIndex($variables);
+    $variables.find('option').remove();
     for (var i = 0; i < model.variables.length; i++) {
       var option = new Option(model.variables[i], model.variables[i]);
-      $selectVariables.append($(option));
+      $variables.append($(option));
     }
-    var newIndex = Math.min(currentIndex,
-                            $selectVariables.find('option').length - 1);
-    $selectVariables.prop('selectedIndex', newIndex);
+    var newIndex = Math.min(currentIndex, $variables.find('option').length - 1);
+    setSelectedIndex($variables, newIndex);
 
     $('#text-objective-cell').val(model.objective);
     if (model.objectiveSense) {
