@@ -343,39 +343,41 @@
   }
 
   function loadModel(model) {
-    var $constraints = $('#select-constraint-cells');
-    var currentIndex = getSelectedIndex($constraints);
-    var defaultOption = new Option('<Add new constraint>', 0);
-    $constraints.find('option').remove().end().append(defaultOption);
-    for (var i = 0; i < model.constraints.length; i++) {
-      var option = new Option(model.constraints[i].text, model.constraints[i].value);
-      $constraints.append($(option));
-    }
-    var newIndex = Math.min(Math.max(currentIndex, 0),
-                            $constraints.find('option').length - 1);
-    setSelectedIndex($constraints, newIndex);
-    changeSelectedConstraint();
+    if (model) {
+      var $constraints = $('#select-constraint-cells');
+      var currentIndex = getSelectedIndex($constraints);
+      var defaultOption = new Option('<Add new constraint>', 0);
+      $constraints.find('option').remove().end().append(defaultOption);
+      for (var i = 0; i < model.constraints.length; i++) {
+        var option = new Option(model.constraints[i].text, model.constraints[i].value);
+        $constraints.append($(option));
+      }
+      var newIndex = Math.min(Math.max(currentIndex, 0),
+                              $constraints.find('option').length - 1);
+      setSelectedIndex($constraints, newIndex);
+      changeSelectedConstraint();
 
-    var $variables = $('#select-variable-cells') || 0;
-    var currentIndex = getSelectedIndex($variables);
-    $variables.find('option').remove();
-    for (var i = 0; i < model.variables.length; i++) {
-      var option = new Option(model.variables[i], model.variables[i]);
-      $variables.append($(option));
-    }
-    var newIndex = Math.min(currentIndex, $variables.find('option').length - 1);
-    setSelectedIndex($variables, newIndex);
+      var $variables = $('#select-variable-cells') || 0;
+      var currentIndex = getSelectedIndex($variables);
+      $variables.find('option').remove();
+      for (var i = 0; i < model.variables.length; i++) {
+        var option = new Option(model.variables[i], model.variables[i]);
+        $variables.append($(option));
+      }
+      var newIndex = Math.min(currentIndex, $variables.find('option').length - 1);
+      setSelectedIndex($variables, newIndex);
 
-    $('#text-objective-cell').val(model.objective);
-    if (model.objectiveSense) {
-      $('input[type=radio][name=objective-sense]').val([model.objectiveSense]);
-    }
-    $('#text-objective-sense-target-value').val(model.objectiveVal);
-    $('#text-objective-sense-target-value').prop('disabled', model.disableVal);
+      $('#text-objective-cell').val(model.objective);
+      if (model.objectiveSense) {
+        $('input[type=radio][name=objective-sense]').val([model.objectiveSense]);
+      }
+      $('#text-objective-sense-target-value').val(model.objectiveVal);
+      $('#text-objective-sense-target-value').prop('disabled', model.disableVal);
 
-    $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
-    $('#checkbox-show-status').prop('checked', model.showStatus);
-    $('#checkbox-check-linear').prop('checked', model.checkLinear);
+      $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
+      $('#checkbox-show-status').prop('checked', model.showStatus);
+      $('#checkbox-check-linear').prop('checked', model.checkLinear);
+    }
 
     hideWait();
   }
