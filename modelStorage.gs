@@ -59,7 +59,7 @@ function setObjective(objectiveString, sheet) {
 function getObjective(sheet) {
   var properties = getAllProperties();
   try {
-    return properties[sheet.getSheetId() + '!solver_opt'];
+    return properties[sheet.getSheetId() + '!solver_opt'] || '';
   } catch(e) {
     return '';
   }
