@@ -35,52 +35,25 @@ function relationConstHasRHS(relationConst) {
   }
 }
 
-function assumeNonNegToBoolean(nonNeg) {
-  switch(parseInt(nonNeg, 10)) {
-    case AssumeNonNeg.TRUE:
-      return true;
-    case AssumeNonNeg.FALSE:
-      return false;
-    default:
-      throw 'Unknown non-negativity assumption';
-  }
-}
-
-function assumeNonNegFromBoolean(nonNeg) {
-  switch(nonNeg) {
-    case true:
-      return AssumeNonNeg.TRUE;
-    case false:
-      return AssumeNonNeg.FALSE;
-    default:
-      throw 'Unknown non-negativity assumption';
-  }
-}
-
-function setSolverProperty(sheet, key, value) {
+function setProperty(sheet, name, value) {
   props = props || PropertiesService.getDocumentProperties();
-  props.setProperty(sheet.getSheetId() + '!solver_'.concat(key), value);
+  props.setProperty(sheet.getSheetId() + '!' + name, value);
 }
 
-function setOpenSolverProperty(sheet, key, value) {
+function setProperties(sheet, properties) {
   props = props || PropertiesService.getDocumentProperties();
-  props.setProperty(sheet.getSheetId() + '!openSolver_'.concat(key), value);
-}
-
-function setSolverProperties(sheet, properties) {
-  props = props || PropertiesService.getDocumentProperties();
-  var solverProps = {};
+  var newProps = {};
   for (var key in properties) {
     if (properties.hasOwnProperty(key)) {
-      solverProps[sheet.getSheetId() + '!solver_'.concat(key)] = properties[key];
+      newProps[sheet.getSheetId() + '!' + key] = properties[key];
     }
   }
-  props.setProperties(solverProps);
+  props.setProperties(newProps);
 }
 
-function getSolverProperty(sheet, key) {
+function getProperty(sheet, name) {
   props = props || PropertiesService.getDocumentProperties();
-  return props.getProperty(sheet.getSheetId() + '!solver_'.concat(key));
+  return props.getProperty(sheet.getSheetId() + '!' + name);
 }
 
 function getAllProperties() {
@@ -93,9 +66,9 @@ function clearAllProperties() {
   props.deleteAllProperties();
 }
 
-function deleteSolverProperty(sheet, key) {
+function delProperty(sheet, key) {
   props = props || PropertiesService.getDocumentProperties();
-  props.deleteProperty(sheet.getSheetId() + '!solver_'.concat(key))
+  props.deleteProperty(sheet.getSheetId() + '!' + key);
 }
 
 function showMessage(message, title) {
@@ -241,4 +214,16 @@ function removeSheetNameFromRange(rangeNotation, sheetName) {
     }
   }
   return rangeNotation;
+}
+
+function isBool(value) {
+  return typeof value === 'boolean';
+}
+
+function isNumber(value) {
+  return typeof value === 'number' && !isNaN(value);
+}
+
+function isInt(value) {
+  return isNumber(value) && Math.floor(value) == value;
 }
