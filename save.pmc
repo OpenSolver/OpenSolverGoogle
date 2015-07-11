@@ -1,6 +1,6 @@
 ﻿[PMC Code]|F3|F4|1|Window|1|Macro1
 1|[Assign Variable]|offset := 216|1|0|Variable|||||
-2|[LoopStart]|LoopStart|22|0|Loop|||||
+2|[LoopStart]|LoopStart|25|0|Loop|||||
 3|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
 4|Left Move & Click|97, %offset% Left, Down|1|0|Click|||||
 5|Left Move & Click|97, %offset% Left, Up|1|0|Click|||||
