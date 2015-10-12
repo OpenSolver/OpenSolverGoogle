@@ -4,7 +4,7 @@
 3|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
 4|Left Move & Click|97, %offset% Left, Down|1|0|Click|||||
 5|Left Move & Click|97, %offset% Left, Up|1|0|Click|||||
-6|[Pause]||1|350|Sleep|||||
+6|[Pause]||1|700|Sleep|||||
 7|Left Move & Click|139, %offset% Left, Down|1|0|Click|||||
 8|Left Move & Click|139, %offset% Left, Up|1|0|Click|||||
 9|[Assign Variable]|offset += 30|1|0|Variable|||||
