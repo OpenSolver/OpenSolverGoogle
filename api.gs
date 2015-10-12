@@ -32,7 +32,7 @@ function setVariables(variables, sheet) {
 
 function getVariables(sheet) {
   var varString = getProperty(sheet, solverName('adj'));
-  if (varString !== undefined) {
+  if (varString !== undefined & varString !== null) {
     return varString.split(',');
   } else {
     return [];
