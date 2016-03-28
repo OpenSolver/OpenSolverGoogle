@@ -55,7 +55,7 @@ function clearProperties() {
 }
 
 function showChangelog() {
-  var changelogUi = HtmlService.createTemplateFromFile('changelog')
+  var changelogUi = HtmlService.createTemplateFromFile('dialogChangelog')
     .evaluate()
     .setHeight(200)
     .setSandboxMode(HtmlService.SandboxMode.IFRAME);
