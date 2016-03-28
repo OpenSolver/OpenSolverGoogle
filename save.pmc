@@ -1,65 +1,70 @@
 ﻿[PMC Code]|F3|F4|1|Window|1|Macro1
-1|[Assign Variable]|offset := 216|1|0|Variable|||||
-2|[LoopStart]|LoopStart|25|0|Loop|||||
-3|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
-4|Left Move & Click|97, %offset% Left, Down|1|0|Click|||||
-5|Left Move & Click|97, %offset% Left, Up|1|0|Click|||||
-6|[Pause]||1|700|Sleep|||||
-7|Left Move & Click|139, %offset% Left, Down|1|0|Click|||||
-8|Left Move & Click|139, %offset% Left, Up|1|0|Click|||||
-9|[Assign Variable]|offset += 30|1|0|Variable|||||
-10|[Pause]||1|500|Sleep|||||
-11|Left Move & Click|153, %offset% Left, Down|1|0|Click|||||
-12|Left Move & Click|153, %offset% Left, Up|1|0|Click|||||
+1|[Assign Variable]|y_offset := 216|1|0|Variable|||||
+2|[Assign Variable]|x_offset := 210|1|0|Variable|||||
+3|[LoopStart]|LoopStart|25|0|Loop|||||
+4|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
+5|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
+6|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
+7|[Pause]||1|700|Sleep|||||
+8|[Assign Variable]|x_offset += 42|1|0|Variable|||||
+9|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
+10|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
+11|[Assign Variable]|y_offset += 30|1|0|Variable|||||
+12|[Assign Variable]|x_offset += 14|1|0|Variable|||||
 13|[Pause]||1|500|Sleep|||||
-14|Left Move & Click|600, 745 Left, 1|1|10|Click|||||
-15|[Pause]||1|200|Sleep|||||
-16|LControl Down|{LControl Down}|1|0|Send|||||
-17|a|{a}|1|0|Send|||||
-18|[Pause]||1|200|Sleep|||||
-19|c|{c}|1|0|Send|||||
-20|LControl Up|{LControl Up}|1|0|Send|||||
-21|Escape|{Escape}|1|0|Send|||||
+14|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
+15|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
+16|[Assign Variable]|x_offset -= 56|1|0|Variable|||||
+17|[Pause]||1|500|Sleep|||||
+18|Left Move & Click|600, 745 Left, 1|1|10|Click|||||
+19|[Pause]||1|200|Sleep|||||
+20|LControl Down|{LControl Down}|1|0|Send|||||
+21|a|{a}|1|0|Send|||||
 22|[Pause]||1|200|Sleep|||||
-23|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
-24|Left Move & Click|330, 264 Left, Down|1|0|Click|||||
-25|Left Move & Click|330, 264 Left, Up|1|0|Click|||||
+23|c|{c}|1|0|Send|||||
+24|LControl Up|{LControl Up}|1|0|Send|||||
+25|Escape|{Escape}|1|0|Send|||||
 26|[Pause]||1|200|Sleep|||||
-27|LControl Down|{LControl Down}|1|0|Send|||||
-28|p|{p}|1|0|Send|||||
-29|[Pause]||1|200|Sleep|||||
-30|v|{v}|1|0|Send|||||
-31|LControl Up|{LControl Up}|1|0|Send|||||
-32|[Pause]||1|200|Sleep|||||
-33|.|{.}|1|0|Send|||||
-34|[Pause]||1|200|Sleep|||||
-35|Enter|{Enter}|1|0|Send|||||
-36|[Pause]||1|200|Sleep|||||
-37|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
-38|[Pause]||1|200|Sleep|||||
-39|Left Move & Click|342, 488 Left, Down|1|0|Click|||||
-40|Left Move & Click|342, 488 Left, Up|1|0|Click|||||
+27|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
+28|Left Move & Click|330, 264 Left, Down|1|0|Click|||||
+29|Left Move & Click|330, 264 Left, Up|1|0|Click|||||
+30|[Pause]||1|200|Sleep|||||
+31|LControl Down|{LControl Down}|1|0|Send|||||
+32|p|{p}|1|0|Send|||||
+33|[Pause]||1|200|Sleep|||||
+34|v|{v}|1|0|Send|||||
+35|LControl Up|{LControl Up}|1|0|Send|||||
+36|[Text]|.|1|0|SendRaw|||||
+37|[Pause]||1|200|Sleep|||||
+38|.|{.}|1|0|Send|||||
+39|[Pause]||1|200|Sleep|||||
+40|Enter|{Enter}|1|0|Send|||||
 41|[Pause]||1|200|Sleep|||||
-42|LControl Down|{LControl Down}|1|0|Send|||||
-43|a|{a}|1|0|Send|||||
-44|[Pause]||1|200|Sleep|||||
-45|c|{c}|1|0|Send|||||
-46|LControl Up|{LControl Up}|1|0|Send|||||
-47|[Pause]||1|200|Sleep|||||
-48|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
+42|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
+43|[Pause]||1|200|Sleep|||||
+44|Left Move & Click|342, 488 Left, Down|1|0|Click|||||
+45|Left Move & Click|342, 488 Left, Up|1|0|Click|||||
+46|[Pause]||1|200|Sleep|||||
+47|LControl Down|{LControl Down}|1|0|Send|||||
+48|a|{a}|1|0|Send|||||
 49|[Pause]||1|200|Sleep|||||
-50|Left Move & Click|508, 409 Left, Down|1|0|Click|||||
-51|Left Move & Click|508, 409 Left, Up|1|0|Click|||||
+50|c|{c}|1|0|Send|||||
+51|LControl Up|{LControl Up}|1|0|Send|||||
 52|[Pause]||1|200|Sleep|||||
-53|LControl Down|{LControl Down}|1|0|Send|||||
-54|a|{a}|1|0|Send|||||
-55|[Pause]||1|200|Sleep|||||
-56|v|{v}|1|0|Send|||||
+53|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
+54|[Pause]||1|200|Sleep|||||
+55|Left Move & Click|508, 409 Left, Down|1|0|Click|||||
+56|Left Move & Click|508, 409 Left, Up|1|0|Click|||||
 57|[Pause]||1|200|Sleep|||||
-58|s|{s}|1|0|Send|||||
-59|LControl Up|{LControl Up}|1|0|Send|||||
+58|LControl Down|{LControl Down}|1|0|Send|||||
+59|a|{a}|1|0|Send|||||
 60|[Pause]||1|200|Sleep|||||
-61|Escape|{Escape}|1|0|Send|||||
+61|v|{v}|1|0|Send|||||
 62|[Pause]||1|200|Sleep|||||
-63|[LoopEnd]|LoopEnd|1|0|Loop|||||
+63|s|{s}|1|0|Send|||||
+64|LControl Up|{LControl Up}|1|0|Send|||||
+65|[Pause]||1|200|Sleep|||||
+66|Escape|{Escape}|1|0|Send|||||
+67|[Pause]||1|200|Sleep|||||
+68|[LoopEnd]|LoopEnd|1|0|Loop|||||
 
