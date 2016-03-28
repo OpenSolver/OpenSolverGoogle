@@ -64,18 +64,18 @@ function showChangelog() {
 }
 
 function checkShowChangelog() {
-  var props = PropertiesService.getDocumentProperties();
-  var previousVersion = props.getProperty(VERSION_KEY);
+  var userProps = PropertiesService.getUserProperties();
+  var previousVersion = userProps.getProperty(VERSION_KEY);
 
   var versionIsCurrent = parseInt(previousVersion, 10) >= CURRENT_VERSION;
   if (!versionIsCurrent) {
     showChangelog();
 
     // Save current version to know we have shown this changelog
-    props.setProperty(VERSION_KEY, CURRENT_VERSION);
+    userProps.setProperty(VERSION_KEY, CURRENT_VERSION);
   }
 }
 
 function detetePreviousVersion() {
-  PropertiesService.getDocumentProperties().deleteProperty(VERSION_KEY);
+  PropertiesService.getUserProperties().deleteProperty(VERSION_KEY);
 }
