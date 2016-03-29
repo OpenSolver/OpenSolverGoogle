@@ -7,14 +7,11 @@
   }
 </style>
 
-Version <?= CURRENT_VERSION ?> of OpenSolver contains the following changes:
-
-<ul>
-  <li>Feature 1</li>
-  <li>Feature 2</li>
-  <li>Bugfix 1</li>
-  <li>Bugfix 2</li>
-</ul>
+<!--
+Use `?!=` to disable HTML-escaping in include. Reference:
+https://developers.google.com/apps-script/guides/html/templates#force-printing_scriptlets
+-->
+<?!= include('news.html'); ?>
 
 If you encounter any problems, please let us know by going to the Help menu and clicking Report Issue. Make sure you include your contact details so that we can respond!
 
