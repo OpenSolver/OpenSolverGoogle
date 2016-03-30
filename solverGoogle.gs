@@ -82,7 +82,7 @@ SolverGoogle.prototype.solve = function(openSolver) {
     }
 
     // Add in objective coefficients unless we are seeking a target value
-    if (!(openSolver.objectiveSense == ObjectiveSenseType.TARGET)) {
+    if (openSolver.objectiveSense != ObjectiveSenseType.TARGET) {
       this.engine.setObjectiveCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
     }
   }

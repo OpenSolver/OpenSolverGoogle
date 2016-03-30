@@ -77,7 +77,7 @@ function setDialogState(dialogId, state) {
 function getDialogState(dialogId) {
   var key = getCacheKey_(dialogId, DialogProperty.STATE);
   var status = CacheService.getDocumentCache().get(key);
-  if (status != null) {
+  if (status !== null) {
     return status;
   } else {
     var lastCheckInKey = getCacheKey_(dialogId, DialogProperty.LAST_CHECK_IN);

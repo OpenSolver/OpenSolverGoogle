@@ -86,7 +86,7 @@ function getSheetColumnForInsertion(col, hiddenSheet) {
  */
 function insertHiddenSheetData(sheet, data) {
   // Make the array to write
-  var valuesToWrite = []
+  var valuesToWrite = [];
   valuesToWrite.push(createHiddenSheetEntry("ModelSheet",
                                             sheet.getName() + "!A:Z"));
 

@@ -477,12 +477,12 @@ OpenSolver.prototype.getConstraintFromRow = function(row) {
 
 OpenSolver.prototype.getArrayPositionFromConstraintInstance = function(constraint, instance) {
   var dim = this.lhsOriginalValues[constraint][0].length;
-  var i = 1 + parseInt(instance / dim, 10)
-  j = 1 + (instance % dim)
+  var i = 1 + parseInt(instance / dim, 10);
+  j = 1 + (instance % dim);
   return {
     i: i,
     j: j
-  }
+  };
 };
 
 OpenSolver.prototype.getVariableByName = function(name) {
@@ -515,7 +515,7 @@ OpenSolver.prototype.reportAnySubOptimality = function() {
 };
 
 OpenSolver.prototype.validateEmptyConstraint = function(row) {
-  Logger.log('Validate: row ' + row + ' relation ' + this.relation[row] + ' rhs ' + this.rhs[row])
+  Logger.log('Validate: row ' + row + ' relation ' + this.relation[row] + ' rhs ' + this.rhs[row]);
   if ((this.relation[row] === Relation.GE && this.rhs[row] > EPSILON) ||
       (this.relation[row] === Relation.LE && this.rhs[row] < -EPSILON) ||
       (this.relation[row] === Relation.EQ && Math.abs(this.rhs[row]) > EPSILON)) {
@@ -712,7 +712,7 @@ OpenSolver.prototype.fullLinearityCheck = function() {
       var c2 = valueOne[row].coeff(i);
       var c3 = valueTen[row].coeff(i);
 
-      Logger.log([c1, c2, c3])
+      Logger.log([c1, c2, c3]);
       var test1 = c1 && c2 && Math.abs(c1 - c2) / (1 + Math.abs(c1)) > EPSILON;
       var test2 = c1 && c3 && Math.abs(c1 - c3) / (1 + Math.abs(c1)) > EPSILON;
       var test3 = c2 && c3 && Math.abs(c2 - c3) / (1 + Math.abs(c2)) > EPSILON;
@@ -756,19 +756,19 @@ OpenSolver.prototype.fullLinearityCheck = function() {
     var c1 = costCoeffsZero[i];
     var c2 = costCoeffsOne[i];
     var c3 = costCoeffsTen[i];
-    Logger.log([c1, c2, c3])
+    Logger.log([c1, c2, c3]);
     var test1 = c1 && c2 && Math.abs(c1 - c2) / (1 + Math.abs(c1)) > EPSILON;
     var test2 = c1 && c3 && Math.abs(c1 - c3) / (1 + Math.abs(c1)) > EPSILON;
     var test3 = c2 && c3 && Math.abs(c2 - c3) / (1 + Math.abs(c2)) > EPSILON;
 
-    Logger.log([test1, test2, test3])
+    Logger.log([test1, test2, test3]);
     if (test1 || test2 || test3) {
       // Objective is non-linear in this var
       var varName = this.varNames[i];
       if (!objNonLinear) {
         objNonLinear = true;
         if (nonLinearInfo !== "") {
-          nonLinearInfo += '\n\n'
+          nonLinearInfo += '\n\n';
         }
         nonLinearInfo += 'The objective function appears to be non-linear in variable(s): ' + varName;
       } else {
