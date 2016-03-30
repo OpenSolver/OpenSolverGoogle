@@ -27,22 +27,6 @@ QUnit.test('relationConstHasRHS', relations.length, function(assert) {
   }
 });
 
-var nonNegStrings = ['TRUE', 'FALSE'];
-var nonNegBools = [true, false];
-
-QUnit.test('assumeNonNeg' + '\u2194' + 'Boolean conversion', nonNegStrings.length * 2, function(assert) {
-  for (var i = 0; i < nonNegStrings.length; i++) {
-    var nonNegString = nonNegStrings[i];
-    var nonNegBool = nonNegBools[i];
-    assert.equal(assumeNonNegToBoolean(AssumeNonNeg[nonNegString]),
-                 nonNegBool,
-                 nonNegString + rightArrow + nonNegBool);
-    assert.equal(assumeNonNegFromBoolean(nonNegBool),
-                 AssumeNonNeg[nonNegString],
-                 nonNegString + leftArrow + nonNegBool);
-  }
-});
-
 var errorValues = ['#DIV/0!', '#NUM!', '#N/A', '#VALUE!'];
 
 QUnit.test('valueIsError', errorValues.length, function(assert) {

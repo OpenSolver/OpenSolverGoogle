@@ -1,6 +1,8 @@
 var currentModel;
 var openSolver;
 
+// Utility functions for sidebar interaction
+
 function getSheetFromId(sheetId) {
   // Force to NaN if not a number
   sheetId = parseInt(sheetId, 10);
@@ -19,6 +21,29 @@ function getSheetFromIdWithDefault(sheetId) {
   return getSheetFromId(sheetId) || SpreadsheetApp.getActiveSheet();
 }
 
+function getModelFromSheetIdWithDefault(sheetId) {
+  return getModelFromSheetWithDefault(getSheetFromIdWithDefault(sheetId));
+}
+
+function getModelFromSheetWithDefault(sheet) {
+  sheet = sheet || SpreadsheetApp.getActiveSheet();
+  return new Model(sheet);
+}
+
+function getSelectedRange() {
+  try {
+    return SpreadsheetApp.getActiveRange();
+  } catch (e) {
+    showMessage(e.message);
+    return null;
+  }
+}
+
+function getSelectedRangeNotation() {
+  return getRangeNotation(SpreadsheetApp.getActiveSheet(), getSelectedRange());
+}
+
+// Sidebar API functions - depend on Sheet ID to get the sheet containing model
 
 function getSidebarData(sheetId) {
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
@@ -37,7 +62,7 @@ function getSidebarData(sheetId) {
         });
 
   var currentSheet = getSheetFromIdWithDefault(sheetId);
-  currentModel = loadModelFromSheet(currentSheet);
+  currentModel = getModelFromSheetWithDefault(currentSheet);
 
   var sheetIndex = sheetData.map(function(sheet) { return sheet.id; })
                             .indexOf(currentSheet.getSheetId());
@@ -51,76 +76,77 @@ function getSidebarData(sheetId) {
 }
 
 function updateObjective(sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.updateObjective(getSelectedRange()).getSidebarData();
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel
+      .updateObjective(getSelectedRangeNotation())
+      .getSidebarData();
 }
 
 function deleteObjective(sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
   return currentModel.deleteObjective().getSidebarData();
 }
 
 function updateObjectiveSense(objSense, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.updateObjectiveSense(objSense);
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateObjectiveSense(objSense).getSidebarData();
 }
 
 function updateObjectiveTarget(objVal, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.updateObjectiveTarget(objVal);
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateObjectiveTarget(objVal).getSidebarData();
 }
 
 function addVariable(sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.addVariable(getSelectedRange()).getSidebarData();
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel
+      .addVariable(getSelectedRangeNotation())
+      .getSidebarData();
 }
 
 function updateVariable(index, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.updateVariable(index, getSelectedRange()).getSidebarData();
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel
+      .updateVariable(index, getSelectedRangeNotation())
+      .getSidebarData();
 }
 
 function deleteVariable(index, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
   return currentModel.deleteVariable(index).getSidebarData();
 }
 
 function saveConstraint(LHSstring, RHSstring, RELstring, index, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  return currentModel.saveConstraint(LHSstring, RHSstring, RELstring, index).getSidebarData();
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel
+      .updateConstraint(LHSstring, RHSstring, RELstring, index)
+      .getSidebarData();
 }
 
 function deleteConstraint(index, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
   return currentModel.deleteConstraint(index).getSidebarData();
 }
 
 function updateAssumeNonNeg(nonNeg, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.updateAssumeNonNeg(nonNeg);
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateAssumeNonNeg(nonNeg).getSidebarData();
 }
 
 function updateShowStatus(showStatus, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.updateShowStatus(showStatus);
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateShowStatus(showStatus).getSidebarData();
 }
 
 function updateCheckLinear(checkLinear, sheetId) {
-  currentModel = loadModelFromSheet(getSheetFromIdWithDefault(sheetId));
-  currentModel.updateCheckLinear(checkLinear);
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateCheckLinear(checkLinear).getSidebarData();
 }
 
-function getSelectedRange() {
-  try {
-    return SpreadsheetApp.getActiveRange();
-  } catch (e) {
-    showMessage(e.message);
-    return null;
-  }
-}
-
-function getSelectedRangeNotation() {
-  return getRangeNotation(SpreadsheetApp.getActiveSheet(), getSelectedRange());
+function updateConstraintSelection(sheetId) {
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return removeSheetNameFromRange(getSelectedRangeNotation(),
+                                  escapeSheetName(currentModel.sheet));
 }
 
 function solveModel(sheetId) {
@@ -128,10 +154,10 @@ function solveModel(sheetId) {
   return openSolver.solveModel();
 }
 
-function checkClearModel(sheetId) {
+function checkResetModel(sheetId) {
   return showDialog('dialogResetModel', 'Reset Model?', 75);
 }
 
-function clearModel(sheetId) {
-  return resetModel(getSheetFromIdWithDefault(sheetId)).getSidebarData();
+function resetModel(sheetId) {
+  return new Model(getSheetFromIdWithDefault(sheetId), false).getSidebarData();
 }

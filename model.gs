@@ -1,21 +1,84 @@
-Model = function(sheet) {
+Model = function(sheet, loadFromSheet) {
   if (!sheet) {
     return null;
   }
+  if (loadFromSheet === undefined || isBool(loadFromSheet)) {
+    loadFromSheet = true;
+  }
+
   this.sheet = sheet;
+
+  // Load the model data on the sheet if requested
+  var data = loadFromSheet ? getHiddenSheetData(this.sheet) : {};
+
+  this.assumeNonNeg =   getSavedBool(   data, solverName("neg"), true);
+  this.showStatus =     getSavedBool(   data, solverName("sho"), true);
+  this.objective =      getSavedString( data, solverName("obj"), '');
+  this.objectiveVal =   getSavedDouble( data, solverName("val"), 0);
+  this.objectiveSense = getSavedInteger(data, solverName("typ"),
+                                        ObjectiveSenseType.MINIMISE);
+
   this.constraints = [];
+  var numConstraints = getSavedInteger(data, solverName("num"), 0);
+  for (var i = 0; i < numConstraints; i++) {
+    var lhs = getSavedString( data, solverName("lhs" + i));
+    var rel = getSavedInteger(data, solverName("rel" + i));
+    var rhs = getSavedString( data, solverName("rhs" + i));
+    this.constraints.push(new Constraint(lhs, rhs, rel));
+  }
+
   this.variables = [];
-  this.objective = '';
-  this.objectiveSense = ObjectiveSenseType.MINIMISE;
-  this.objectiveVal = 0;
-  this.assumeNonNeg = true;
-  this.showStatus = false;
-  this.checkLinear = true;
+  // Load a default length of 1 so that we always look for solver_adj
+  var numVariables = getSavedInteger(data, openSolverName("AdjNum"), 1);
+  for (var j = 0; j < numVariables; j++) {
+    var adj = getSavedString(data, solverName("adj" + variableIndex(j)), '');
+    if (adj) {
+      this.variables.push(adj);
+    }
+  }
+
+  this.checkLinear = getSavedBool(data, openSolverName("LinearityCheck"), true);
+
+  return this;
 };
 
-Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
-  // TODO move validation logic into API
+Model.prototype.save = function() {
+  data = {};
+  if (this.objective) {
+    setSavedString( data, solverName("obj"), this.objective);
+  }
+  setSavedInteger(  data, solverName("typ"), this.objectiveSense);
+  setSavedDouble(   data, solverName("val"), this.objectiveVal);
+  setSavedBool(     data, solverName("neg"), this.assumeNonNeg);
+  setSavedBool(     data, solverName("sho"), this.showStatus);
+  setSavedInteger(  data, solverName("num"), this.constraints.length);
 
+  for (var i = 0; i < this.constraints.length; i++) {
+    setSavedString( data, solverName('lhs' + i), this.constraints[i].lhs);
+    setSavedString( data, solverName('rhs' + i), this.constraints[i].rhs);
+    setSavedInteger(data, solverName('rel' + i), this.constraints[i].rel);
+  }
+
+  for (var j = 0; j < this.variables.length; j++) {
+    setSavedString( data, solverName('adj' + variableIndex(j)),
+                    this.variables[j]);
+  }
+
+  setSavedInteger(  data, openSolverName("AdjNum"), this.variables.length);
+  setSavedBool(     data, openSolverName("LinearityCheck"), this.checkLinear);
+
+  insertHiddenSheetData(this.sheet, data);
+
+  return this;
+};
+
+// Constraint API
+
+Model.prototype.addConstraint = function(lhs, rhs, rel) {
+  return this.updateConstraint(-1, lhs, rhs, rel);
+};
+
+Model.prototype.updateConstraint = function(lhs, rhs, rel, index) {
   if (!lhs) {
     showError(ERR_LHS_BLANK());
     return;
@@ -98,95 +161,86 @@ Model.prototype.saveConstraint = function(lhs, rhs, rel, index) {
   } else {
     this.constraints[index] = constraint;
   }
-  setConstraints(this.constraints, this.sheet);
   return this;
 };
 
 Model.prototype.deleteConstraint = function(index) {
   this.constraints.splice(index, 1);
-  setConstraints(this.constraints, this.sheet);
   return this;
 };
 
-Model.prototype.load = function() {
-  this.constraints = getConstraints(this.sheet);
-  this.variables = getVariables(this.sheet);
-  this.objective = getObjective(this.sheet);
-  this.objectiveSense = getObjectiveSense(this.sheet);
-  this.objectiveVal = getObjectiveTargetValue(this.sheet);
-  this.assumeNonNeg = getAssumeNonNegative(this.sheet);
-  this.showStatus = getShowStatus(this.sheet);
-  this.checkLinear = getCheckLinear(this.sheet);
-  return this;
+// Variable API
+
+Model.prototype.addVariable = function(varString) {
+  return this.updateVariable(-1, varString);
 };
 
-Model.prototype.updateObjective = function(objRange) {
-  // Make sure objective cell is a single cell
-  if (objRange.getNumColumns() !== 1 || objRange.getNumRows() !== 1) {
-    showError(ERR_OBJ_NOT_SINGLE_CELL());
-  } else {
-    this.objective = getRangeNotation(this.sheet, objRange);
-    setObjective(this.objective, this.sheet);
-  }
-  return this;
-};
-
-Model.prototype.deleteObjective = function() {
-  return this.updateObjective(new MockRange([[0]]));
-};
-
-Model.prototype.updateObjectiveSense = function(objSense) {
-  this.objectiveSense = objSense;
-  setObjectiveSense(this.objectiveSense, this.sheet);
-  return this;
-};
-
-Model.prototype.updateObjectiveTarget = function(objVal) {
-  this.objectiveVal = objVal;
-  setObjectiveTargetValue(this.objectiveVal, this.sheet);
-  return this;
-};
-
-Model.prototype.addVariable = function(varRange) {
-  return this.updateVariable(-1, varRange);
-};
-
-Model.prototype.updateVariable = function(index, varRange) {
-  var varString = getRangeNotation(this.sheet, varRange);
+Model.prototype.updateVariable = function(index, varString) {
   if (index >= 0) {
     this.variables[index] = varString;
   } else {
     this.variables.push(varString);
   }
-  setVariables(this.variables, this.sheet);
   return this;
 };
 
 Model.prototype.deleteVariable = function(index) {
   this.variables.splice(index, 1);
-  setVariables(this.variables, this.sheet);
+  return this;
+};
+
+// Objective API
+
+Model.prototype.updateObjective = function(obj) {
+  if (obj) {
+    var objRange = this.sheet.getRange(obj);
+    // Make sure objective cell is a single cell
+    if (objRange.getNumColumns() !== 1 || objRange.getNumRows() !== 1) {
+      showError(ERR_OBJ_NOT_SINGLE_CELL());
+    } else {
+      this.objective = obj;
+    }
+  } else {
+    this.objective = '';
+  }
+  return this;
+};
+
+Model.prototype.deleteObjective = function() {
+  return this.updateObjective('');
+};
+
+// Other APIs
+
+Model.prototype.updateObjectiveSense = function(objSense) {
+  this.objectiveSense = objSense;
+  return this;
+};
+
+Model.prototype.updateObjectiveTarget = function(objVal) {
+  this.objectiveVal = objVal;
   return this;
 };
 
 Model.prototype.updateAssumeNonNeg = function(nonNeg) {
   this.assumeNonNeg = nonNeg;
-  setAssumeNonNegative(this.assumeNonNeg, this.sheet);
   return this;
 };
 
 Model.prototype.updateShowStatus = function(showStatus) {
   this.showStatus = showStatus;
-  setShowStatus(this.showStatus, this.sheet);
   return this;
 };
 
 Model.prototype.updateCheckLinear = function(checkLinear) {
   this.checkLinear = checkLinear;
-  setCheckLinear(this.checkLinear, this.sheet);
   return this;
 };
 
+// Info needed for sidebar
+
 Model.prototype.getSidebarData = function() {
+  this.save();
   var escapedSheetName = escapeSheetName(this.sheet);
   return {
     constraints: this.constraints.map(function(constraint) {
@@ -208,15 +262,5 @@ Model.prototype.getSidebarData = function() {
   };
 };
 
-Model.prototype.save = function() {
-  setConstraints(this.constraints, this.sheet);
-  setVariables(this.variables, this.sheet);
-  setObjective(this.objective, this.sheet);
-  setObjectiveSense(this.objectiveSense, this.sheet);
-  setObjectiveTargetValue(this.objectiveTarget, this.sheet);
-  setAssumeNonNegative(this.assumeNonNeg, this.sheet);
-  setShowStatus(this.showStatus, this.sheet);
-  setCheckLinear(this.checkLinear, this.sheet);
-  return this;
-};
+
 

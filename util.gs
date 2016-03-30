@@ -207,13 +207,24 @@ function checkRangeValuesNumeric(range, errorInvalid, errorNotNumeric) {
 }
 
 function removeSheetNameFromRange(rangeNotation, sheetName) {
-  if (sheetName + '') {
+  if (sheetName + '' && rangeNotation + '') {
     var searchString = sheetName + '!';
     if (rangeNotation.indexOf(searchString) === 0) {
       return rangeNotation.substr(searchString.length);
     }
   }
   return rangeNotation;
+}
+
+function getSheetNameFromRange(rangeNotation) {
+  var values = rangeNotation.split("!");
+  if (values.length === 1) {
+    return values[0];
+  } else if (values.length === 2) {
+    return values[0];
+  } else {
+    return null;
+  }
 }
 
 function isBool(value) {
@@ -226,4 +237,20 @@ function isNumber(value) {
 
 function isInt(value) {
   return isNumber(value) && Math.floor(value) == value;
+}
+
+
+/**
+ * Returns the name of a sheet for use in a range expression (Sheet!Range)
+ *
+ * @param {Sheet} sheet the sheet to get the name from
+ * @return {String} the escaped name of the sheet
+ */
+function escapeSheetName(sheet) {
+  // TODO escape this. figure out which characters force quoting
+  return sheet.getSheetName();
+}
+
+function getRangeNotation(sheet, range) {
+  return escapeSheetName(sheet) + '!' + range.getA1Notation();
 }

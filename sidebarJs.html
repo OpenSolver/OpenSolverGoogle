@@ -187,7 +187,7 @@
             enableUi();
             hideWait();
           })
-        .getSelectedRangeNotation();
+        .updateConstraintSelection(curSheetId);
   }
 
   function saveConstraint() {
@@ -324,7 +324,7 @@
           }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
           intervalIds[dialogId] = intervalId;
         })
-      .checkClearModel();
+      .checkResetModel();
   }
 
   function completeResetModel(state) {
@@ -339,7 +339,7 @@
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(loadModel)
-      .clearModel(curSheetId);
+      .resetModel(curSheetId);
   }
 
   function updateShowStatus() {
