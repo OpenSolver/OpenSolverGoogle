@@ -2,27 +2,32 @@
 
 <?!= include('sidebarCss'); ?>
 
-<div id="main" class="sidebar branding-below wait">
+<div id="main" class="sidebar wait">
   <form>
-    <div class="block col-contain">
-      <b>Sheet:</b>
-      <div class="clearfix width-100">
-        <select id="select-sheet">
-        </select>
-        <button id="button-sheet-current">Use Current Sheet</button>
+    <div class="block">
+      <div id="select-sheet-header">
+        <span id="select-sheet-label">
+          <b>Sheet:</b>
+        </span>
+        <span id="button-sheet-current-container">
+          <button id="button-sheet-current">Current Sheet</button>
+        </span>
+        <div id="select-sheet-container">
+          <select id="select-sheet"></select>
+        </div>
       </div>
-
-      <hr class="divider">
 
       <b>Objective Cell:</b>
-      <div id="objective-cell">
-        <input type="text" id="text-objective-cell" class="text-range" disabled>
+      <div>
         <button id="button-clear-objective" class="objective-button">Clear</button>
         <button id="button-update-objective" class="objective-button">Update</button>
+        <div style="overflow: hidden">
+          <input type="text" id="text-objective-cell" class="text-range" disabled>
+        </div>
       </div>
-      <div class="spacer error" id="error-objective-cell"></div>
+
       <b>Objective Sense:</b>
-      <div class="clearfix">
+      <div class="clearfix width-100">
         <div class="col-half">
           <div>
             <input type="radio" name="objective-sense" id="radio-objective-sense-min" value="2" checked="checked">
@@ -38,7 +43,7 @@
             <input type="radio" name="objective-sense" id="radio-objective-sense-target" value="3">
             <label for="radio-objective-sense-min">target value:</label>
           </div>
-          <div>
+          <div style="overflow: hidden; padding-left: 24px">
             <input type="number" id="text-objective-sense-target-value" val="0" step="any">
           </div>
         </div>
@@ -47,13 +52,13 @@
       <hr class="divider">
 
       <b>Variable Cells:</b>
-      <div class="clearfix  width-100">
+      <div class="clearfix width-100">
         <div class="col-twothird">
-          <select size="8" id="select-variable-cells"></select>
+          <select size="8" id="select-variable-cells" class="select-cells"></select>
         </div>
         <div class="col-third variable-button-container">
           <div>
-            <button id="button-add-variable" class="variable-button">Add</button>
+            <button id="button-add-variable" class="variable-button top-button">Add</button>
           </div>
           <div>
             <button id="button-update-variable" class="variable-button">Update</button>
@@ -74,24 +79,17 @@
       <hr class="divider">
 
       <b>Constraints:</b>
-      <div class="clearfix  width-100">
-        <div class="col-twothird">
-          <select size="8" id="select-constraint-cells"></select>
-        </div>
-        <div class="col-third constraint-button-container">
-          <div>
-            <button id="button-save-constraint" class="constraint-button">Save</button>
-          </div>
-          <div>
-            <button id="button-cancel-constraint" class="constraint-button">Cancel</button>
-          </div>
-          <div>
-            <button id="button-delete-constraint" class="constraint-button">Delete</button>
-          </div>
+      <div class="width-100">
+        <select size="8" id="select-constraint-cells" class="select-cells"></select>
+      </div>
+      <b>Selected Constraint:</b>
+      <div>
+        <button id="button-edit-constraint-lhs" class="edit-constraint-button">Update</button>
+        <div style="overflow: hidden">
+          <input type="text" id="text-constraint-lhs" class="text-constraint text-range" disabled>
         </div>
       </div>
       <div>
-        <input type="text" id="text-constraint-lhs" class="text-constraint text-range" disabled>
         <select id="select-constraint-rel">
           <option value="1">&lt;=</option>
           <option value="2">==</option>
@@ -99,40 +97,39 @@
           <option value="4">int</option>
           <option value="5">bin</option>
         </select>
-        <input type="text" id="text-constraint-rhs" class="text-constraint text-range" disabled>
       </div>
       <div>
-        <div class="inline form-group edit-constraint-button-container" id="edit-constraint-button-lhs-container">
-          <button id="button-edit-constraint-lhs" class="edit-constraint-button">Update Left Side</button>
-        </div>
-        <div class="inline form-group edit-constraint-button-container" id="edit-constraint-button-rhs-container">
-          <button id="button-edit-constraint-rhs" class="edit-constraint-button">Update Right Side</button>
+        <button id="button-edit-constraint-rhs" class="edit-constraint-button">Update</button>
+        <div style="overflow: hidden">
+          <input type="text" id="text-constraint-rhs" class="text-constraint text-range" disabled>
         </div>
       </div>
-    </div>
 
-    <hr class="divider">
+      <div class="constraint-button-container">
+        <button id="button-save-constraint" class="first-button">Save</button>
+        <button id="button-cancel-constraint" class="second-button">Cancel</button>
+        <button id="button-delete-constraint" class="third-button">Delete</button>
+      </div>
 
-    <div id="solve-button-container">
-      <div class="inline form-group solve-button-container" id="solve-model-button-container">
+      <hr class="divider">
+
+      <div id="solve-button-container">
         <button id="button-solve" class="action solve-button">Solve Model</button>
+        <button id="button-reset" class="solve-button second-button">Reset Model</button>
       </div>
-      <div class="inline form-group solve-button-container" id="reset-model-button-container">
-        <button id="button-reset" class="solve-button">Reset Model</button>
-      </div>
-    </div>
 
-    <div>
-      <div class="inline form-group">
-        <input type="checkbox" id="checkbox-show-status">
-        <label for="checkbox-show-status">Show progress while solving</label>
+      <div>
+        <div class="inline form-group">
+          <input type="checkbox" id="checkbox-show-status">
+          <label for="checkbox-show-status">Show progress while solving</label>
+        </div>
       </div>
-    </div>
 
-    <div>
-      <div class="inline form-group">
-        <input type="checkbox" id="checkbox-check-linear">
-        <label for="checkbox-check-linear">Check solution is linear</label>
+      <div>
+        <div class="inline form-group">
+          <input type="checkbox" id="checkbox-check-linear">
+          <label for="checkbox-check-linear">Check solution is linear</label>
+        </div>
       </div>
     </div>
 

@@ -4,8 +4,32 @@
 <style>
 
 #main {
-  position: initial;
   padding: 6px;
+  margin-top: 0;
+  position: initial;
+  overflow: visible;
+  top: 49px;
+  position: relative;
+}
+
+#select-sheet-header {
+  background: #c1c1c1;
+  padding: 10px 14px;
+  position: fixed;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.top > div {
+  padding: 10px 14px;
+}
+
+#select-sheet-label {
+  float: left;
+  line-height: 29px;
+  padding-right: 6px;
 }
 
 .wait, .wait * {
@@ -57,41 +81,68 @@ input[type=text] {
 }
 
 #select-sheet {
-  width: 51%;
-  vertical-align: middle;
+  width: 100%;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+#select-sheet-container {
+  overflow: hidden;
+  background-color: white;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
 }
 
 #button-sheet-current {
-  margin-left: 10px;
-  vertical-align: middle;
+  margin-left: -1px;
+  border-bottom-left-radius: 0px;
+  border-top-left-radius: 0px;
+
+}
+
+#button-sheet-current-container {
   float: right;
+  background-color: white;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+#button-sheet-current, #select-sheet {
+  border-color: #aaa;
+  z-index: 8;
+  position: relative;
+}
+
+#button-sheet-current:hover, #select-sheet:hover {
+  border-color: #888;
+  z-index: 9;
 }
 
 #text-objective-cell {
-  width: 35%;
-  vertical-align: middle;
+  margin-bottom: 12px;
 }
 
 #text-objective-sense-target-value {
-  width: 84%;
-  margin-left: 20px;
-  float: right;
-}
-
-#select-variable-cells, #select-constraint-cells {
   width: 100%;
-  margin: 10px 0;
+}
+
+#select-constraint-cells {
+  margin-bottom: 10px;
+}
+
+#select-variable-cells {
+  height: 107px;
+}
+
+.select-cells {
+  width: 100%;
+  margin: 0;
   text-align: left;
+  height: 107px;
 }
 
-.objective-button {
-  margin-left: 10px;
-  width: 25%;
-  vertical-align: middle;
-  float: right;
-}
 
-.variable-button-container, .constraint-button-container {
+.variable-button-container {
   padding-left: 10px;
 }
 
@@ -100,39 +151,65 @@ input[type=text] {
   float: right;
 }
 
-.text-constraint {
-  width: 32%;
+.constraint-button-container > button {
+  width: 30%;
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+
+.second-button, .third-button {
+  margin-left: 5%;
+  float: right;
+}
+
+.variable-button.top-button, .constraint-button.top-button {
+  margin-top: 0;
+}
+
+.text-constraint, #text-objective-cell {
+  width: 100%;
+  border-bottom-right-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-right-width: 0 !important;
 }
 
 #select-constraint-rel {
   width: 28%;
+  margin: 6px 0;
 }
 
-#select-constraint-rel, #text-constraint-rhs {
-  margin-left: 6px;
-}
-
-.edit-constraint-button-container, .solve-button-container {
+.edit-constraint-button-container, .solve-button-container, .objective-button-container {
   width: 47%;
 }
 
-.edit-constraint-button-container {
+.edit-constraint-button-container, .objective-button-container {
   margin-top: 10px;
 }
 
-#edit-constraint-button-rhs-container, #text-constraint-rhs, #reset-model-button-container {
+#reset-model-button-container, #clear-objective-button-container {
   float: right;
 }
 
-#edit-constraint-button-lhs-container, #solve-model-button-container {
+#solve-model-button-container, #update-objective-button-container {
   float: left;
 }
 
-.edit-constraint-button, .solve-button {
-  width: 100%;
+.edit-constraint-button, .objective-button {
+  float: right;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  min-width: 50px;
+  margin: 0;
 }
 
-#solve-button-container {
+#button-update-objective {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+  border-right-width: 0;
+}
+
+#solve-button-container > button {
+  width: 47%;
   margin-bottom: 10px;
 }
 
