@@ -75,7 +75,7 @@ Model.prototype.save = function() {
 // Constraint API
 
 Model.prototype.addConstraint = function(lhs, rhs, rel) {
-  return this.updateConstraint(-1, lhs, rhs, rel);
+  return this.updateConstraint(lhs, rhs, rel, -1);
 };
 
 Model.prototype.updateConstraint = function(lhs, rhs, rel, index) {
