@@ -220,6 +220,7 @@ function setSavedInteger(data, name, value) {
   if (isInt(value)) {
     setSavedDouble(data, name, value);
   } else {
+    Logger.log('Not integer: ' + name + ', ' + value);
     throw 'Value not integer';
   }
 }
