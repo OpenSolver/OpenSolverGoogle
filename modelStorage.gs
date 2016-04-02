@@ -124,7 +124,7 @@ function getHiddenSheetData(sheet, loadCacheOnly) {
   _HIDDEN_SHEET = hiddenSheet;
 
   // Return no data if hidden sheet doesn't contain the specified sheet.
-  if (col === -1) {
+  if (col === -1 || loadCacheOnly) {
     return {};
   }
 

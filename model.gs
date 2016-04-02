@@ -2,14 +2,14 @@ Model = function(sheet, loadFromSheet) {
   if (!sheet) {
     return null;
   }
-  if (loadFromSheet === undefined || isBool(loadFromSheet)) {
+  if (loadFromSheet === undefined || !isBool(loadFromSheet)) {
     loadFromSheet = true;
   }
 
   this.sheet = sheet;
 
   // Load the model data on the sheet if requested
-  var data = loadFromSheet ? getHiddenSheetData(this.sheet) : {};
+  var data = getHiddenSheetData(this.sheet, !loadFromSheet);
 
   this.assumeNonNeg =   getSavedBool(   data, solverName("neg"), true);
   this.showStatus =     getSavedBool(   data, solverName("sho"), true);
