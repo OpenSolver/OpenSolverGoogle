@@ -105,14 +105,16 @@ function insertHiddenSheetData(sheet, data) {
   var rangeToWrite = hiddenSheet.getRange(1, col + 1, numNames, 1);
 
   // Clear column and write values
-  hiddenSheet.getRange(1, col + 1, lastRow, 1).clear();
+  if (lastRow > 0) {
+    hiddenSheet.getRange(1, col + 1, lastRow, 1).clear();
+  }
   rangeToWrite.setValues(valuesToWrite);
 }
 
 /**
  * Returns all data for the specified sheet from the hidden sheet.
  */
-function getHiddenSheetData(sheet) {
+function getHiddenSheetData(sheet, loadCacheOnly) {
   var hiddenSheet = getHiddenSheet();
   var values = getHiddenSheetValues(hiddenSheet);
   var col = getSheetColumn(sheet, values);
