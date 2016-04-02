@@ -87,11 +87,15 @@ SolverNeos.prototype.solve = function(openSolver) {
                                       : '';
       updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
                    'Waiting in queue to start...' + queueString,
-                   'Solving model on NEOS...');
+                   'Solving model on NEOS...',
+                   false,
+                   TIME_INCREMENT);
     } else if (jobStatus == 'Running') {
       updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
                    'Model is solving...',
-                   'Solving model on NEOS...');
+                   'Solving model on NEOS...',
+                   false,
+                   TIME_INCREMENT);
     } else {
       Logger.log(jobStatus);
       throw('An error occured while waiting for NEOS. NEOS returned: ' +

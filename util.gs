@@ -159,12 +159,13 @@ function createArray(length) {
   return arr;
 }
 
-function updateStatus(msg, title, priority) {
+function updateStatus(msg, title, priority, timeoutSeconds) {
   if (openSolver && openSolver.showStatus) {
     lastToastTime = lastToastTime || 0;
     var now = new Date().getTime();
     if (now - lastToastTime > (TOAST_TIMEOUT) * 1000 || priority) {
-      SpreadsheetApp.getActiveSpreadsheet().toast(msg, title);
+      SpreadsheetApp.getActiveSpreadsheet().toast(msg, title,
+                                                  timeoutSeconds || null);
       lastToastTime = now;
     }
   }
