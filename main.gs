@@ -12,6 +12,9 @@ var VERSION_KEY = 'OpenSolver_CurrentVersion';
 function onOpen(e) {
   SpreadsheetApp.getUi().createAddonMenu()
       .addItem('Open sidebar', 'showSidebar')
+      .addSeparator()
+      .addItem('Show legacy model data', 'showProperties')
+      .addItem('Import legacy model', 'importLegacyModel')
       .addToUi();
 }
 
@@ -37,6 +40,27 @@ function showSidebar() {
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
   checkShowChangelog();
+}
+
+/**
+ * Converts a legacy (properties) model into sheet-storage model
+ */
+function importLegacyModel() {
+  var ui = SpreadsheetApp.getUi();
+  var result = ui.alert(
+      'Import legacy OpenSolver model?',
+      'This will load a model from the previous version of OpenSolver as the ' +
+      'model for the current sheet. It will replace any model on this sheet ' +
+      'that was created by the current version of OpenSolver. The model ' +
+      'from the previous version will not be affected. Do you want to proceed?',
+      ui.ButtonSet.YES_NO);
+
+  if (result == ui.Button.YES) {
+    Logger.log('starting legacy load');
+    var model = loadLegacyModel(SpreadsheetApp.getActiveSheet());
+    model.save();
+    showSidebar();
+  }
 }
 
 /**
