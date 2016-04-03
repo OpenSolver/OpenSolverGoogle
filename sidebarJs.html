@@ -30,7 +30,7 @@
 
     $('#checkbox-non-negative').change(updateAssumeNonNeg);
 
-    $('#button-solve').click(solveModel);
+    $('#button-solve').click(checkSolveModel);
     $('#button-reset').click(checkResetModel);
     $('#checkbox-show-status').change(updateShowStatus);
     $('#checkbox-check-linear').change(updateCheckLinear);
@@ -286,7 +286,7 @@
 
   }
 
-  function loadSidebar() {
+  function loadSidebar(keepWait, callback) {
     // Reset any selections in the lists
     setSelectedIndex($('#select-constraint-cells'), -1);
     setSelectedIndex($('#select-variable-cells'), -1);
@@ -300,18 +300,60 @@
             curEscapedSheetName = data.escapedSheetName;
             populateSheetSelect(data.sheets);
             selectSheet(data.sheetIndex);
-            loadModel(data.model);
+            loadModel(data.model, keepWait);
+            console.log(callback);
+            if (callback) { callback() };
           })
         .getSidebarData(curSheetId);
 
   }
 
-  function solveModel() {
+  function checkSolveModel() {
+    showWait();
+    google.script.run
+      .withSuccessHandler(
+        function(dialogId) {
+          if (dialogId) {
+            var intervalId = window.setInterval(function() {
+              checkDialog(dialogId, completeSolveModel);
+            }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
+            intervalIds[dialogId] = intervalId;
+          } else {
+            // No dialog was shown, so there's nothing in the cache.
+            // We can just solve
+            solveModel();
+          }
+        })
+      .checkSolveModel();
+  }
+
+  function completeSolveModel(state) {
+    showWait();
+    console.log('taking action on: ' + state);
+    if (state === 'done') {
+      google.script.run
+        .withSuccessHandler(
+          function(cachedSheetId) {
+            curSheetId = cachedSheetId;
+            loadSidebar(true, function() {
+                solveModel(true);
+            });
+          })
+        .getCachedSheetId();
+
+    } else if (state === 'aborted') {
+      solveModel();
+    } else {
+      hideWait();
+    }
+  }
+
+  function solveModel(loadFromCache) {
     showWait();
     google.script.run
       .withFailureHandler(hideWait)
       .withSuccessHandler(hideWait)
-      .solveModel(curSheetId);
+      .solveModel(curSheetId, loadFromCache);
   }
 
   function checkResetModel() {
@@ -362,7 +404,7 @@
     enableUi();
   }
 
-  function loadModel(model) {
+  function loadModel(model, keepWait) {
     if (model) {
       var $constraints = $('#select-constraint-cells');
       var currentIndex = getSelectedIndex($constraints);
@@ -399,7 +441,11 @@
       $('#checkbox-check-linear').prop('checked', model.checkLinear);
     }
 
-    hideWait();
+    if (keepWait === true) {
+      showWait();
+    } else {
+      hideWait();
+    }
   }
 
   // CODE FOR DIALOG LISTENING

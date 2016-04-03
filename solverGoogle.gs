@@ -56,6 +56,8 @@ SolverGoogle.prototype.getVariableValue = function(varKey) {
 };
 
 SolverGoogle.prototype.solve = function(openSolver) {
+  updateStatus('Model is being solved by solver', 'Solving Model', true);
+
   this.engine = LinearOptimizationService.createEngine();
 
   var lowerBound = -Infinity;

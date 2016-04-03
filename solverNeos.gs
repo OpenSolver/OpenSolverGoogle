@@ -1,12 +1,20 @@
 SolverNeos = function() {
   Solver.call(this);
+
+  // NEOS details
+  this.jobNumber = null;
+  this.jobPassword = null;
+
+  // Result details
   this.solve_result_num = -1;
   this.objectiveValue = null;
   this.variableValues = {};
+
+  return this;
 };
 
 SolverNeos.prototype = Object.create(Solver.prototype);
-SolverNeos.prototype.constructor = SolverGoogle;
+SolverNeos.prototype.constructor = SolverNeos;
 
 SolverNeos.prototype.getStatus = function() {
   var result;
@@ -66,44 +74,19 @@ SolverNeos.prototype.getVariableValue = function(varKey) {
 };
 
 SolverNeos.prototype.solve = function(openSolver) {
-  var amplModel = createAmplModel(openSolver);
-  Logger.log(amplModel);
+  // Skip submission if the solver has already submitted the job.
+  // This happens if we are resuming a solve from the cache after timeout.
+  if (!this.jobNumber || !this.jobPassword) {
+    this.submitJob(openSolver);
+    openSolver.updateCache();
 
-  updateStatus('Sending model to NEOS server', 'Solving model on NEOS...');
-  var jobInfo = submitJob(amplModel);
-
-  var timeElapsed = 0;
-  var TIME_INCREMENT = 10;
-  while (true) {
-    Utilities.sleep(TIME_INCREMENT * 1000);
-    timeElapsed += TIME_INCREMENT;
-
-    var jobStatus = getJobStatus(jobInfo.jobNumber, jobInfo.jobPassword);
-    if (jobStatus == 'Done') {
-      break;
-    } else if (jobStatus == 'Waiting') {
-      var queuePosition = getQueuePosition(jobInfo.jobNumber);
-      var queueString = queuePosition ? '\nPosition in queue: ' + queuePosition
-                                      : '';
-      updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
-                   'Waiting in queue to start...' + queueString,
-                   'Solving model on NEOS...',
-                   false,
-                   TIME_INCREMENT);
-    } else if (jobStatus == 'Running') {
-      updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
-                   'Model is solving...',
-                   'Solving model on NEOS...',
-                   false,
-                   TIME_INCREMENT);
-    } else {
-      Logger.log(jobStatus);
-      throw('An error occured while waiting for NEOS. NEOS returned: ' +
-            jobStatus);
-    }
+    // For testing resume.
+    throw(makeError('stop before getting results'));
   }
 
-  var finalResults = getFinalResults(jobInfo.jobNumber, jobInfo.jobPassword);
+  waitForCompletion(this.jobNumber, this.jobPassword);
+
+  var finalResults = getFinalResults(this.jobNumber, this.jobPassword);
   this.extractResults(finalResults, openSolver.varKeys);
 
   return this.getStatus();
@@ -171,4 +154,26 @@ SolverNeos.prototype.extractResults = function(finalResults, varNames) {
   this.objectiveValue = objValue;
 
   Logger.log(this.variableValues);
+  return this;
+};
+
+SolverNeos.prototype.submitJob = function(openSolver) {
+  var amplModel = createAmplModel(openSolver);
+  Logger.log(amplModel);
+
+  updateStatus('Sending model to NEOS server', 'Solving model on NEOS...',
+               true, TIME_BETWEEN_CHECKS);
+  var jobInfo = submitJob(amplModel);
+  this.jobNumber =   jobInfo.jobNumber;
+  this.jobPassword = jobInfo.jobPassword;
+  return this;
+};
+
+SolverNeos.prototype.loadFromCache = function(data) {
+  var keys = data ? Object.keys(data) : [];
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    this[key] = data[key];
+  }
+  return this;
 };

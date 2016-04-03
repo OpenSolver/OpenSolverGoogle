@@ -19,3 +19,7 @@ Solver.prototype.getVariableValue = function(varKey) {
 Solver.prototype.solve = function(openSolver) {
   return this.getStatus;
 };
+
+Solver.prototype.loadFromCache = function() {
+  return this;
+};

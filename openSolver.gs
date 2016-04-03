@@ -1,5 +1,6 @@
 OpenSolver = function(sheet) {
   this.sheet = sheet;
+  this.sheetId = sheet.getSheetId();
 
   this.showStatus = false;
   this.minimiseUserInteraction = false;
@@ -15,6 +16,7 @@ OpenSolver = function(sheet) {
   this.linearityOffset = 0;
 
   this.numVariableAreas = 0;
+  this.variableAreaStrings = [];
   this.variableAreas = [];
   this.numVars = 0;
 
@@ -27,6 +29,7 @@ OpenSolver = function(sheet) {
 
   this.objectiveSense = ObjectiveSenseType.UNKNOWN;
   this.objectiveTarget = null;
+  this.objectiveString = null;
   this.objective = null;
   this.objectiveValue = 0;
 
@@ -34,9 +37,13 @@ OpenSolver = function(sheet) {
   this.numRows = 0;
   this.mappingRowsToConstraints = [];
   this.constraintSummary = [];
+
+  this.lhsString = [];
   this.lhsRange = [];
   this.lhsType = [];
   this.lhsOriginalValues = [];
+
+  this.rhsString = [];
   this.rhsRange = [];
   this.rhsType = [];
   this.rhsOriginalValues = [];
@@ -44,16 +51,100 @@ OpenSolver = function(sheet) {
   this.varTypes = {}; // Object to store sparsely
 
   this.sparseA = [];
+  this.startVariable = 0;
   this.rhs = [];
   this.costCoeffs = [];
   this.lowerBoundedVariables = {}; // Object for sparse storage
+
+  this.solver = null;
+};
+
+OpenSolver.prototype.toJSON = function() {
+  // Don't write out properties in this blacklist
+  var excluded = [
+    'sheet',
+    'variableAreas',
+    'lhsRange',
+    'rhsRange'
+  ];
+
+  var out = {};
+  var keys = Object.keys(this);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (excluded.indexOf(key) < 0) {
+      out[key] = this[key];
+    }
+  }
+  return out;
+};
+
+OpenSolver.prototype.loadFromCache = function(data) {
+  var keys = Object.keys(data);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    this[key] = data[key];
+  }
+
+  for (var i = 0; i < this.numVariableAreas; i++) {
+    var area = this.getVariableAreaFromString(this.variableAreaStrings[i]);
+    this.variableAreas.push(area);
+  }
+
+  this.getObjectiveFromString(this.objectiveString);
+
+  for (var i = 0; i < this.numConstraints; i++) {
+    this.lhsRange[i] = this.getConRangeFromString(this.lhsString[i]);
+    this.rhsRange[i] = this.getConRangeFromString(this.rhsString[i]);
+  }
+
+  for (var row = 0; row < this.sparseA.length; row++) {
+    this.sparseA[row] = new IndexedCoeffs().loadFromCache(this.sparseA[row]);
+  }
+
+  this.solver = new SolverNeos().loadFromCache(this.solver);
+  return this;
+};
+
+OpenSolver.prototype.getObjectiveFromString = function(objString) {
+  if (objString) {
+    try {
+      this.objective = this.sheet.getRange(objString);
+    } catch (e) {
+      throw(ERR_OBJ_RANGE_ERROR(objString));
+    }
+  } else {
+    // If there is no objective, we set a mock range that has value 0
+    this.objective = new MockRange([[0]]);
+  }
+
+  // Check that objective is a single cell
+  if (this.objective.getNumColumns() !== 1 || this.objective.getNumRows() !== 1) {
+    throw(ERR_OBJ_NOT_SINGLE_CELL());
+  }
+  return this.objective;
+};
+
+OpenSolver.prototype.getConRangeFromString = function(conString) {
+  try {
+    return conString ? this.sheet.getRange(conString) : null;
+  } catch (e) {
+    throw(ERR_CON_RANGE_ERROR(conString));
+  }
+};
+
+OpenSolver.prototype.getVariableAreaFromString = function(varArea) {
+  return this.sheet.getRange(varArea)
 };
 
 OpenSolver.prototype.solveModel = function() {
   try {
-    this.buildModelFromSolverData();
+    if (this.modelStatus !== ModelStatus.BUILT) {
+      this.buildModelFromSolverData();
+    }
     this.solve();
     this.reportAnySubOptimality();
+    this.deleteCache();
   } catch (e) {
     this.solveStatus = OpenSolverResult.ERROR_OCCURRED;
     if (!(e.title && e.title.length >= 10 && e.title.substring(0, 10) == 'OpenSolver')) {
@@ -95,7 +186,10 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 //    } catch(e) { // Error getting range
 //      throw(ERR_VAR_RANGE_ERROR(model.variables[i]));
 //    }
-    var variableArea = this.sheet.getRange(model.variables[i]);
+    var variableAreaString = model.variables[i];
+    this.variableAreaStrings.push(variableAreaString);
+
+    var variableArea = this.getVariableAreaFromString(variableAreaString);
     variableArea.setValue(this.linearityOffset);
     this.variableAreas.push(variableArea);
 
@@ -124,21 +218,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
     this.objectiveTarget = model.objectiveVal;
   }
 
-  if (model.objective) {
-    try {
-      this.objective = this.sheet.getRange(model.objective);
-    } catch (e) {
-      throw(ERR_OBJ_RANGE_ERROR(model.objective));
-    }
-  } else {
-    // If there is no objective, we set a mock range that has value 0
-    this.objective = new MockRange([[0]]);
-  }
-
-  // Check that objective is a single cell
-  if (this.objective.getNumColumns() !== 1 || this.objective.getNumRows() !== 1) {
-    throw(ERR_OBJ_NOT_SINGLE_CELL());
-  }
+  this.objectiveString = model.objective;
+  this.getObjectiveFromString(this.objectiveString);
 
   this.objectiveValue = this.getObjectiveValue();
   this.objectiveConstant = this.objectiveValue;
@@ -161,15 +242,15 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 
     this.constraintSummary[constraint] = model.constraints[constraint].displayText();
 
-    try {
-      var lhsRange = this.sheet.getRange(model.constraints[constraint].lhs);
-    } catch (e) {
-      throw(ERR_CON_RANGE_ERROR(model.constraints[constraint].lhs));
-    }
+    this.lhsString[constraint] = model.constraints[constraint].lhs;
+    var lhsRange = this.getConRangeFromString(this.lhsString[constraint]);
+
     var rel = model.constraints[constraint].rel;
 
     // INT/BIN constraint - no rhs
     if (!relationConstHasRHS(rel)) {
+      this.rhsString[constraint] = '';
+
       var lhsSize = getRangeDims(lhsRange);
       for (var j = 0; j < lhsSize.rows; j++) {
         for (var k = 0; k < lhsSize.cols; k++) {
@@ -200,12 +281,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 
     // Other constraints with a RHS
     } else {
-      var rhsRange;
-      try {
-        rhsRange = this.sheet.getRange(model.constraints[constraint].rhs);
-      } catch(e) {
-        throw(ERR_CON_RANGE_ERROR(model.constraints[constraint].rhs));
-      }
+      this.rhsString[constraint] = model.constraints[constraint].rhs;
+      var rhsRange = this.getConRangeFromString(this.rhsString[constraint]);
 
       var rhsCount = getRangeSize(rhsRange);
       var rowCount = getRangeSize(lhsRange);
@@ -250,6 +327,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
     }
   }
 
+  this.modelStatus = ModelStatus.INITIALISED;
+
   if (!this.buildSparseA()) {
     // Building A failed
     Logger.log('build A failed');
@@ -257,6 +336,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   }
 
   this.modelStatus = ModelStatus.BUILT;
+  this.updateCache();
 };
 
 OpenSolver.prototype.getConstraintValues = function(constraint) {
@@ -291,16 +371,23 @@ OpenSolver.prototype.buildSparseA = function() {
 
   // Create SparseA
   for (var row = 0; row < this.numRows; row++) {
-    this.sparseA[row] = new IndexedCoeffs();
+    this.sparseA[row] = this.sparseA[row] || new IndexedCoeffs();
   }
 
   // Target value needs to be adjusted by any constants in the objective
   this.objectiveTarget -= this.objectiveValue;
 
-  for (var i = 0; i < this.numVars; i++) {
+  var start = this.startVariable;
+  for (var i = this.startVariable; i < this.numVars; i++) {
     if (i % 10 === 0) {
       updateStatus('Building variable ' + (i + 1) + '/' + this.numVars,
                    'Solving Model');
+
+      // Save progress to cache
+      this.updateCache();
+
+      // For testing termination
+      if (i !== start) { throw(makeError('stop while building')); };
     }
 
     var currentCell = this.getVariableByIndex(i);
@@ -350,6 +437,7 @@ OpenSolver.prototype.buildSparseA = function() {
     }
 
     currentCell.setValue(this.linearityOffset);
+    this.startVariable = i + 1;
   }
   // Add an 'end of data' entry
   if (this.numConstraints > 0) {
@@ -415,13 +503,14 @@ OpenSolver.prototype.solve = function() {
   this.solveStatusString = 'Unsolved';
   this.solveStatusStringComment = '';
 
-  if (this.modelStatus !== ModelStatus.BUILT) throw(MODEL_NOT_BUILT());
+  if (this.modelStatus !== ModelStatus.BUILT) throw(ERR_MODEL_NOT_BUILT());
 
   // TODO set up duals
 
-  updateStatus('Model is being solved by solver', 'Solving Model', true);
-  var solver = new SolverGoogle();
-  var result = solver.solve(this);
+//  var solver = new SolverGoogle();
+  this.solver = this.solver || new SolverNeos();
+  var result = this.solver.solve(this);
+
   this.solveStatus = result.solveStatus;
   this.solveStatusString = result.solveStatusString;
   Logger.log(this.solveStatus);
@@ -430,7 +519,7 @@ OpenSolver.prototype.solve = function() {
   // If we have a solution, even non-optimal, we load it into the sheet.
   if (result.loadSolution) {
     updateStatus('Model solved, loading solution into sheet', 'Solving Model', true);
-    Logger.log('Objective value: ' + solver.getObjectiveValue());
+    Logger.log('Objective value: ' + this.solver.getObjectiveValue());
 
     var valuesToSet = new Array(this.numVariableAreas);
     for (var i = 0; i < this.numVariableAreas; i++) {
@@ -440,7 +529,7 @@ OpenSolver.prototype.solve = function() {
 
     for (var i = 0; i < this.numVars; i++) {
       var name = this.varKeys[i];
-      this.varValues[i] = solver.getVariableValue(name);
+      this.varValues[i] = this.solver.getVariableValue(name);
       var coeffs = name.split('_').map(Number);
       valuesToSet[coeffs[0]][coeffs[1]][coeffs[2]] = this.varValues[i];
     }
@@ -786,4 +875,12 @@ OpenSolver.prototype.fullLinearityCheck = function() {
     }
   }
 
+};
+
+OpenSolver.prototype.updateCache = function() {
+  updateOpenSolverCache(this);
+};
+
+OpenSolver.prototype.deleteCache = function() {
+  deleteOpenSolverCache();
 };

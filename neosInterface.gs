@@ -1,6 +1,7 @@
 var NEOS_SERVER = 'http://www.neos-server.org';
 var NEOS_PORT = 3332;
 var NEOS_URL = NEOS_SERVER + ':' + NEOS_PORT;
+var TIME_BETWEEN_CHECKS = 10;
 
 // TODO move me
 function createAmplModel(openSolver) {
@@ -141,9 +142,16 @@ function submitJob(amplModel) {
   var response = request.send();
   var responseData = response.parseXML();
 
+  var jobNumber = parseInt(responseData[0], 10);
+  var jobPassword = responseData[1];
+
+  if (jobNumber == 0) {
+    throw(jobPassword);
+  }
+
   return {
-    jobNumber:   parseInt(responseData[0], 10),
-    jobPassword: responseData[1]
+    jobNumber:   jobNumber,
+    jobPassword: jobPassword
   };
 }
 
@@ -231,6 +239,37 @@ function getQueuePosition(jobNumber) {
     }
   }
   return queuePosition;
+}
+
+function waitForCompletion(jobNumber, jobPassword) {
+  var timeElapsed = 0;
+  while (true) {
+    var jobStatus = getJobStatus(jobNumber, jobPassword);
+    if (jobStatus == 'Done') {
+      break;
+    } else if (jobStatus == 'Waiting') {
+      var queuePosition = getQueuePosition(jobNumber);
+      var queueString = queuePosition ? '\nPosition in queue: ' + queuePosition
+                                      : '';
+      updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
+                   'Waiting in queue to start...' + queueString,
+                   'Solving model on NEOS...',
+                   false,
+                   TIME_BETWEEN_CHECKS);
+    } else if (jobStatus == 'Running') {
+      updateStatus('Time elapsed: ' + timeElapsed + ' seconds\n' +
+                   'Model is solving...',
+                   'Solving model on NEOS...',
+                   false,
+                   TIME_BETWEEN_CHECKS);
+    } else {
+      Logger.log(jobStatus);
+      throw('An error occured while waiting for NEOS. NEOS returned: ' +
+            jobStatus);
+    }
+    Utilities.sleep(TIME_BETWEEN_CHECKS * 1000);
+    timeElapsed += TIME_BETWEEN_CHECKS;
+  }
 }
 
 function test() {

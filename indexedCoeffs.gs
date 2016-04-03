@@ -33,3 +33,12 @@ IndexedCoeffs.prototype.evaluate = function(varValues) {
   }
   return { value: total, max: maxValue };
 };
+
+IndexedCoeffs.prototype.loadFromCache = function(data) {
+  var keys = Object.keys(data);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    this[key] = data[key];
+  }
+  return this;
+};

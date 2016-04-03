@@ -149,8 +149,13 @@ function updateConstraintSelection(sheetId) {
                                   escapeSheetName(currentModel.sheet));
 }
 
-function solveModel(sheetId) {
+function solveModel(sheetId, loadFromCache) {
   openSolver = new OpenSolver(getSheetFromIdWithDefault(sheetId));
+
+  if (loadFromCache === true) {
+    openSolver.loadFromCache(loadOpenSolverCache());
+  }
+
   return openSolver.solveModel();
 }
 
@@ -160,4 +165,16 @@ function checkResetModel(sheetId) {
 
 function resetModel(sheetId) {
   return new Model(getSheetFromIdWithDefault(sheetId), false).getSidebarData();
+}
+
+function checkSolveModel() {
+  var data = loadOpenSolverCache();
+  if (data !== null) {
+    var sheet = getSheetFromId(data.sheetId);
+    if (sheet) {
+      setCachedSheet(sheet);
+      return showDialog('dialogResumeSolve', 'Resume Solve?', 170);
+    }
+  }
+  return;
 }

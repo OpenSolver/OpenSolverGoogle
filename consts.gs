@@ -13,8 +13,9 @@ var OpenSolverResult = {
 };
 
 var ModelStatus = {
-  UNINITIALISED: 0,
-  BUILT: 1
+  UNINITIALISED: 0,             // Model has not been loaded from sheet
+  INITIALISED: 1,               // Model has loaded values from sheet but not finished construction
+  BUILT: 2                      // Model has finished construction and is ready for solving
 };
 
 var Relation = {
