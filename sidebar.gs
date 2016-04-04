@@ -160,7 +160,7 @@ function solveModel(sheetId, loadFromCache) {
 }
 
 function checkResetModel(sheetId) {
-  return showDialog('dialogResetModel', 'Reset Model?', 75);
+  return showDialog('dialogResetModel', 'Reset Model?', 78, 220);
 }
 
 function resetModel(sheetId) {

@@ -30,15 +30,17 @@ var DialogProperty = {
  * @param {String} templateName The name of the HTML file to show.
  * @param {String} title The title to assign to the dialog.
  * @param {Number} height The height to assign to the dialog.
+ * @param {Number} width The width to assign to the dialog.
  * @return {String} The ID of the dialog for tracking state.
  */
-function showDialog(templateName, title, height) {
+function showDialog(templateName, title, height, width) {
   var dialogId = Utilities.base64Encode(Math.random());
   var template = HtmlService.createTemplateFromFile(templateName);
   template.dialogId = dialogId;
   var page = template.evaluate()
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   if (height) page.setHeight(height);
+  if (width)  page.setWidth(width);
   SpreadsheetApp.getUi().showModalDialog(page, title);
   checkIn(dialogId);
   Logger.log(dialogId);
