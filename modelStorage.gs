@@ -257,7 +257,7 @@ function integerToBool(value) {
 
 // Name helpers
 function solverName(name) { return 'solver_' + name; }
-function openSolverName(name) { return 'openSolver_' + name; }
+function openSolverName(name) { return 'OpenSolver_' + name; }
 
 /**
  * Returns the suffix for the jth variable entry, which is blank if j is zero

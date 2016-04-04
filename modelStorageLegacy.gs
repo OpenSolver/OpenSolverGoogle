@@ -43,13 +43,15 @@ function loadLegacyModel(sheet) {
   Logger.log('Loading assume non negative: ' + assumeNonNeg);
   model.updateAssumeNonNeg(assumeNonNeg);
 
-  var showStatus = (properties[openSolverName('showStatus')] || 'false') === 'true';
+  var showStatus = (properties[openSolverNameLegacy('showStatus')] || 'true') === 'true';
   Logger.log('Loading show status: ' + showStatus);
   model.updateShowStatus(showStatus);
 
-  var checkLinear = (properties[openSolverName('checkLinear')] || 'true') === 'true';
+  var checkLinear = (properties[openSolverNameLegacy('checkLinear')] || 'true') === 'true';
   Logger.log('Loading check linear: ' + checkLinear);
   model.updateCheckLinear(checkLinear);
 
   return model;
 }
+
+function openSolverNameLegacy(name) { return 'openSolver_' + name; }
