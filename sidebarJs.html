@@ -303,7 +303,7 @@
             populateSheetSelect(data.sheets);
             selectSheet(data.sheetIndex);
             loadModel(data.model, keepWait);
-            console.log(callback);
+
             if (callback) { callback() };
           })
         .getSidebarData(curSheetId);
@@ -327,7 +327,6 @@
 
   function completeChangeSolver(state) {
     showWait();
-    console.log('taking action on: ' + state);
     if (state === 'done') {
       google.script.run
         .withSuccessHandler(
@@ -369,7 +368,6 @@
 
   function completeSolveModel(state) {
     showWait();
-    console.log('taking action on: ' + state);
     if (state === 'done') {
       google.script.run
         .withSuccessHandler(
