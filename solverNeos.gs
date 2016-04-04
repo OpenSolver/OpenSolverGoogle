@@ -80,8 +80,8 @@ SolverNeos.prototype.solve = function(openSolver) {
     this.submitJob(openSolver);
     openSolver.updateCache();
 
-    // For testing resume.
-    throw(makeError('stop before getting results'));
+//    // For testing resume.
+//    throw(makeError('stop before getting results'));
   }
 
   waitForCompletion(this.jobNumber, this.jobPassword);

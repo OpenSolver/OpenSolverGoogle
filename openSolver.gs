@@ -389,8 +389,8 @@ OpenSolver.prototype.buildSparseA = function() {
       // Save progress to cache
       this.updateCache();
 
-      // For testing termination
-      if (i !== start) { throw(makeError('stop while building')); };
+//      // For testing termination
+//      if (i !== start) { throw(makeError('stop while building')); };
     }
 
     var currentCell = this.getVariableByIndex(i);
