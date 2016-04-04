@@ -56,6 +56,7 @@ OpenSolver = function(sheet) {
   this.costCoeffs = [];
   this.lowerBoundedVariables = {}; // Object for sparse storage
 
+  this.solverShortName = null;
   this.solver = null;
 };
 
@@ -102,7 +103,7 @@ OpenSolver.prototype.loadFromCache = function(data) {
     this.sparseA[row] = new IndexedCoeffs().loadFromCache(this.sparseA[row]);
   }
 
-  this.solver = new SolverNeos().loadFromCache(this.solver);
+  this.solver = createSolver(this.solverShortName).loadFromCache(this.solver);
   return this;
 };
 
@@ -168,6 +169,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   var model = new Model(this.sheet);
   this.showStatus = model.showStatus;
   this.checkLinear = model.checkLinear;
+
+  this.solverShortName = model.solver.shortName;
 
   if (model.variables.length === 0) {
     throw(ERR_NO_VARS());
@@ -507,8 +510,7 @@ OpenSolver.prototype.solve = function() {
 
   // TODO set up duals
 
-//  var solver = new SolverGoogle();
-  this.solver = this.solver || new SolverNeos();
+  this.solver = this.solver || createSolver(this.solverShortName);
   var result = this.solver.solve(this);
 
   this.solveStatus = result.solveStatus;

@@ -1,0 +1,115 @@
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  #solver-info {
+    padding-right:6px;
+
+  }
+
+  #select-solver {
+    width: 100%;
+  }
+
+  section.button-bar {
+    position: fixed;
+  }
+
+  #main {
+
+  }
+</style>
+
+<? var solvers = Object.keys(SolverType) ?>
+
+<div id="main">
+
+  <select id="select-solver" onchange="changeSolver()">
+    <? for (var i = 0; i < solvers.length; i++) { ?>
+      <? var solver = SolverType[solvers[i]]; ?>
+      <option value="<?= solver.shortName ?>">
+        <?= solver.longName ?>
+      </option>
+    <? } ?>
+  </select>
+
+  <div id="solver-info">
+    <? for (var i = 0; i < solvers.length; i++) { ?>
+      <? var solver = SolverType[solvers[i]]; ?>
+      <div id="<?= solver.shortName ?>" style="display: none;">
+        <p><?!= solver.description ?></p>
+      </div>
+    <? } ?>
+  </div>
+</div>
+
+<section class="button-bar">
+  <button class="action" onclick="confirm()">Use this Solver</button>
+  <button onclick="cancel()">Cancel</button>
+</section>
+
+<script>
+  /**
+   * The ID of this dialog. This is set once when the template is rendered.
+   */
+  var DIALOG_ID = '<?= dialogId ?>';
+  /**
+   * How often to check-in with the server, in seconds.
+   */
+  var CHECKIN_INTERVAL_SECONDS = 3;
+  // Sets up an interval to check-in with the server every few seconds, so we can tell
+  // if it's been X-ed out.
+  window.setInterval(function() {
+    google.script.run.checkIn(DIALOG_ID);
+  }, CHECKIN_INTERVAL_SECONDS * 1000);
+  /**
+   * Runs when the form is submitted.
+   */
+  function confirm() {
+    // Here is where you would add custom logic specific to your form.
+    // You may need to make additional google.script.run calls to store various information
+    // collected in the dialog.
+    var solverShortName = document.getElementById('select-solver').value;
+    google.script.run
+        .withSuccessHandler(function() {
+          google.script.run
+            .withSuccessHandler(close)
+            .setDialogState(DIALOG_ID, 'done');
+        })
+        .setCachedSolverShortName(solverShortName);
+  }
+  /**
+   * Runs when the cancel button is clicked.
+   */
+  function cancel() {
+    google.script.run
+        .withSuccessHandler(close)
+        .setDialogState(DIALOG_ID, 'aborted');
+  }
+  /**
+   * Closes the dialog.
+   */
+  function close() {
+    google.script.host.close();
+  }
+
+  function changeSolver() {
+    var solvers = document.querySelectorAll('#solver-info > div');
+    for (var i = 0; i < solvers.length; i++) {
+      solvers[i].style.display = 'none';
+    }
+
+    var solverShortName = document.getElementById('select-solver').value;
+    document.getElementById(solverShortName).style.display = 'block';
+
+    var main = document.getElementById('main');
+    google.script.host.setHeight(main.offsetHeight + 39);
+  }
+
+  document.getElementById('select-solver')
+          .value = '<?= currentModel.solver.shortName ?>';
+  changeSolver();
+</script>

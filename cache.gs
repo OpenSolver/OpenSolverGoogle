@@ -33,6 +33,15 @@ function getCachedSheetId() {
   return _cachedSheetId || loadOpenSolverCache().sheetId;
 }
 
-function test() {
-  Logger.log(parseInt(getCachedSheetId()));
+// For solver change form
+
+var CACHE_KEY_SOLVERSHORTNAME = "CACHE_SOLVERSHORTNAME";
+
+function getCachedSolverShortName() {
+  return CacheService.getDocumentCache().get(CACHE_KEY_SOLVERSHORTNAME);
+}
+function setCachedSolverShortName(solverShortName) {
+  CacheService
+      .getDocumentCache()
+      .put(CACHE_KEY_SOLVERSHORTNAME, solverShortName);
 }

@@ -52,3 +52,53 @@ var SolverInputType = {
   CONSTANT: 4,          // Valid for a RHS only
 };
 
+var SolverType = {
+  Google: {
+      shortName:   'Google',
+      longName:    'Google Apps Script Linear Optimization Service',
+      sidebarName: 'Google Linear Solver',
+      description: 'The Google Apps Script Linear Optimization Service uses the ' +
+                   '<a href="https://developers.google.com/optimization/lp/glop" target="_blank">Glop</a> ' +
+                   'solver for pure linear-optimization problems where all ' +
+                   'variables can take on real values. If any variables are ' +
+                   'constrained to integers, the service uses ' +
+                   '<a href="http://scip.zib.de/" target="_blank">SCIP</a>' +
+                   ', a commercial solver from Zuse-Institut Berlin.'
+  },
+  NeosCBC: {
+      shortName:   'NeosCBC',
+      longName:    'COIN-OR Cbc via NEOS Optimization Server',
+      sidebarName: 'Cbc via NEOS',
+      description: 'The NEOS (Network-Enabled Optimization System) Server is ' +
+                   'a free Internet-based service for solving optimization ' +
+                   'problems. Models sent to NEOS often have to wait in a ' +
+                   'queue before they are solved, depending on the current ' +
+                   'load on NEOS. For this reason, other solvers are usually ' +
+                   'faster. Submitting a model to NEOS results in it ' +
+                   'becoming publicly available. Use of NEOS is subject to ' +
+                   'the ' +
+                   '<a href="http://www.neos-server.org/neos/termofuse.html" target="_blank">NEOS Terms and Conditions</a>.' +
+                   '</p><p>' +
+                   'The COIN-OR Branch and Cut solver (Cbc) is an ' +
+                   'open-source mixed-integer linear program (MILP) solver ' +
+                   'written in C++. Cbc is an active ' +
+                   '<a href="http://www.coin-or.org" target="_blank">open-source project</a> ' +
+                   'led by John Forrest.'
+
+  },
+};
+
+function getSolver(solverType) {
+  return solver = SolverType[solverType] || SolverType.Google;
+}
+
+function createSolver(solverType) {
+  switch(solverType) {
+    case 'Google':
+      return new SolverGoogle();
+    case 'NeosCBC':
+      return new SolverNeos();
+    default:
+      throw(makeError('Unknown solver: ' + solverType));
+  }
+}

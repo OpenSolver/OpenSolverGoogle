@@ -143,10 +143,20 @@ function updateCheckLinear(checkLinear, sheetId) {
   return currentModel.updateCheckLinear(checkLinear).getSidebarData();
 }
 
+function updateSolver(solverShortName, sheetId) {
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateSolver(solverShortName).getSidebarData();
+}
+
 function updateConstraintSelection(sheetId) {
   currentModel = getModelFromSheetIdWithDefault(sheetId);
   return removeSheetNameFromRange(getSelectedRangeNotation(),
                                   escapeSheetName(currentModel.sheet));
+}
+
+function checkChangeSolver(sheetId) {
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return showDialog('dialogChangeSolver', 'Choose a Solver', 200, 350);
 }
 
 function checkSolveModel() {

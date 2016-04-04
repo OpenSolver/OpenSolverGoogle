@@ -30,6 +30,8 @@
 
     $('#checkbox-non-negative').change(updateAssumeNonNeg);
 
+    $('#button-change-solver').click(checkChangeSolver);
+
     $('#button-solve').click(checkSolveModel);
     $('#button-reset').click(checkResetModel);
     $('#checkbox-show-status').change(updateShowStatus);
@@ -254,7 +256,7 @@
     $('#select-sheet, #button-sheet-current, ' +
       '#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
       '#select-variable-cells, #button-add-variable, #button-update-variable, #button-delete-variable, ' +
-      '#checkbox-non-negative, #select-constraint-cells, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
+      '#checkbox-non-negative, #select-constraint-cells, #button-change-solver, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
         .prop('disabled', changed || disableAll);
 
     var disableRHS = $('#select-constraint-rel').val() >= 4;
@@ -306,6 +308,44 @@
           })
         .getSidebarData(curSheetId);
 
+  }
+
+  function checkChangeSolver() {
+    showWait();
+    google.script.run
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(
+        function(dialogId) {
+          var intervalId = window.setInterval(function() {
+            checkDialog(dialogId, completeChangeSolver);
+          }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
+          intervalIds[dialogId] = intervalId;
+
+        })
+      .checkChangeSolver();
+  }
+
+  function completeChangeSolver(state) {
+    showWait();
+    console.log('taking action on: ' + state);
+    if (state === 'done') {
+      google.script.run
+        .withSuccessHandler(
+          function(solverShortName) {
+            changeSolver(solverShortName);
+          })
+        .getCachedSolverShortName();
+    } else {
+      hideWait();
+    }
+  }
+
+  function changeSolver(solverShortName) {
+    showWait();
+    google.script.run
+      .withFailureHandler(hideWait)
+      .withSuccessHandler(loadModel)
+      .updateSolver(solverShortName, curSheetId);
   }
 
   function checkSolveModel() {
@@ -439,6 +479,7 @@
       $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
       $('#checkbox-show-status').prop('checked', model.showStatus);
       $('#checkbox-check-linear').prop('checked', model.checkLinear);
+      $('#current-solver').text(model.solverLongName);
     }
 
     if (keepWait === true) {
