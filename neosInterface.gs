@@ -271,7 +271,3 @@ function waitForCompletion(jobNumber, jobPassword) {
     timeElapsed += TIME_BETWEEN_CHECKS;
   }
 }
-
-function test() {
-  Logger.log(getQueuePosition(4414739));
-}

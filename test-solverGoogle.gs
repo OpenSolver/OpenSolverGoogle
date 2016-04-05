@@ -1,6 +1,4 @@
-function testSolverGoogle() {
-
-QUnit.module('solverGoogle');
+function testSolverGoogle(test) {
 
 var googleStatuses = [
   'ABNORMAL',
@@ -32,7 +30,7 @@ var loadSolutions = [
   false
 ];
 
-QUnit.test('getStatus', googleStatuses.length * 2, function(assert) {
+test('solverGoogle - getStatus', function(t) {
   for (var i = 0; i < googleStatuses.length; i++) {
     var googleStatus = googleStatuses[i];
     var status = openSolverStatuses[i];
@@ -42,12 +40,12 @@ QUnit.test('getStatus', googleStatuses.length * 2, function(assert) {
     solver.solution = new MockLinearOptimizationSolution(googleStatus);
     var result = solver.getStatus();
 
-    assert.equal(result.solveStatus,
-                 OpenSolverResult[status],
-                 'solveStatus: ' + googleStatus + rightArrow + status);
-    assert.equal(result.loadSolution,
-                 loadSol,
-                 'loadSolution: ' + googleStatus + rightArrow + loadSol);
+    t.equal(result.solveStatus,
+            OpenSolverResult[status],
+            'solveStatus: ' + googleStatus + rightArrow + status);
+    t.equal(result.loadSolution,
+            loadSol,
+            'loadSolution: ' + googleStatus + rightArrow + loadSol);
   }
 });
 
