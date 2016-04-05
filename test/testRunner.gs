@@ -11,13 +11,6 @@ function testRunner() {
 
   var test = new GasTap()
 
-  test('array', function(t) {
-    t.deepEqual(
-      [0],
-      [0]
-    )
-  });
-
   testUtil(test);
   testSolverGoogle(test);
   testConstraint(test);
