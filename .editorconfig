@@ -1,0 +1,8 @@
+# editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Whitespace override for all JS under lib directory
+[lib/**.js]
+trim_trailing_whitespace = false
