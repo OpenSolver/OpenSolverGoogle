@@ -1,0 +1,6 @@
+[submodule "lib/gast"]
+	path = lib/gast
+	url = git@github.com:OpenSolver/gast.git
+[submodule "lib/mimic"]
+	path = lib/mimic
+	url = git@github.com:OpenSolver/Mimic-for-Google-Apps-Script.git
