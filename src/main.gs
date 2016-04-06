@@ -1,4 +1,6 @@
 var CURRENT_VERSION = 10;
+var CURRENT_VERSION_STRING = '2.0';
+var CURRENT_VERSION_DATE = '07.04.16';
 var VERSION_KEY = 'OpenSolver_CurrentVersion';
 
 
