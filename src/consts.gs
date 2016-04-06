@@ -69,21 +69,22 @@ var SolverType = {
       shortName:   'NeosCBC',
       longName:    'COIN-OR Cbc via NEOS Optimization Server',
       sidebarName: 'Cbc via NEOS',
-      description: 'The NEOS (Network-Enabled Optimization System) Server is ' +
-                   'a free Internet-based service for solving optimization ' +
-                   'problems. Models sent to NEOS often have to wait in a ' +
-                   'queue before they are solved, depending on the current ' +
-                   'load on NEOS. For this reason, other solvers are usually ' +
-                   'faster. Submitting a model to NEOS results in it ' +
+      description: 'The ' +
+                   '<a href="http://www.neos-server.org" target="_blank">NEOS (Network-Enabled Optimization System) Server</a> ' +
+                   'is a free Internet-based service for solving ' +
+                   'optimization problems. Models sent to NEOS often have to ' +
+                   'wait in a queue before they are solved, depending on the ' +
+                   'current load on NEOS. For this reason, other solvers are ' +
+                   'usually faster. Submitting a model to NEOS results in it ' +
                    'becoming publicly available. Use of NEOS is subject to ' +
                    'the ' +
                    '<a href="http://www.neos-server.org/neos/termofuse.html" target="_blank">NEOS Terms and Conditions</a>.' +
                    '</p><p>' +
-                   'The COIN-OR Branch and Cut solver (Cbc) is an ' +
-                   'open-source mixed-integer linear program (MILP) solver ' +
-                   'written in C++. Cbc is an active ' +
-                   '<a href="http://www.coin-or.org" target="_blank">open-source project</a> ' +
-                   'led by John Forrest.'
+                   'The ' +
+                   '<a href="https://projects.coin-or.org/Cbc" target="_blank">COIN-OR Branch and Cut solver</a> ' +
+                   '(Cbc) is an open-source mixed-integer linear program ' +
+                   '(MILP) solver written in C++. Cbc is an active ' +
+                   'open-source project led by John Forrest.'
 
   },
 };
