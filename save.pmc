@@ -1,7 +1,7 @@
 ﻿[PMC Code]|F3|F4|1|Window|1|Macro1
 1|[Assign Variable]|y_offset := 216|1|0|Variable|||||
 2|[Assign Variable]|x_offset := 97|1|0|Variable|||||
-3|[LoopStart]|LoopStart|35|0|Loop|||||
+3|[LoopStart]|LoopStart|34|0|Loop|||||
 4|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
 5|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
 6|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
