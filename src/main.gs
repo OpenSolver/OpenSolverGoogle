@@ -13,8 +13,8 @@ function onOpen(e) {
   SpreadsheetApp.getUi().createAddonMenu()
       .addItem('Open sidebar', 'showSidebar')
       .addSeparator()
-      .addItem('Show legacy model data', 'showProperties')
-      .addItem('Import legacy model', 'importLegacyModel')
+      .addItem('Import previous model', 'importLegacyModel')
+      .addItem('Show previous model data', 'showProperties')
       .addToUi();
 }
 
