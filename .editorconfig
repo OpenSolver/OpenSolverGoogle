@@ -4,5 +4,5 @@
 root = true
 
 # Whitespace override for all JS under lib directory
-[lib/**.js]
+[lib/**]
 trim_trailing_whitespace = false
