@@ -17,6 +17,8 @@ function onOpen(e) {
       .addSeparator()
       .addItem('Import previous model', 'importLegacyModel')
       .addItem('Show previous model data', 'showProperties')
+      .addSeparator()
+      .addItem('View changelog', 'showChangelog')
       .addToUi();
 }
 
