@@ -81,7 +81,7 @@ function clearProperties() {
 function showChangelog() {
   var changelogUi = HtmlService.createTemplateFromFile('dialogChangelog')
     .evaluate()
-    .setHeight(200)
+    .setHeight(420)
     .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi()
     .showModalDialog(changelogUi, 'OpenSolver has been updated!');
