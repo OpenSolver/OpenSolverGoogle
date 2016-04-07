@@ -72,7 +72,7 @@ function createAmplModel(openSolver) {
         }
       }
 
-      constraintLine += ' ' + relationConstToString(openSolver.relation[row]);
+      constraintLine += ' ' + relationConstToAmpl(openSolver.relation[row]);
       constraintLine += ' ' + openSolver.rhs[row] + ';';
       lines.push(constraintLine);
     }

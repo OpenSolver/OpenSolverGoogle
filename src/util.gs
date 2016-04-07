@@ -6,7 +6,7 @@ function relationConstToString(relationConst) {
     case Relation.LE:
       return '<=';
     case Relation.EQ:
-      return '==';
+      return '=';
     case Relation.GE:
       return '>=';
     case Relation.INT:
@@ -15,6 +15,22 @@ function relationConstToString(relationConst) {
       return 'bin';
     case Relation.ALLDIFF:
       return 'alldiff';
+    default:
+      throw 'Unknown relation';
+  }
+}
+
+function relationConstToAmpl(relationConst) {
+  switch(relationConst) {
+    case Relation.LE:
+      return '<=';
+    case Relation.EQ:
+      return '==';
+    case Relation.GE:
+      return '>=';
+    case Relation.INT:
+    case Relation.BIN:
+    case Relation.ALLDIFF:
     default:
       throw 'Unknown relation';
   }
