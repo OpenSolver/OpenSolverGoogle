@@ -1,69 +1,57 @@
 ﻿[PMC Code]|F3|F4|1|Window|1|Macro1
-1|[Assign Variable]|y_offset := 216|1|0|Variable|||||
-2|[Assign Variable]|x_offset := 97|1|0|Variable|||||
-3|[LoopStart]|LoopStart|34|0|Loop|||||
-4|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
-5|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
-6|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
-7|[Pause]||1|700|Sleep|||||
-8|[Assign Variable]|x_offset += 42|1|0|Variable|||||
-9|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
-10|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
-11|[Assign Variable]|y_offset += 30|1|0|Variable|||||
-12|[Assign Variable]|x_offset += 14|1|0|Variable|||||
-13|[Pause]||1|500|Sleep|||||
-14|Left Move & Click|%x_offset%, %y_offset% Left, Down|1|0|Click|||||
-15|Left Move & Click|%x_offset%, %y_offset% Left, Up|1|0|Click|||||
-16|[Assign Variable]|x_offset -= 56|1|0|Variable|||||
-17|[Pause]||1|500|Sleep|||||
-18|Left Move & Click|600, 745 Left, 1|1|10|Click|||||
-19|[Pause]||1|200|Sleep|||||
-20|LControl Down|{LControl Down}|1|0|Send|||||
-21|a|{a}|1|0|Send|||||
-22|[Pause]||1|200|Sleep|||||
-23|c|{c}|1|0|Send|||||
-24|LControl Up|{LControl Up}|1|0|Send|||||
-25|Escape|{Escape}|1|0|Send|||||
+1|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
+2|Left Move & Click|61, 1380 Left, 1|1|10|Click|||||
+3|[Text]|var list = $('.project-items-list'); copy(list.children.length)|1|0|SendRaw|||||
+4|[Pause]||1|700|Sleep|||||
+5|Enter|{Enter}|1|0|Send|||||
+6|[Assign Variable]|NumItems := %Clipboard%|1|0|Variable|||||
+7|[MsgBox]|%NumItems%|1|0|MsgBox|0||||
+8|[Assign Variable]|counter := 0|1|0|Variable|||||
+9|[LoopStart]|LoopStart|%NumItems%|0|Loop|||||
+10|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
+11|Left Move & Click|61, 1380 Left, 1|1|10|Click|||||
+12|[Text]|var item = list.children[%counter%]; item.click(); var name = item.getAttribute('aria-label'); copy(name.substring(0`, name.lastIndexOf('.')));|1|0|SendRaw|||||
+13|[Pause]||1|700|Sleep|||||
+14|Enter|{Enter}|1|0|Send|||||
+15|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
+16|Left Move & Click|330, 264 Left, Down|1|0|Click|||||
+17|Left Move & Click|330, 264 Left, Up|1|0|Click|||||
+18|[Pause]||1|200|Sleep|||||
+19|LControl Down|{LControl Down}|1|0|Send|||||
+20|p|{p}|1|0|Send|||||
+21|[Pause]||1|200|Sleep|||||
+22|v|{v}|1|0|Send|||||
+23|LControl Up|{LControl Up}|1|0|Send|||||
+24|[Pause]||1|200|Sleep|||||
+25|.|{.}|1|0|Send|||||
 26|[Pause]||1|200|Sleep|||||
-27|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
-28|Left Move & Click|330, 264 Left, Down|1|0|Click|||||
-29|Left Move & Click|330, 264 Left, Up|1|0|Click|||||
+27|Enter|{Enter}|1|0|Send|||||
+28|[Pause]||1|200|Sleep|||||
+29|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
 30|[Pause]||1|200|Sleep|||||
-31|LControl Down|{LControl Down}|1|0|Send|||||
-32|p|{p}|1|0|Send|||||
+31|Left Move & Click|342, 488 Left, Down|1|0|Click|||||
+32|Left Move & Click|342, 488 Left, Up|1|0|Click|||||
 33|[Pause]||1|200|Sleep|||||
-34|v|{v}|1|0|Send|||||
-35|LControl Up|{LControl Up}|1|0|Send|||||
+34|LControl Down|{LControl Down}|1|0|Send|||||
+35|a|{a}|1|0|Send|||||
 36|[Pause]||1|200|Sleep|||||
-37|.|{.}|1|0|Send|||||
-38|[Pause]||1|200|Sleep|||||
-39|Enter|{Enter}|1|0|Send|||||
-40|[Pause]||1|200|Sleep|||||
-41|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
-42|[Pause]||1|200|Sleep|||||
-43|Left Move & Click|342, 488 Left, Down|1|0|Click|||||
-44|Left Move & Click|342, 488 Left, Up|1|0|Click|||||
-45|[Pause]||1|200|Sleep|||||
-46|LControl Down|{LControl Down}|1|0|Send|||||
-47|a|{a}|1|0|Send|||||
-48|[Pause]||1|200|Sleep|||||
-49|c|{c}|1|0|Send|||||
-50|LControl Up|{LControl Up}|1|0|Send|||||
-51|[Pause]||1|200|Sleep|||||
-52|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
-53|[Pause]||1|200|Sleep|||||
-54|Left Move & Click|508, 409 Left, Down|1|0|Click|||||
-55|Left Move & Click|508, 409 Left, Up|1|0|Click|||||
-56|[Pause]||1|200|Sleep|||||
-57|LControl Down|{LControl Down}|1|0|Send|||||
-58|a|{a}|1|0|Send|||||
-59|[Pause]||1|200|Sleep|||||
-60|v|{v}|1|0|Send|||||
-61|[Pause]||1|200|Sleep|||||
-62|s|{s}|1|0|Send|||||
-63|LControl Up|{LControl Up}|1|0|Send|||||
-64|[Pause]||1|200|Sleep|||||
-65|Escape|{Escape}|1|0|Send|||||
-66|[Pause]||1|200|Sleep|||||
-67|[LoopEnd]|LoopEnd|1|0|Loop|||||
+37|c|{c}|1|0|Send|||||
+38|LControl Up|{LControl Up}|1|0|Send|||||
+39|[Pause]||1|200|Sleep|||||
+40|WinActivate||1|0|WinActivate||ahk_exe sublime_text.exe|||
+41|[Pause]||1|200|Sleep|||||
+42|Left Move & Click|508, 409 Left, Down|1|0|Click|||||
+43|Left Move & Click|508, 409 Left, Up|1|0|Click|||||
+44|[Pause]||1|200|Sleep|||||
+45|LControl Down|{LControl Down}|1|0|Send|||||
+46|a|{a}|1|0|Send|||||
+47|[Pause]||1|200|Sleep|||||
+48|v|{v}|1|0|Send|||||
+49|[Pause]||1|200|Sleep|||||
+50|s|{s}|1|0|Send|||||
+51|LControl Up|{LControl Up}|1|0|Send|||||
+52|[Pause]||1|200|Sleep|||||
+53|Escape|{Escape}|1|0|Send|||||
+54|[Pause]||1|200|Sleep|||||
+55|[LoopEnd]|LoopEnd|1|0|Loop|||||
 
