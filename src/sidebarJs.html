@@ -329,7 +329,7 @@
       .withSuccessHandler(
         function(dialogId) {
           var intervalId = window.setInterval(function() {
-            checkDialog(dialogId, completeChangeSolver);
+            checkDialogInitial(dialogId, completeChangeSolver);
           }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
           intervalIds[dialogId] = intervalId;
 
@@ -366,7 +366,7 @@
         function(dialogId) {
           if (dialogId) {
             var intervalId = window.setInterval(function() {
-              checkDialog(dialogId, completeSolveModel);
+              checkDialogInitial(dialogId, completeSolveModel);
             }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
             intervalIds[dialogId] = intervalId;
           } else {
@@ -412,7 +412,7 @@
       .withSuccessHandler(
         function(dialogId) {
           var intervalId = window.setInterval(function() {
-            checkDialog(dialogId, completeResetModel);
+            checkDialogInitial(dialogId, completeResetModel);
           }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
           intervalIds[dialogId] = intervalId;
         })
@@ -522,10 +522,27 @@
   function checkDialog(dialogId, callback) {
     google.script.run
       .withSuccessHandler(function(state) {
+        // console.log('main: ' + state);
         if (state != 'open') {
           window.clearInterval(intervalIds[dialogId]);
           callback(state);
         }})
-      .getDialogState(dialogId);
+      .getDialogState(dialogId, false);
+  }
+
+  function checkDialogInitial(dialogId, callback) {
+    google.script.run
+      .withSuccessHandler(function(state) {
+        // console.log('initial: ' + state);
+        if (state != 'pending') {
+          window.clearInterval(intervalIds[dialogId]);
+          // The dialog has loaded
+          // Now set up an interval to check for the actual result
+          var intervalId = window.setInterval(function() {
+            checkDialog(dialogId, callback);
+          }, CHECK_DIALOG_INTERVAL_SECONDS * 1000);
+          intervalIds[dialogId] = intervalId;
+        }})
+      .getDialogState(dialogId, true);
   }
 </script>

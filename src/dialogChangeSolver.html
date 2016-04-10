@@ -112,4 +112,8 @@
   document.getElementById('select-solver')
           .value = '<?= currentModel.solver.shortName ?>';
   changeSolver();
+
+  // Let the server know we are finished loading
+  google.script.run.checkIn(DIALOG_ID);
+  google.script.run.setDialogState(DIALOG_ID, 'open');
 </script>

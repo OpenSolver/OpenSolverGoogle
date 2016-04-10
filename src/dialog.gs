@@ -5,6 +5,7 @@
  * closed, in seconds.
  */
 var DIALOG_TIMEOUT_SECONDS = 5;
+var DIALOG_TIMEOUT_SECONDS_FIRST = 10;
 
 /**
  * The various states the dialog can be in.
@@ -13,7 +14,8 @@ var DialogState = {
   OPEN: 'open',        // Still open.
   ABORTED: 'aborted',  // Closed without being completed.
   LOST: 'lost',        // Hasn't checked-in in a while, assume closed via "X".
-  DONE: 'done'         // The dialog has been completed and closed.
+  DONE: 'done',        // The dialog has been completed and closed.
+  PENDING: 'pending',  // The dialog hasn't checked in yet.
 };
 
 /**
@@ -76,19 +78,21 @@ function setDialogState(dialogId, state) {
  * @param {String} dialogId The ID of the dialog.
  * @return {String} The state of the dialog.
  */
-function getDialogState(dialogId) {
+function getDialogState(dialogId, firstTime) {
   var key = getCacheKey_(dialogId, DialogProperty.STATE);
   var status = CacheService.getDocumentCache().get(key);
-  if (status !== null) {
+  if (status !== null && (firstTime || status !== DialogState.OPEN)) {
     return status;
   } else {
     var lastCheckInKey = getCacheKey_(dialogId, DialogProperty.LAST_CHECK_IN);
     var lastCheckIn = parseInt(CacheService.getDocumentCache().get(lastCheckInKey));
     var now = new Date().getTime();
-    if (now - lastCheckIn > DIALOG_TIMEOUT_SECONDS * 1000) {
+    var timeoutSeconds = firstTime ? DIALOG_TIMEOUT_SECONDS_FIRST
+                                   : DIALOG_TIMEOUT_SECONDS;
+    if (now - lastCheckIn > timeoutSeconds * 1000) {
       return DialogState.LOST;
     } else {
-      return DialogState.OPEN;
+      return firstTime ? DialogState.PENDING : DialogState.OPEN;
     }
   }
 }
