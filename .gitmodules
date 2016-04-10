@@ -4,3 +4,6 @@
 [submodule "lib/mimic"]
 	path = lib/mimic
 	url = git@github.com:OpenSolver/Mimic-for-Google-Apps-Script.git
+[submodule "lib/glpk"]
+	path = lib/glpk
+	url = git@github.com:OpenSolver/glpk.js.git
