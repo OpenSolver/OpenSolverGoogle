@@ -193,3 +193,12 @@ function checkResetModel(sheetId) {
 function resetModel(sheetId) {
   return new Model(getSheetFromIdWithDefault(sheetId), false).getSidebarData();
 }
+
+function insertResults(results) {
+  openSolver = new OpenSolver(getSheetFromIdWithDefault());
+  openSolver.loadFromCache(loadOpenSolverCache());
+  openSolver.solver.insertResults(results);
+  Logger.log(results);
+  Logger.log(openSolver.solver);
+  return openSolver.solveModel();
+}

@@ -4,13 +4,13 @@ var NEOS_URL = NEOS_SERVER + ':' + NEOS_PORT;
 var TIME_BETWEEN_CHECKS = 10;
 
 // TODO move me
-function createAmplModel(openSolver) {
+function createMplModel(openSolver) {
   var lines = [];
 
   var costLine = '  ';
 
   for (var i = 0; i < openSolver.numVars; i++) {
-    var varString = 'var ' + openSolver.varKeys[i];
+    var varString = 'var v' + openSolver.varKeys[i];
 
     if (openSolver.varTypes[i] === VariableType.BINARY) {
       varString += ', binary';
@@ -26,7 +26,7 @@ function createAmplModel(openSolver) {
     varString += ';';
     lines.push(varString);
 
-    costLine += openSolver.costCoeffs[i] + '*' + openSolver.varKeys[i];
+    costLine += openSolver.costCoeffs[i] + ' * v' + openSolver.varKeys[i];
     if (i < openSolver.numVars - 1) {
       costLine += ' + ';
     }
@@ -66,7 +66,7 @@ function createAmplModel(openSolver) {
       for (var i = 0; i < currConstraint.count(); i++) {
         var index = currConstraint.index(i);
         var coeff = currConstraint.coeff(i);
-        constraintLine += coeff + ' * ' + openSolver.varKeys[index];
+        constraintLine += coeff + ' * v' + openSolver.varKeys[index];
         if (i < currConstraint.count() - 1) {
           constraintLine += ' + ';
         }
@@ -77,12 +77,17 @@ function createAmplModel(openSolver) {
       lines.push(constraintLine);
     }
   }
+  return lines;
+}
+
+function createAmplModel(openSolver) {
+  var lines = createMplModel(openSolver);
 
   lines.push('option solver cbc;');
   lines.push('solve;');
 
   for (var i = 0; i < openSolver.numVars; i++) {
-    lines.push('_display ' + openSolver.varKeys[i] + ';');
+    lines.push('_display v' + openSolver.varKeys[i] + ';');
   }
   if (openSolver.objectiveSense !== ObjectiveSenseType.TARGET) {
     lines.push('_display Total_Cost;');
@@ -91,6 +96,13 @@ function createAmplModel(openSolver) {
   }
   lines.push('display solve_result_num, solve_result;');
 
+  return lines.join('\n');
+}
+
+function createGmplModel(openSolver) {
+  var lines = createMplModel(openSolver);
+  lines.push('end;');
+  lines.push('');  // Avoid warning message about not finishing with blank line
   return lines.join('\n');
 }
 

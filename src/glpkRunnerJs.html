@@ -1,0 +1,142 @@
+<script>
+
+var BOLD_GLPK_MESSAGES = [
+  'Solving LP relaxation...',
+  'Integer optimization begins...',
+];
+
+// Regexp to process messages from GLPK
+var IP_NODE_RE = /\+(\d+):\s+(?:\>+|\w+\s\=)\s+([\d\.]+)\D+([\d\.]+)\s+([\d\.]+\%)/;
+var IP_TERM_RE  = /\+(\d+):\s+(?:\>+|\w+\s\=)\s+([\d\.]+)\D+([\d\.]+\%)/
+var LP_NODE_RE = /\D+(\d+):\D+([\d\.]+)\D+([\d\.]+)/
+
+function processOutput(output) {
+  // Look in the whitelist for messages to bold
+  if (BOLD_GLPK_MESSAGES.indexOf(output) >= 0) {
+    if (output == 'Integer optimization begins...') {
+      output = 'Starting integer optimization...';
+    }
+    return 'BOLD' + output;
+  }
+
+  // Don't show scaling messages
+  if (output.indexOf('min|aij|') >= 0) {
+    return '';
+  }
+
+  // IP iteration output
+  if (output.substring(0, 1) == '+') {
+    // Don't show starting messages
+    if (output.indexOf('not found yet') >= 0) {
+      return '';
+    }
+
+    // Look for termination message
+    if (output.indexOf('tree is empty') >= 0) {
+      var match = output.match(IP_TERM_RE);
+      if (match) {
+        return 'After ' + match[1] + ' nodes, best solution ' + match[2] +
+               ', best possible ' + match[2] + ' (gap ' + match[3] + ')';
+      } else {
+        return '';
+      }
+    }
+
+    var match = output.match(IP_NODE_RE);
+    if (match) {
+      return 'After ' + match[1] + ' nodes, best solution ' + match[2] +
+             ', best possible ' + match[3] + ' (gap ' + match[4] + ')';
+    }
+
+  }
+
+  // Simplex iteration output
+  if (output.substring(0, 1) == ' ' || output.substring(0, 1) == '*') {
+    var match = output.match(LP_NODE_RE);
+    if (match) {
+      return 'After ' + match[1] + ' iterations, current solution ' + match[2] +
+             ', total infeasibility ' + match[3];
+    }
+  }
+
+  // Otherwise do nothing
+  return output;
+}
+
+// Add a line of output to the UI
+function addOutput(output) {
+  if (!output) { return; }
+
+  // Check if we are already scrolled to the bottom (before adding new element)
+  var body = document.body;
+  var height = parseFloat(<?= height ?>, 10);
+  var isAtBottom = body.scrollHeight == height ||
+                   body.scrollHeight - height <= body.scrollTop + 1;
+
+  // Make any necessary substitutions
+  output = processOutput(output);
+
+  // Add text element, making it bold if needed
+  var node = document.createElement('p');
+  var text;
+  if (output.substring(0, 4) == "BOLD") {
+    text = document.createTextNode(output.substring(4));
+    node.className = 'heading';
+  } else {
+    text = document.createTextNode(output);
+  }
+  node.appendChild(text);
+  var outputContainer = document.getElementById('output');
+  outputContainer.appendChild(node);
+
+  // Scroll down to the new line if we were already at the bottom
+  if (isAtBottom) {
+    body.scrollTop = body.scrollHeight;
+  }
+}
+
+function processResults(results) {
+  console.log(results);
+  google.script.run.withSuccessHandler(autoClose).insertResults(results);
+}
+
+function autoClose() {
+  <? if (autoClose) { ?>
+    close();
+  <? } ?>
+}
+
+function close() {
+  google.script.host.close();
+}
+
+// Code for making an inline worker to run GLPK in the background
+// http://www.html5rocks.com/en/tutorials/workers/basics/#toc-inlineworkers
+
+// URL.createObjectURL
+window.URL = window.URL || window.webkitURL;
+
+// "Server response", used in all examples
+var response = document.querySelector('#worker').textContent;
+
+var blob;
+try {
+    blob = new Blob([response], {type: 'application/javascript'});
+} catch (e) { // Backwards-compatibility
+    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+    blob = new BlobBuilder();
+    blob.append(response);
+    blob = blob.getBlob();
+}
+var worker = new Worker(URL.createObjectURL(blob));
+
+worker.onmessage = function(e) {
+  if (typeof e.data === 'string') {
+    addOutput(e.data);
+  } else if (e.data) {
+    processResults(e.data);
+  }
+};
+worker.postMessage('start');
+
+</script>

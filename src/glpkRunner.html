@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+    <style>
+      body {
+        margin: 0;
+      }
+      p {
+        margin: 0;
+      }
+      .heading {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .heading:first-child {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="output"></div>
+    <!-- Recursively evaluate template in the current context -->
+    <?!= HtmlService.createTemplateFromFile('glpkWorker').evaluate().getContent(); ?>
+    <?!= HtmlService.createTemplateFromFile('glpkRunnerJs').evaluate().getContent(); ?>
+  </body>
+</html>
+
+

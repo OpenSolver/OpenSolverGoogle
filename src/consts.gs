@@ -2,6 +2,7 @@ var EPSILON = 1e-10; // A small number
 var TOAST_TIMEOUT = 1; // How long (in seconds) to show status messages
 
 var OpenSolverResult = {
+  PENDING: -4,                  // Indicates that an async solve has yet to run.
   ABORTED_THRU_USER_ACTION: -3, // Indicates that a non-linearity check was made (losing the solution)
   ERROR_OCCURRED: -2,           // Indicates an error occured and has been reported to the user
   UNSOLVED: -1,                 // Indicates a model not yet solved
@@ -65,6 +66,23 @@ var SolverType = {
                    '<a href="http://scip.zib.de/" target="_blank">SCIP</a>' +
                    ', a commercial solver from Zuse-Institut Berlin.'
   },
+  GLPK: {
+      shortName:   'GLPK',
+      longName:    'GNU Linear Programming Kit (GLPK)',
+      sidebarName: 'GLPK',
+      description: 'The ' +
+                   '<a href="https://www.gnu.org/software/glpk/" target="_blank">GNU Linear Programming Kit (GLPK)</a> ' +
+                   'is a software package intended for solving large-scale ' +
+                   'linear programming (LP), mixed integer programming ' +
+                   '(MIP), and other related problems. GLPK is free software ' +
+                   'and licensed under the GNU General Public License 3.' +
+                   '</p><p>' +
+                   'OpenSolver uses ' +
+                   '<a href="https://github.com/hgourvest/glpk.js" target="_blank">glpk.js</a>, ' +
+                   'a Javascript port of GLPK by Henri Gourvest. This solver ' +
+                   'runs on your machine rather than an external server, and ' +
+                   'so is likely to be a faster option.'
+  },
   NeosCBC: {
       shortName:   'NeosCBC',
       longName:    'COIN-OR Cbc via NEOS Optimization Server',
@@ -97,6 +115,8 @@ function createSolver(solverType) {
   switch(solverType) {
     case 'Google':
       return new SolverGoogle();
+    case 'GLPK':
+      return new SolverGlpk();
     case 'NeosCBC':
       return new SolverNeos();
     default:
