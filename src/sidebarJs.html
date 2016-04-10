@@ -146,11 +146,11 @@
   }
 
   function editConstraintLHS() {
-    editConstraint($('#text-constraint-lhs'));
+    editConstraint($('#text-constraint-lhs'), $('#text-constraint-lhs-value'));
   }
 
   function editConstraintRHS() {
-    editConstraint($('#text-constraint-rhs'));
+    editConstraint($('#text-constraint-rhs'), $('#text-constraint-rhs-value'));
   }
 
   function changeConstraintREL() {
@@ -163,29 +163,41 @@
       curLHS = '';
       curREL = 0;
       curRHS = '';
+      curLHSdisplay = '';
+      curRHSdisplay = '';
     } else {
       var values = getSelectedOption($constraints).val().split(';');
       curLHS = values[0];
       curREL = parseInt(values[1]);
       curRHS = values[2];
+      var display = getSelectedOption($constraints).text().split(' ');
+      curLHSdisplay = display[0];
+      curRHSdisplay = display[2];
     }
-    $('#text-constraint-lhs').val(curLHS);
-    $('#select-constraint-rel').val(curREL);
+
     if (curREL >= 4) {
       curRHS = '';
+      curRHSdisplay = '';
     }
-    $('#text-constraint-rhs').val(curRHS);
+
+    $('#text-constraint-lhs-value').val(curLHS);
+    $('#text-constraint-rhs-value').val(curRHS);
+    $('#select-constraint-rel').val(curREL);
+    $('#text-constraint-lhs').val(curLHSdisplay);
+    $('#text-constraint-rhs').val(curRHSdisplay);
+
     changeConstraintREL();
     enableUi();
   }
 
-  function editConstraint($textElem) {
+  function editConstraint($textElem, $valueElem) {
     showWait();
     google.script.run
         .withFailureHandler(hideWait)
         .withSuccessHandler(
-          function(range, element) {
-            $textElem.val(range);
+          function(data, element) {
+            $textElem.val(data.display);
+            $valueElem.val(data.value);
             enableUi();
             hideWait();
           })
@@ -194,9 +206,9 @@
 
   function saveConstraint() {
     var index = getSelectedIndex($('#select-constraint-cells'))  - 1;
-    var lhs = $('#text-constraint-lhs').val();
+    var lhs = $('#text-constraint-lhs-value').val();
     var rel = parseInt(getSelectedOption($('#select-constraint-rel')).val(), 10);
-    var rhs = $('#text-constraint-rhs').val();
+    var rhs = $('#text-constraint-rhs-value').val();
 
     showWait();
     google.script.run
@@ -239,12 +251,12 @@
   }
 
   function checkConstraintChanged() {
-    var lhs = $('#text-constraint-lhs').val();
+    var lhs = $('#text-constraint-lhs-value').val();
     var rel = parseInt(getSelectedOption($('#select-constraint-rel')).val(), 10);
-    var rhs = $('#text-constraint-rhs').val();
-    return !((removeCurrentSheetName(lhs) === curLHS) &&
+    var rhs = $('#text-constraint-rhs-value').val();
+    return !((lhs === curLHS) &&
              (rel === curREL || 0 === curREL) &&
-             (removeCurrentSheetName(rhs) === curRHS));
+             (rhs === curRHS));
   }
 
   function enableUi(disableAll) {

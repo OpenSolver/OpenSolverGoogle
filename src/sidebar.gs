@@ -150,8 +150,13 @@ function updateSolver(solverShortName, sheetId) {
 
 function updateConstraintSelection(sheetId) {
   currentModel = getModelFromSheetIdWithDefault(sheetId);
-  return removeSheetNameFromRange(getSelectedRangeNotation(),
-                                  escapeSheetName(currentModel.sheet));
+  var value = getSelectedRangeNotation();
+  var display = removeSheetNameFromRange(value,
+                                         escapeSheetName(currentModel.sheet));
+  return {
+    value: value,
+    display: display
+  };
 }
 
 function checkChangeSolver(sheetId) {

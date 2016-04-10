@@ -14,7 +14,5 @@ Constraint.prototype.displayText = function(sheetName) {
 };
 
 Constraint.prototype.displayValue = function(sheetName) {
-  return removeSheetNameFromRange(this.lhs, sheetName) +
-         ';' + this.rel + ';' +
-         removeSheetNameFromRange(this.rhs, sheetName);
+  return this.lhs + ';' + this.rel + ';' + this.rhs;
 };
