@@ -6,3 +6,6 @@ root = true
 # Whitespace override for all JS under lib directory
 [lib/**]
 trim_trailing_whitespace = false
+
+[lib/glpk**]
+insert_final_newline = false
