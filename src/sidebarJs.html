@@ -306,6 +306,9 @@
     setSelectedIndex($('#select-variable-cells'), -1);
 
     showWait();
+
+    var t0 = performance.now();
+
     google.script.run
         .withFailureHandler(hideWait)
         .withSuccessHandler(
@@ -315,6 +318,9 @@
             populateSheetSelect(data.sheets);
             selectSheet(data.sheetIndex);
             loadModel(data.model, keepWait);
+
+            var t1 = performance.now();
+            // console.log("Sidebar load took " + (t1 - t0) + " milliseconds.")
 
             if (callback) { callback() };
           })
