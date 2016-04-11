@@ -1,12 +1,12 @@
-Version 2.0 (released 7 April 2016) contains the following changes:
+<p>Version 2.1 (released xx) contains the following changes:</p>
 
 <ul>
-  <li>Support for one more than one model per workbook! Now, each sheet can have its own model. Use the sheet selector at the top of the sidebar to switch to the model for a sheet.</li>
-  <li>Models can reference cells on different sheets! You can define models using ranges on any sheet in the workbook.</li>
-  <li>Added a new solver: Cbc on NEOS! You can choose to either use the solver provided by Google, or the <a href="https://projects.coin-or.org/Cbc" target="_blank">Cbc solver</a> on the <a href="https://neos-server.org" target="_blank">NEOS optimization cloud</a>. Note that all problems submitted to NEOS become publicly available, please see the <a href="https://neos-server.org/neos/termofuse.html" target="_blank">terms of use</a>.</li>
-  <li>Support for resuming incomplete solves! If the solve takes more than 6 minutes, it will be stopped before a solution is found. Now you can resume the solve from where you left off, allowing you to solve larger models than before.</li>
+  <li>Added GLPK solver. You can now solve problems in your browser using the open-source <a href="https://www.gnu.org/software/glpk/">GLPK</a> solver, via <a href="https://github.com/hgourvest/glpk.js">glpk.js</a> by Henri Gourvest. This solver runs in the browser on your computer rather than on a cloud server, so is typically much faster than the alternatives.</li>
+  <li>Bugfixes:
+  <ul>
+    <li>Fixed bug where dialogs could time out before they finished loading.</li>
+    <li>Fixed sheet-scoping issue when storing constraints</li>
+  </ul>
 </ul>
 
-<p><b>NOTE:</b> Due to supporting one model per sheet, we have had to make changes to how we store the OpenSolver models, and so your current models are not automatically loaded into the new version. To load in your old model, you can either redefine it manually, or use the "Import previous model" item in the menu. This will load in your previous model as the model for the currently selected sheet.</p>
-
-<p>For more information, please see the <a href=" http://opensolver.org/opensolver-for-google-sheets-v2-0/" target="_blank">release post.</a></p>
+<p>For more information, please see the <a href="xxx">release post</a> for this release.</p>
