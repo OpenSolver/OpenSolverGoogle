@@ -18,10 +18,6 @@
   section.button-bar {
     position: fixed;
   }
-
-  #main {
-
-  }
 </style>
 
 <? var solvers = Object.keys(SolverType) ?>
@@ -53,48 +49,15 @@
 </section>
 
 <script>
-  /**
-   * The ID of this dialog. This is set once when the template is rendered.
-   */
-  var DIALOG_ID = '<?= dialogId ?>';
-  /**
-   * How often to check-in with the server, in seconds.
-   */
-  var CHECKIN_INTERVAL_SECONDS = 3;
-  // Sets up an interval to check-in with the server every few seconds, so we can tell
-  // if it's been X-ed out.
-  window.setInterval(function() {
-    google.script.run.checkIn(DIALOG_ID);
-  }, CHECKIN_INTERVAL_SECONDS * 1000);
-  /**
-   * Runs when the form is submitted.
-   */
   function confirm() {
-    // Here is where you would add custom logic specific to your form.
-    // You may need to make additional google.script.run calls to store various information
-    // collected in the dialog.
     var solverShortName = document.getElementById('select-solver').value;
     google.script.run
-        .withSuccessHandler(function() {
-          google.script.run
-            .withSuccessHandler(close)
-            .setDialogState(DIALOG_ID, 'done');
-        })
+        .withSuccessHandler(dialogDone)
         .setCachedSolverShortName(solverShortName);
   }
-  /**
-   * Runs when the cancel button is clicked.
-   */
+
   function cancel() {
-    google.script.run
-        .withSuccessHandler(close)
-        .setDialogState(DIALOG_ID, 'aborted');
-  }
-  /**
-   * Closes the dialog.
-   */
-  function close() {
-    google.script.host.close();
+    dialogAbort();
   }
 
   function changeSolver() {
@@ -110,11 +73,8 @@
     google.script.host.setHeight(main.offsetHeight + 39);
   }
 
+  // Set the initial choice of solver
   document.getElementById('select-solver')
           .value = '<?= currentModel.solver.shortName ?>';
   changeSolver();
-
-  // Let the server know we are finished loading
-  google.script.run.checkIn(DIALOG_ID);
-  google.script.run.setDialogState(DIALOG_ID, 'open');
 </script>

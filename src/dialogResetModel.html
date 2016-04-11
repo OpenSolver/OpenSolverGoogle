@@ -10,48 +10,18 @@
 <p style="margin-top: 0;">
   This will clear all of the saved model information, and can't be undone.
 </p>
+
 <section class="button-bar">
   <button class="action" onclick="reset()">Reset</button>
   <button onclick="cancel()">Cancel</button>
 </section>
 
 <script>
-  /**
-   * The ID of this dialog. This is set once when the template is rendered.
-   */
-  var DIALOG_ID = '<?= dialogId ?>';
-  /**
-   * How often to check-in with the server, in seconds.
-   */
-  var CHECKIN_INTERVAL_SECONDS = 3;
-  // Sets up an interval to check-in with the server every few seconds, so we can tell
-  // if it's been X-ed out.
-  window.setInterval(function() {
-    google.script.run.checkIn(DIALOG_ID);
-  }, CHECKIN_INTERVAL_SECONDS * 1000);
-  /**
-   * Runs when the form is submitted.
-   */
   function reset() {
-    // Here is where you would add custom logic specific to your form.
-    // You may need to make additional google.script.run calls to store various information
-    // collected in the dialog.
-    google.script.run.withSuccessHandler(close).setDialogState(DIALOG_ID, 'done');
-  }
-  /**
-   * Runs when the cancel button is clicked.
-   */
-  function cancel() {
-    google.script.run.withSuccessHandler(close).setDialogState(DIALOG_ID, 'aborted');
-  }
-  /**
-   * Closes the dialog.
-   */
-  function close() {
-    google.script.host.close();
+    dialogDone();
   }
 
-  // Let the server know we are finished loading
-  google.script.run.checkIn(DIALOG_ID);
-  google.script.run.setDialogState(DIALOG_ID, 'open');
+  function cancel() {
+    dialogAbort();
+  }
 </script>

@@ -37,12 +37,20 @@ var DialogProperty = {
  */
 function showDialog(templateName, title, height, width) {
   var dialogId = Utilities.base64Encode(Math.random());
-  var template = HtmlService.createTemplateFromFile(templateName);
-  template.dialogId = dialogId;
-  var page = template.evaluate()
+
+  // Construct the library functions for managing the dialog
+  var dialogFunctions = HtmlService.createTemplateFromFile('dialogJs');
+  dialogFunctions.dialogId = dialogId;
+
+  // Create the dialog UI and append the library functions
+  var page = HtmlService.createTemplateFromFile(templateName)
+      .evaluate()
+      .append(dialogFunctions.evaluate().getContent())
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+
   if (height) page.setHeight(height);
   if (width)  page.setWidth(width);
+
   SpreadsheetApp.getUi().showModalDialog(page, title);
   checkIn(dialogId);
   Logger.log(dialogId);

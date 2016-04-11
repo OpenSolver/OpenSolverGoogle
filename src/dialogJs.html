@@ -1,0 +1,46 @@
+<script>
+
+/**
+ * The ID of this dialog. This is set once when the template is rendered.
+ */
+var DIALOG_ID = '<?!= dialogId ?>';
+/**
+ * How often to check-in with the server, in seconds.
+ */
+var CHECKIN_INTERVAL_SECONDS = 3;
+// Sets up an interval to check-in with the server every few seconds, so we can tell
+// if it's been X-ed out.
+window.setInterval(function() {
+  google.script.run.checkIn(DIALOG_ID);
+}, CHECKIN_INTERVAL_SECONDS * 1000);
+/**
+ * Runs when the form is submitted.
+ */
+function dialogDone() {
+  // Here is where you would add custom logic specific to your form.
+  // You may need to make additional google.script.run calls to store various information
+  // collected in the dialog.
+  google.script.run
+      .withSuccessHandler(dialogClose)
+      .setDialogState(DIALOG_ID, 'done');
+}
+/**
+ * Runs when the cancel button is clicked.
+ */
+function dialogAbort() {
+  google.script.run
+      .withSuccessHandler(dialogClose)
+      .setDialogState(DIALOG_ID, 'aborted');
+}
+/**
+ * Closes the dialog.
+ */
+function dialogClose() {
+  google.script.host.close();
+}
+
+// Let the server know we are finished loading
+google.script.run.checkIn(DIALOG_ID);
+google.script.run.setDialogState(DIALOG_ID, 'open');
+
+</script>
