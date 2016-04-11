@@ -59,11 +59,11 @@ var SolverType = {
       longName:    'Google Apps Script Linear Optimization Service',
       sidebarName: 'Google Linear Solver',
       description: 'The Google Apps Script Linear Optimization Service uses the ' +
-                   '<a href="https://developers.google.com/optimization/lp/glop" target="_blank">Glop</a> ' +
+                   '<a href="https://developers.google.com/optimization/lp/glop">Glop</a> ' +
                    'solver for pure linear-optimization problems where all ' +
                    'variables can take on real values. If any variables are ' +
                    'constrained to integers, the service uses ' +
-                   '<a href="http://scip.zib.de/" target="_blank">SCIP</a>' +
+                   '<a href="http://scip.zib.de/">SCIP</a>' +
                    ', a commercial solver from Zuse-Institut Berlin.'
   },
   GLPK: {
@@ -71,14 +71,14 @@ var SolverType = {
       longName:    'GNU Linear Programming Kit (GLPK)',
       sidebarName: 'GLPK',
       description: 'The ' +
-                   '<a href="https://www.gnu.org/software/glpk/" target="_blank">GNU Linear Programming Kit (GLPK)</a> ' +
+                   '<a href="https://www.gnu.org/software/glpk/">GNU Linear Programming Kit (GLPK)</a> ' +
                    'is a software package intended for solving large-scale ' +
                    'linear programming (LP), mixed integer programming ' +
                    '(MIP), and other related problems. GLPK is free software ' +
                    'and licensed under the GNU General Public License 3.' +
                    '</p><p>' +
                    'OpenSolver uses ' +
-                   '<a href="https://github.com/hgourvest/glpk.js" target="_blank">glpk.js</a>, ' +
+                   '<a href="https://github.com/hgourvest/glpk.js">glpk.js</a>, ' +
                    'a Javascript port of GLPK by Henri Gourvest. This solver ' +
                    'runs on your machine rather than an external server, and ' +
                    'so is likely to be a faster option.'
@@ -88,7 +88,7 @@ var SolverType = {
       longName:    'COIN-OR Cbc via NEOS Optimization Server',
       sidebarName: 'Cbc via NEOS',
       description: 'The ' +
-                   '<a href="http://www.neos-server.org" target="_blank">NEOS (Network-Enabled Optimization System) Server</a> ' +
+                   '<a href="http://www.neos-server.org">NEOS (Network-Enabled Optimization System) Server</a> ' +
                    'is a free Internet-based service for solving ' +
                    'optimization problems. Models sent to NEOS often have to ' +
                    'wait in a queue before they are solved, depending on the ' +
@@ -96,10 +96,10 @@ var SolverType = {
                    'usually faster. Submitting a model to NEOS results in it ' +
                    'becoming publicly available. Use of NEOS is subject to ' +
                    'the ' +
-                   '<a href="http://www.neos-server.org/neos/termofuse.html" target="_blank">NEOS Terms and Conditions</a>.' +
+                   '<a href="http://www.neos-server.org/neos/termofuse.html">NEOS Terms and Conditions</a>.' +
                    '</p><p>' +
                    'The ' +
-                   '<a href="https://projects.coin-or.org/Cbc" target="_blank">COIN-OR Branch and Cut solver</a> ' +
+                   '<a href="https://projects.coin-or.org/Cbc">COIN-OR Branch and Cut solver</a> ' +
                    '(Cbc) is an open-source mixed-integer linear program ' +
                    '(MILP) solver written in C++. Cbc is an active ' +
                    'open-source project led by John Forrest.'
