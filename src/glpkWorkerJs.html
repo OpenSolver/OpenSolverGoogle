@@ -3,15 +3,6 @@
 // Include the actual GLPK.js code
 <?!= include('glpk.min') ?>
 
-var glpStatus = new Array();
-glpStatus[GLP_OPT]    = "Solution is optimal.";
-glpStatus[GLP_FEAS]   = "Solution is feasible.";
-glpStatus[GLP_INFEAS] = "Solution is infeasible.";
-glpStatus[GLP_NOFEAS] = "Problem has no feasible solution.";
-glpStatus[GLP_UNBND]  = "Problem has unbounded solution.";
-glpStatus[GLP_UNDEF]  = "Solution is undefined.";
-console.log(glpStatus);
-
 // Begin the solve when the worker receives a 'start' message
 self.onmessage = function(e) {
   if (e.data == 'start') {
@@ -52,7 +43,6 @@ function mathprog(modelStr, logger) {
 
   boldLogger('Starting solve...');
   // Dispatch to IP/LP solver as required.
-  // TODO is this necessary?
   if (isMip) {
     var iocp = new IOCP({
       presolve: GLP_ON,
