@@ -95,8 +95,10 @@ OpenSolver.prototype.loadFromCache = function(data) {
   this.getObjectiveFromString(this.objectiveString);
 
   for (var i = 0; i < this.numConstraints; i++) {
-    this.lhsRange[i] = this.getConRangeFromString(this.lhsString[i]);
-    this.rhsRange[i] = this.getConRangeFromString(this.rhsString[i]);
+    if (this.rhsString[i]) {
+      this.lhsRange[i] = this.getConRangeFromString(this.lhsString[i]);
+      this.rhsRange[i] = this.getConRangeFromString(this.rhsString[i]);
+    }
   }
 
   for (var row = 0; row < this.sparseA.length; row++) {
@@ -145,7 +147,9 @@ OpenSolver.prototype.solveModel = function() {
     }
     this.solve();
     this.reportAnySubOptimality();
-    this.deleteCache();
+    if (this.solveStatus !== OpenSolverResult.PENDING) {
+      this.deleteCache();
+    }
   } catch (e) {
     this.solveStatus = OpenSolverResult.ERROR_OCCURRED;
     if (!(e.title && e.title.length >= 10 && e.title.substring(0, 10) == 'OpenSolver')) {
@@ -591,7 +595,8 @@ OpenSolver.prototype.getVariableByLocation = function(coeffs) {
 OpenSolver.prototype.reportAnySubOptimality = function() {
   if (this.solveStatus !== OpenSolverResult.OPTIMAL &&
       this.solveStatus !== OpenSolverResult.NOT_LINEAR &&
-      this.solveStatus !== OpenSolverResult.ABORTED_THRU_USER_ACTION) {
+      this.solveStatus !== OpenSolverResult.ABORTED_THRU_USER_ACTION &&
+      this.solveStatus !== OpenSolverResult.PENDING) {
     var message = this.solutionWasLoaded ? 'The solution generated has been loaded into the spreadsheet.'
                                          : 'No solution was available to load into the spreadsheet.';
 
