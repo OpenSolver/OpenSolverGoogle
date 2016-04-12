@@ -199,6 +199,5 @@ function insertResults(results) {
   openSolver.loadFromCache(loadOpenSolverCache());
   openSolver.solver.insertResults(results);
   Logger.log(results);
-  Logger.log(openSolver.solver);
   return openSolver.solveModel();
 }
