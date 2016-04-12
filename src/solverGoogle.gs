@@ -98,35 +98,35 @@ SolverGoogle.prototype.solve = function(openSolver) {
   for (var row = 0; row < openSolver.numRows; row++) {
     var currConstraint = openSolver.sparseA[row];
 
+    // Skip over any empty constraint, we have already verified it holds
     if (currConstraint.count() === 0) {
-      var invalid = openSolver.validateEmptyConstraint(row);
-      if (invalid !== false) {
-        return invalid;
-      }
-    } else {
-      var lowerBound = openSolver.rhs[row];
-      var upperBound = openSolver.rhs[row];
-      if (openSolver.relation[row] == Relation.GE) {
-        upperBound = Infinity;
-      } else if (openSolver.relation[row] == Relation.LE) {
-        lowerBound = -Infinity;
-      }
-      Logger.log(openSolver.rhs);
-      Logger.log(lowerBound);
-      Logger.log(upperBound);
-      var constraint = this.engine.addConstraint(lowerBound, upperBound);
-      for (var i = 0; i < currConstraint.count(); i++) {
-        var index = currConstraint.index(i);
-        var coeff = currConstraint.coeff(i);
-        constraint.setCoefficient(openSolver.varKeys[index], coeff);
-      }
+      continue;
+    }
+
+    var lowerBound = openSolver.rhs[row];
+    var upperBound = openSolver.rhs[row];
+    var rel = openSolver.relation[openSolver.rowToConstraint[row]];
+    if (rel == Relation.GE) {
+      upperBound = Infinity;
+    } else if (rel == Relation.LE) {
+      lowerBound = -Infinity;
+    }
+    Logger.log(openSolver.rhs);
+    Logger.log(lowerBound);
+    Logger.log(upperBound);
+    var constraint = this.engine.addConstraint(lowerBound, upperBound);
+    for (var i = 0; i < currConstraint.count(); i++) {
+      var index = currConstraint.index(i);
+      var coeff = currConstraint.coeff(i);
+      constraint.setCoefficient(openSolver.varKeys[index], coeff);
     }
   }
 
   // Add constraint forcing objective == target if we are seeking a value
   if (openSolver.objectiveSense == ObjectiveSenseType.TARGET) {
-    Logger.log(openSolver.objectiveTarget);
-    var constraint = this.engine.addConstraint(openSolver.objectiveTarget, openSolver.objectiveTarget);
+    var targetValue = openSolver.objectiveTarget - openSolver.objectiveConstant;
+    Logger.log(targetValue);
+    var constraint = this.engine.addConstraint(targetValue, targetValue);
     for (var i = 0; i < openSolver.numVars; i++) {
       constraint.setCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
       Logger.log([openSolver.varKeys[i], openSolver.costCoeffs[i]]);

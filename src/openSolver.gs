@@ -6,6 +6,7 @@ OpenSolver = function(sheet) {
   this.minimiseUserInteraction = false;
   this.assumeNonNegativeVars = false;
   this.checkLinear = false;
+  this.linearityOffset = 10.423;  // An uncommon magic number!
 
   this.solveStatus = OpenSolverResult.UNSOLVED;
   this.solveStatusString = 'Unsolved';
@@ -13,49 +14,53 @@ OpenSolver = function(sheet) {
 
   this.modelStatus = ModelStatus.UNINITIALISED;
 
-  this.linearityOffset = 0;
-
+  // Solver variable information
   this.numVariableAreas = 0;
   this.variableAreaStrings = [];
   this.variableAreas = [];
-  this.numVars = 0;
 
+  // LP variable information
+  this.numVars = 0;
   this.varNames = [];
   this.varLocations = [];
   this.varKeys = [];
   this.varRangeSizes = [];
   this.varNameMap = {};
   this.varValues = [];
+  this.varTypes = {}; // Object to store sparsely
+  this.lowerBoundedVariables = {}; // Object for sparse storage
 
+  // Objective information
   this.objectiveSense = ObjectiveSenseType.UNKNOWN;
   this.objectiveTarget = null;
   this.objectiveString = null;
   this.objective = null;
-  this.objectiveValue = 0;
 
+  // Mappings between solver constraints and LP rows
   this.numConstraints = 0;
   this.numRows = 0;
-  this.mappingRowsToConstraints = [];
-  this.constraintSummary = [];
+  this.rowToConstraint = [];  // Map row number to solver constraint
+  this.constraintToRow = [];  // Map solver constraint to first LP row
+  this.rowCount = [];         // Number of rows for each solver constraint
 
+  // Constraint information
+  this.constraintSummary = [];
+  this.relation = [];
   this.lhsString = [];
   this.lhsRange = [];
   this.lhsType = [];
-  this.lhsOriginalValues = [];
-
   this.rhsString = [];
   this.rhsRange = [];
   this.rhsType = [];
-  this.rhsOriginalValues = [];
-  this.relation = [];
-  this.varTypes = {}; // Object to store sparsely
 
+  // Model information filled in by model builder
+  this.startVariable = 0;  // The last variable that was processed for resuming
   this.sparseA = [];
-  this.startVariable = 0;
   this.rhs = [];
   this.costCoeffs = [];
-  this.lowerBoundedVariables = {}; // Object for sparse storage
+  this.objectiveConstant = 0;
 
+  // Solver information
   this.solverShortName = null;
   this.solver = null;
 };
@@ -137,7 +142,11 @@ OpenSolver.prototype.getConRangeFromString = function(conString) {
 };
 
 OpenSolver.prototype.getVariableAreaFromString = function(varArea) {
-  return this.sheet.getRange(varArea)
+  try {
+    return this.sheet.getRange(varArea);
+  } catch(e) {
+    throw(ERR_VAR_RANGE_ERROR(varArea));
+  }
 };
 
 OpenSolver.prototype.solveModel = function() {
@@ -145,8 +154,14 @@ OpenSolver.prototype.solveModel = function() {
     if (this.modelStatus !== ModelStatus.BUILT) {
       this.buildModelFromSolverData();
     }
-    this.solve();
+
+    // Only proceed with solve if we don't already have a result from building
+    if (this.solveStatus === OpenSolverResult.UNSOLVED) {
+      this.solve();
+    }
     this.reportAnySubOptimality();
+
+    // Don't empty the cache if the solve is going to finish later
     if (this.solveStatus !== OpenSolverResult.PENDING) {
       this.deleteCache();
     }
@@ -170,8 +185,6 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   this.linearityOffset = linearityOffset || this.linearityOffset;
   this.minimiseUserInteraction = minimiseUserInteraction || this.minimiseUserInteraction;
 
-  // TODO get solver from user selection
-
   var model = new Model(this.sheet);
   this.showStatus = model.showStatus;
   this.checkLinear = model.checkLinear;
@@ -190,16 +203,10 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   this.varRangeSizes = [];
   var variable = 0;
   for (var i = 0; i < this.numVariableAreas; i++) {
-//    try {
-//      var variableArea = this.sheet.getRange(model.variables[i]);
-//    } catch(e) { // Error getting range
-//      throw(ERR_VAR_RANGE_ERROR(model.variables[i]));
-//    }
     var variableAreaString = model.variables[i];
     this.variableAreaStrings.push(variableAreaString);
 
     var variableArea = this.getVariableAreaFromString(variableAreaString);
-    variableArea.setValue(this.linearityOffset);
     this.variableAreas.push(variableArea);
 
     // Set name reference for each cell
@@ -210,6 +217,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
         this.varLocations[variable] = [i, j, k];
         this.varKeys[variable] = this.varLocations[variable].join('_');
         this.varNames[variable] = variableArea.getCell(j + 1, k + 1).getA1Notation();
+        // TODO check if the variable exists and if so skip the var
+        // TODO include sheet name in variable name
         this.varNameMap[this.varNames[variable]] = variable;
         variable++;
       }
@@ -222,39 +231,35 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   }
 
   // Objective setup
+  this.objectiveString = model.objective;
+  this.getObjectiveFromString(this.objectiveString);
   this.objectiveSense = model.objectiveSense;
   if (model.objectiveSense == ObjectiveSenseType.TARGET) {
     this.objectiveTarget = model.objectiveVal;
   }
 
-  this.objectiveString = model.objective;
-  this.getObjectiveFromString(this.objectiveString);
-
-  this.objectiveValue = this.getObjectiveValue();
-  this.objectiveConstant = this.objectiveValue;
-
   // Model options
   this.assumeNonNegativeVars = model.assumeNonNeg;
 
   // Constraints setup
-  this.numConstraints = model.constraints.length;
-
   updateStatus('Processing constraints', 'Solving Model');
+  this.numConstraints = model.constraints.length;
   this.numRows = 0;
-  var row = 0;
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
 
     if (constraint % 10 === 0) {
       updateStatus('Processing constraint ' + (constraint + 1) + '/' +
-                                   this.numConstraints, 'Solving Model');
+                   this.numConstraints, 'Solving Model');
     }
 
-    this.constraintSummary[constraint] = model.constraints[constraint].displayText();
+    this.constraintSummary[constraint] = model.constraints[constraint]
+                                              .displayText();
 
     this.lhsString[constraint] = model.constraints[constraint].lhs;
     var lhsRange = this.getConRangeFromString(this.lhsString[constraint]);
 
     var rel = model.constraints[constraint].rel;
+    this.relation[constraint] = rel;
 
     // INT/BIN constraint - no rhs
     if (!relationConstHasRHS(rel)) {
@@ -281,23 +286,26 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
               break;
           }
           if (varType) {
-            this.varTypes[varIndex] = varType;
+            // Don't override a binary with integer
+            if (this.varTypes[varIndex] !== VariableType.BINARY) {
+              this.varTypes[varIndex] = varType;
+            }
           }
         }
       }
-
-      this.mappingRowsToConstraints[constraint] = this.numRows;
+      this.rowCount[constraint] = 0;
+      this.constraintToRow[constraint] = this.numRows;
 
     // Other constraints with a RHS
     } else {
       this.rhsString[constraint] = model.constraints[constraint].rhs;
       var rhsRange = this.getConRangeFromString(this.rhsString[constraint]);
 
+      var lhsCount = getRangeSize(lhsRange);
       var rhsCount = getRangeSize(rhsRange);
-      var rowCount = getRangeSize(lhsRange);
 
       // Check we have a compatible constraint system.
-      if (rowCount !== rhsCount && rowCount !== 1 && rhsCount !== 1) {
+      if (lhsCount !== rhsCount && lhsCount !== 1 && rhsCount !== 1) {
         throw(ERR_CON_WRONG_DIMS(this.constraintSummary[constraint]));
       }
 
@@ -322,27 +330,32 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
         this.rhsType[constraint] = SolverInputType.MULTI_CELL_RANGE;
       }
 
-      // Store relations for these rows, keep track of how many rows we've added
+      this.rowCount[constraint] = lhsCount;
+      this.constraintToRow[constraint] = this.numRows;
+      this.numRows += lhsCount;
+    }
+  }
+
+  if (this.numRows > 0) {
+    var row = 0;
+    for (var con = 0; con < this.numConstraints; con++) {
+      var rowCount = this.rowCount[con];
       for (var i = 0; i < rowCount; i++) {
-        this.relation[row + i] = rel;
+        this.rowToConstraint[row + i] = con;
       }
       row += rowCount;
-      this.mappingRowsToConstraints[constraint] = this.numRows;
-      this.numRows += rowCount;
-
-      var values = this.getConstraintValues(constraint);
-      this.lhsOriginalValues[constraint] = values.lhsValues;
-      this.rhsOriginalValues[constraint] = values.rhsValues;
     }
   }
 
   this.modelStatus = ModelStatus.INITIALISED;
 
-  if (!this.buildSparseA()) {
+  if (!this.processSolverModel(this.linearityOffset, this.checkLinear)) {
     // Building A failed
     Logger.log('build A failed');
     return;
   }
+
+  this.setAllVariableValues(0);
 
   this.modelStatus = ModelStatus.BUILT;
   this.updateCache();
@@ -375,16 +388,174 @@ OpenSolver.prototype.getObjectiveValue = function() {
                              ERR_OBJ_NOT_NUMERIC);
 };
 
-OpenSolver.prototype.buildSparseA = function() {
+OpenSolver.prototype.processSolverModel = function(linearityOffset, checkLinear) {
   updateStatus('Building model...', 'Solving Model');
 
+  // Don't do the setup if we are resuming a sparseA build
+  if (this.startVariable === 0) {
+    // Build RHS terms and objective constant
+    if (!this.buildConstantTerms()) {
+      return false;
+    }
+  }
+
+  // Build sparseA and cost vector
+  if (!this.buildVariableTerms(linearityOffset)) {
+    return false;
+  }
+
+  // Check all empty constraints are satisfied
+  for (var row = 0; row < this.numRows; row++) {
+    if (this.sparseA[row].count() === 0) {
+      var constraint = this.rowToConstraint[row];
+      var rel = this.relation[constraint];
+      var rhs = this.rhs[row];
+      Logger.log('Validate: row ' + row + ' relation ' + rel + ' rhs ' + rhs);
+      if ((rel === Relation.GE && rhs > EPSILON) ||
+          (rel === Relation.LE && rhs < -EPSILON) ||
+          (rel === Relation.EQ && Math.abs(rhs) > EPSILON)) {
+        var instance = this.getConstraintInstance(row, constraint);
+        var position = this.getArrayPosition(instance,
+                                             lhsOriginalValues[constraint]);
+        var i = position.i - 1;
+        var j = position.j - 1;
+
+        var lhsRange;
+        var lhsValue;
+        if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+          lhsRange = this.lhsRange[constraint].getCell(i + 1, j + 1);
+          lhsValue = lhsOriginalValues[constraint][i][j];
+        } else {
+          lhsRange = this.lhsRange[constraint].getCell(1, 1);
+          lhsValue = lhsOriginalValues[constraint][0][0];
+        }
+
+        var rhsRange;
+        var rhsValue;
+        if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+          rhsRange = this.rhsRange[constraint].getCell(i + 1, j + 1);
+          rhsValue = rhsOriginalValues[constraint][i][j];
+        } else {
+          rhsRange = this.rhsRange[constraint].getCell(1, 1);
+          rhsValue = rhsOriginalValues[constraint][0][0];
+        }
+
+        this.solveStatus = OpenSolverResult.INFEASIBLE;
+        this.solveStatusString = 'Infeasible';
+        this.solveStatusComment =
+            'The model contains a constraint in the group ' +
+            this.constraintSummary[constraint] + ' ' +
+            'which does not depend on the decision variables and is not ' +
+            'satisfied.\n\n' +
+            'Constraint specifies: \n' +
+            'LHS: ' + lhsRange.getA1Notation() + ' = ' + lhsValue + '\n' +
+            ' ' + relationConstToString(rel) + '\n' +
+            'RHS: ' + rhsRange.getA1Notation() + ' = ' + rhsValue;
+        return false;
+      }
+    }
+  }
+
+  // Check for explicit lower bounds
+  for (var row = 0; row < this.numRows; row++) {
+    if (this.sparseA[row].count() == 1) {
+      var index = this.sparseA[row].index(0);
+      var coeff = this.sparseA[row].coeff(0);
+      var constraint = this.rowToConstraint[row];
+      var rel = this.relation[constraint];
+      if (coeff >= 0 && rel === Relation.GE) {
+        var instance = this.getConstraintInstance(row, constraint);
+        var position = this.getArrayPosition(instance,
+                                             lhsOriginalValues[constraint]);
+        var lhsRange = this.lhsRange[constraint].getCell(position.i, position.j);
+        if (this.varNameMap[lhsRange.getA1Notation()] !== undefined) {
+          this.lowerBoundedVariables[index] = true;
+        }
+      }
+    }
+  }
+
+  if (checkLinear) {
+    this.quickLinearityCheck();
+  }
+
+  Logger.log("Finished building model");
+  return true;
+}
+
+OpenSolver.prototype.setAllVariableValues = function(value) {
+  for (var i = 0; i < this.numVariableAreas; i++) {
+    this.variableAreas[i].setValue(value);
+  }
+}
+
+OpenSolver.prototype.buildConstantTerms = function() {
+  // Zero all values
+  this.setAllVariableValues(0);
+
+  if (this.objective) {
+    this.objectiveConstant = this.getObjectiveValue();
+  }
+
+  // Create the rhs vector
+  var row = 0;
+  for (var constraint = 0; constraint < this.numConstraints; constraint++) {
+    // Skip Binary and Integer constraints
+    if (!this.lhsRange[constraint]) {
+      continue;
+    }
+
+    var values = this.getConstraintValues(constraint);
+    var zeroedLhsValues = values.lhsValues;
+    var zeroedRhsValues = values.rhsValues;
+
+    for (m = 0; m < zeroedLhsValues.length; m++) {
+      for (n = 0; n < zeroedLhsValues[m].length; n++) {
+        var coeff = -zeroedLhsValues[m][n];
+        if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+          // Making it work for column LHS with row RHS and vice versa
+          if (zeroedLhsValues.length === zeroedRhsValues.length) {
+            coeff += zeroedRhsValues[m][n];
+          } else {
+            coeff += zeroedRhsValues[n][m];
+          }
+        } else { // SolverInputType.SINGLE_CELL_RANGE
+          coeff += zeroedRhsValues[0][0];
+        }
+        this.rhs[row] = coeff;
+        row += 1;
+      }
+    }
+  }
+  return true;
+}
+
+OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
   // Create SparseA
   for (var row = 0; row < this.numRows; row++) {
+    // Don't overwrite if already present, e.g. when resuming
     this.sparseA[row] = this.sparseA[row] || new IndexedCoeffs();
   }
 
-  // Target value needs to be adjusted by any constants in the objective
-  this.objectiveTarget -= this.objectiveValue;
+  this.setAllVariableValues(linearityOffset);
+
+  // Get all values at the linearity offset
+  var lhsOriginalValues = [];
+  var rhsOriginalValues = [];
+  for (var constraint = 0; constraint < this.numConstraints; constraint++) {
+    if (!this.lhsRange[constraint]) {
+      continue;
+    }
+
+    var originalValues = this.getConstraintValues(constraint);
+    lhsOriginalValues[constraint] = originalValues.lhsValues;
+    rhsOriginalValues[constraint] = originalValues.rhsValues;
+  }
+
+  var originalObjectiveValue;
+  if (this.objective) {
+    originalObjectiveValue = this.getObjectiveValue();
+  }
 
   var start = this.startVariable;
   for (var i = this.startVariable; i < this.numVars; i++) {
@@ -395,17 +566,16 @@ OpenSolver.prototype.buildSparseA = function() {
       // Save progress to cache
       this.updateCache();
 
-//      // For testing termination
-//      if (i !== start) { throw(makeError('stop while building')); };
+      // // For testing termination
+      // if (i !== start) { throw(makeError('stop while building')); };
     }
 
     var currentCell = this.getVariableByIndex(i);
-    currentCell.setValue(this.linearityOffset + 1);
-
+    currentCell.setValue(linearityOffset + 1);
 
     // The objective function value change
     if (this.objective) {
-      this.costCoeffs[i] = this.getObjectiveValue() - this.objectiveValue;
+      this.costCoeffs[i] = this.getObjectiveValue() - originalObjectiveValue;
     }
     // The constraint changes
     var row = 0;
@@ -415,8 +585,8 @@ OpenSolver.prototype.buildSparseA = function() {
         continue;
       }
 
-      var originalLhsValues = this.lhsOriginalValues[constraint];
-      var originalRhsValues = this.rhsOriginalValues[constraint];
+      var originalLhsValues = lhsOriginalValues[constraint];
+      var originalRhsValues = rhsOriginalValues[constraint];
 
       var values = this.getConstraintValues(constraint);
       var currentLhsValues = values.lhsValues;
@@ -445,63 +615,9 @@ OpenSolver.prototype.buildSparseA = function() {
       }
     }
 
-    currentCell.setValue(this.linearityOffset);
+    currentCell.setValue(linearityOffset);
     this.startVariable = i + 1;
   }
-  // Add an 'end of data' entry
-  if (this.numConstraints > 0) {
-    this.mappingRowsToConstraints[this.numConstraints] = this.numRows;
-  }
-
-  // Create the rhs vector
-  var row = 0;
-  for (var constraint = 0; constraint < this.numConstraints; constraint++) {
-    // Skip Binary and Integer constraints
-    if (!this.lhsRange[constraint]) {
-      continue;
-    }
-
-    var originalLhsValues = this.lhsOriginalValues[constraint];
-    var originalRhsValues = this.rhsOriginalValues[constraint];
-    for (m = 0; m < originalLhsValues.length; m++) {
-      for (n = 0; n < originalLhsValues[m].length; n++) {
-        var coeff = -originalLhsValues[m][n];
-        if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-          // Making it work for column LHS with row RHS and vice versa
-          if (originalLhsValues.length === originalRhsValues.length) {
-            coeff += originalRhsValues[m][n];
-          } else {
-            coeff += originalRhsValues[n][m];
-          }
-        } else { // this.rhsType[constraint] === SolverInputType.SINGLE_CELL_RANGE
-          coeff += originalRhsValues[0][0];
-        }
-        this.rhs[row] = coeff;
-        row += 1;
-      }
-    }
-  }
-  Logger.log(this.mappingRowsToConstraints);
-  // Check for explicit lower bounds
-  for (var row = 0; row < this.numRows; row++) {
-    if (this.sparseA[row].count() == 1) {
-      var index = this.sparseA[row].index(0);
-      var coeff = this.sparseA[row].coeff(0);
-      var rel = this.relation[row];
-      if (coeff >= 0 && rel === Relation.GE) {
-        var constraintData = this.getConstraintFromRow(row);
-        var constraint = constraintData.constraint;
-        var instance = constraintData.instance;
-        Logger.log([constraint, instance]);
-        var position = this.getArrayPositionFromConstraintInstance(constraint, instance);
-        var lhsRange = this.lhsRange[constraint].getCell(position.i, position.j);
-        if (this.varNameMap[lhsRange.getA1Notation()] !== undefined) {
-          this.lowerBoundedVariables[index] = true;
-        }
-      }
-    }
-  }
-
   return true;
 };
 
@@ -548,34 +664,18 @@ OpenSolver.prototype.solve = function() {
     }
   }
 
-  // Perform linearity check if requested
-  if (result.loadSolution && this.checkLinear) {
-    if (this.quickLinearityCheck()) {
-      this.solveStatus = OpenSolverResult.ABORTED_THRU_USER_ACTION;
-      this.solveStatusString = "No solution found";
-    }
-  }
-
   // TODO write duals
 
 };
 
-OpenSolver.prototype.getConstraintFromRow = function(row) {
-  var constraint = 0;
-  while (row >= this.mappingRowsToConstraints[constraint + 1]) {
-    constraint++;
-  }
-  var instance = row - this.mappingRowsToConstraints[constraint];
-  return {
-    constraint: constraint,
-    instance: instance
-  };
+OpenSolver.prototype.getConstraintInstance = function(row, constraint) {
+  return row - this.constraintToRow[constraint];
 };
 
-OpenSolver.prototype.getArrayPositionFromConstraintInstance = function(constraint, instance) {
-  var dim = this.lhsOriginalValues[constraint][0].length;
+OpenSolver.prototype.getArrayPosition = function(instance, values) {
+  var dim = values[0].length;
   var i = 1 + parseInt(instance / dim, 10);
-  j = 1 + (instance % dim);
+  var j = 1 + (instance % dim);
   return {
     i: i,
     j: j
@@ -612,156 +712,112 @@ OpenSolver.prototype.reportAnySubOptimality = function() {
   }
 };
 
-OpenSolver.prototype.validateEmptyConstraint = function(row) {
-  Logger.log('Validate: row ' + row + ' relation ' + this.relation[row] + ' rhs ' + this.rhs[row]);
-  if ((this.relation[row] === Relation.GE && this.rhs[row] > EPSILON) ||
-      (this.relation[row] === Relation.LE && this.rhs[row] < -EPSILON) ||
-      (this.relation[row] === Relation.EQ && Math.abs(this.rhs[row]) > EPSILON)) {
-    var constraintData = this.getConstraintFromRow(row);
-    var constraint = constraintData.constraint;
-    var instance = constraintData.instance;
-    var position = this.getArrayPositionFromConstraintInstance(constraint, instance);
-    var i = position.i - 1;
-    var j = position.j - 1;
-
-    var lhsRange;
-    var lhsValue;
-    if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-      lhsRange = this.lhsRange[constraint].getCell(i + 1, j + 1);
-      lhsValue = this.lhsOriginalValues[constraint][i][j];
-    } else {
-      lhsRange = this.lhsRange[constraint].getCell(1, 1);
-      lhsValue = this.lhsOriginalValues[constraint][0][0];
-    }
-    var rhsRange;
-    var rhsValue;
-    if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-      rhsRange = this.rhsRange[constraint].getCell(i + 1, j + 1);
-      rhsValue = this.rhsOriginalValues[constraint][i][j];
-    } else {
-      rhsRange = this.rhsRange[constraint].getCell(1, 1);
-      rhsValue = this.rhsOriginalValues[constraint][0][0];
-    }
-
-    this.solveStatusComment = 'The model contains a constraint in the group ' + this.constraintSummary[constraint] +
-                              ' which does not depend on the decision variables and is not satisfied.\n\n' +
-                              'Constraint specifies: \n' +
-                              'LHS: ' + lhsRange.getA1Notation() + ' = ' + lhsValue + '\n' +
-                              ' ' + relationConstToString(this.relation[row]) + '\n' +
-                              'RHS: ' + rhsRange.getA1Notation() + ' = ' + rhsValue;
-    return {
-      solveStatus: OpenSolverResult.INFEASIBLE,
-      solveStatusString: 'Infeasible',
-      loadSolution: false
-    };
-  } else {
-    return false;
-  }
-};
-
 OpenSolver.prototype.quickLinearityCheck = function() {
+  Logger.log('start linearity check');
+
+  var varValues = [];
+  for (var i = 0; i < this.numVars; i++) {
+    varValues[i] = this.linearityOffset;
+  }
+
   var nonLinearInfo = '';
   var nonLinearCount = 0;
   var rowIsNonLinear = {}; // Object for sparse storage
-
-  Logger.log('start linearity check');
-
   var row = 0;
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
-    if (this.lhsRange[constraint]) {
-      var values = this.getConstraintValues(constraint);
-      var currentLhsValues = values.lhsValues;
-      var currentRhsValues = values.rhsValues;
+    if (!this.lhsRange[constraint]) {
+      continue;
+    }
 
-      for (m = 0; m < currentLhsValues.length; m++) {
-        for (n = 0; n < currentLhsValues[m].length; n++) {
+    var values = this.getConstraintValues(constraint);
+    var currentLhsValues = values.lhsValues;
+    var currentRhsValues = values.rhsValues;
 
-          // Get current constraint value
-          var solutionValue = currentLhsValues[m][n];
-          if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-            // Making it work for column LHS with row RHS and vice versa
-            if (currentLhsValues.length === currentRhsValues.length) {
-              solutionValue -= currentRhsValues[m][n];
-            } else {
-              solutionValue -= currentRhsValues[n][m];
-            }
-          } else { // this.rhsType[constraint] === SolverInputType.SINGLE_CELL_RANGE
-            solutionValue -= currentRhsValues[0][0];
+    for (m = 0; m < currentLhsValues.length; m++) {
+      for (n = 0; n < currentLhsValues[m].length; n++) {
+        // Get current constraint value
+        var solutionValue = currentLhsValues[m][n];
+        if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+          // Making it work for column LHS with row RHS and vice versa
+          if (currentLhsValues.length === currentRhsValues.length) {
+            solutionValue -= currentRhsValues[m][n];
+          } else {
+            solutionValue -= currentRhsValues[n][m];
           }
-
-
-          // Get predicted value from Ax = b
-          // Track largest value we encounter to get some idea of expected error
-          var result = this.sparseA[row].evaluate(this.varValues);
-          var expectedValue = result.value - this.rhs[row];
-          var maxValue = Math.max(result.max, Math.abs(this.rhs[row]));
-
-          Logger.log(Math.abs(expectedValue - solutionValue) / (1 + Math.abs(expectedValue)));
-          Logger.log(maxValue);
-
-          // Ratio test
-          if (Math.abs(expectedValue - solutionValue) / (1 + Math.abs(expectedValue)) >
-              Math.max(EPSILON, EPSILON * maxValue)) {
-            nonLinearInfo = nonLinearInfo || 'The following constraint(s) do not appear to be linear: \n';
-            if (nonLinearCount < 10) {
-              nonLinearInfo += '\n' + this.constraintSummary[constraint];
-
-              var constraintData = this.getConstraintFromRow(row);
-              var constraint = constraintData.constraint;
-              var instance = constraintData.instance;
-              var position = this.getArrayPositionFromConstraintInstance(constraint, instance);
-              var lhsCell = this.lhsRange[constraint].getCell(position.i, position.j).getA1Notation();
-              var rhsCell = this.rhsRange[constraint].getCell(position.i, position.j).getA1Notation();
-
-              if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-                nonLinearInfo += ' (instance ' + (instance + 1) + ')';
-              }
-              nonLinearInfo += ': LHS=' + lhsCell + ', ';
-              nonLinearInfo += 'RHS=' + rhsCell + ', ';
-              nonLinearInfo += expectedValue.toPrecision(4)  + ' != ' + solutionValue.toPrecision(4);
-            }
-            nonLinearCount++;
-            rowIsNonLinear[row] = true;
-          }
-
-          row++;
+        } else { // SolverInputType.SINGLE_CELL_RANGE
+          solutionValue -= currentRhsValues[0][0];
         }
+
+        // Get predicted value from Ax = b
+        // Track largest value we encounter to get some idea of expected error
+        var result = this.sparseA[row].evaluate(varValues);
+        var expectedValue = result.value - this.rhs[row];
+        var maxValue = Math.max(result.max, Math.abs(this.rhs[row]));
+
+        // Ratio test
+        var ratio = Math.abs(expectedValue - solutionValue) /
+                    (1 + Math.abs(expectedValue));
+        if (ratio > Math.max(EPSILON, EPSILON * maxValue)) {
+          var constraint = this.rowToConstraint[row];
+          var instance = this.getConstraintInstance(row, constraint);
+          var position = this.getArrayPosition(instance, currentLhsValues);
+          var lhsCell = this.lhsRange[constraint]
+              .getCell(position.i, position.j)
+              .getA1Notation();
+          var rhsCell = this.rhsRange[constraint]
+              .getCell(position.i, position.j)
+              .getA1Notation();
+
+          nonLinearInfo += '\n' + this.constraintSummary[constraint];
+          if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+            nonLinearInfo += ' (instance ' + (instance + 1) + ')';
+          }
+          nonLinearInfo += ': LHS=' + lhsCell + ', RHS=' + rhsCell + ', ' +
+                           expectedValue.toPrecision(4)  + ' != ' +
+                           solutionValue.toPrecision(4);
+          rowIsNonLinear[row] = true;
+        }
+
+        row++;
       }
     }
   }
 
-  if (nonLinearCount > 10) {
-    nonLinearInfo += '\n' + 'and ' + (nonLinearCount - 10) + ' other constraints.';
-  }
   if (nonLinearInfo) {
-    nonLinearInfo += '\n\n';
+    nonLinearInfo = 'The following constraint(s) do not appear to be linear: ' +
+                     '\n' + nonLinearInfo + '\n\n';
   }
 
-  var observedObj = this.getObjectiveValue();
-  var expectedObj = this.calculateObjectiveValue(this.varValues);
-
-  Logger.log('here');
-  var objNonLinear = Math.abs(observedObj - expectedObj) / (1 + Math.abs(expectedObj)) > EPSILON;
-  if (objNonLinear) {
-    nonLinearInfo = 'The objective function is not linear. Expected ' + expectedObj.toPrecision(4) + ', got ' + observedObj.toPrecision(4) + '\n\n' + nonLinearInfo;
+  var objNonLinear = false;
+  if (this.objective) {
+    var observedObj = this.getObjectiveValue();
+    var expectedObj = this.calculateObjectiveValue(varValues);
+    var ratio = Math.abs(observedObj - expectedObj) /
+                (1 + Math.abs(expectedObj));
+    if (!isNumber(ratio) || ratio > EPSILON) {
+      objNonLinear = true;
+      nonLinearInfo = 'The objective function is not linear. Expected ' +
+                      expectedObj.toPrecision(4) + ', got ' +
+                      observedObj.toPrecision(4) + '\n\n' + nonLinearInfo;
+    }
   }
 
   if (nonLinearInfo) {
     this.solveStatus = OpenSolverResult.NOT_LINEAR;
     if (!this.minimiseUserInteraction) {
       var ui = SpreadsheetApp.getUi();
-      var response = ui.alert('OpenSolver Quick Linearity Check',
-                              nonLinearInfo + 'Would you like to run a full linearity check? This will ' +
-                                              'destroy the current solution.',
-                              ui.ButtonSet.YES_NO);
+      var response = ui.alert(
+          'OpenSolver Quick Linearity Check',
+          nonLinearInfo + 'Would you like to run a full linearity check? ',
+          ui.ButtonSet.YES_NO);
       if (response === ui.Button.YES) {
         this.fullLinearityCheck();
-        return true;
       }
+      return false;
     }
   }
 
-  return false;
+  return true;
 };
 
 OpenSolver.prototype.calculateObjectiveValue = function(values) {
@@ -769,98 +825,78 @@ OpenSolver.prototype.calculateObjectiveValue = function(values) {
   for (var i = 0; i < this.numVars; i++) {
     total += this.costCoeffs[i] * values[i];
   }
-  total += this.objectiveValue;
+  total += this.objectiveConstant;
   return total;
 };
 
 OpenSolver.prototype.fullLinearityCheck = function() {
-  // Copy solution values into a new array
-  this.originalValues = this.varValues.slice();
+  // Build each matrix and cost vector where the decision variables start at
+  // the base linearity offset, 1 and 10.
+  var valueBase = this.sparseA.slice();
+  var costCoeffsBase = this.costCoeffs.slice();
 
-  // Build each matrix where the decision variables start at zero (ValueZero()), one (ValueOne())
-  // and ten (ValueTen())
-
-  var valueZero = this.sparseA.slice();
-  var costCoeffsZero = this.costCoeffs.slice();
-  var objectiveConstantZero = this.objectiveConstant;
-
-  this.buildModelFromSolverData(1);
+  this.sparseA = [];
+  this.costCoeffs = [];
+  this.startVariable = 0;
+  this.buildVariableTerms(1);
   var valueOne = this.sparseA.slice();
   var costCoeffsOne = this.costCoeffs.slice();
-  var objectiveConstantOne = this.objectiveConstant;
 
-  this.buildModelFromSolverData(10);
+  this.sparseA = [];
+  this.costCoeffs = [];
+  this.startVariable = 0;
+  this.buildVariableTerms(10);
   var valueTen = this.sparseA.slice();
   var costCoeffsTen = this.costCoeffs.slice();
-  var objectiveConstantTen = this.objectiveConstant;
 
+  // Check constraint linearities
   var constraint = 0;
-  var nonLinearCount = 0;
   var nonLinearInfo = '';
   var rowIsNonLinear = {}; // Object for sparse storage
 
   for (var row = 0; row < this.numRows; row++) {
     var firstVar = true;
-    var valueZeroCounter = valueZero[row].count();
-    var valueOneCounter = valueOne[row].count();
-    var valueTenCounter = valueTen[row].count();
-    var numEntries = Math.max(valueZeroCounter, valueOneCounter, valueTenCounter);
+    var valueBaseCount = valueBase[row].count();
+    var valueOneCount = valueOne[row].count();
+    var valueTenCount = valueTen[row].count();
+    var numEntries = Math.max(valueBaseCount, valueOneCount, valueTenCount);
     for (var i = 0; i < numEntries; i++) {
-      var c1 = valueZero[row].coeff(i);
-      var c2 = valueOne[row].coeff(i);
-      var c3 = valueTen[row].coeff(i);
+      var a1 = valueBase[row].coeff(i);
+      var a2 = valueOne[row].coeff(i);
+      var a3 = valueTen[row].coeff(i);
+      if (this.ratioTest(a1, a2, a3)) {
+        // Constraint non-linear in this var
+        var constraint = this.rowToConstraint[row];
+        var instance = this.getConstraintInstance(row, constraint);
+        var varName = this.varNames[valueBase[row].index(i)];
 
-      Logger.log([c1, c2, c3]);
-      var test1 = c1 && c2 && Math.abs(c1 - c2) / (1 + Math.abs(c1)) > EPSILON;
-      var test2 = c1 && c3 && Math.abs(c1 - c3) / (1 + Math.abs(c1)) > EPSILON;
-      var test3 = c2 && c3 && Math.abs(c2 - c3) / (1 + Math.abs(c2)) > EPSILON;
-
-      Logger.log([test1, test2, test3]);
-      if (test1 || test2 || test3) {
-        // Non linear in this var
-        var constraintData = this.getConstraintFromRow(row);
-        var constraint = constraintData.constraint;
-        var instance = constraintData.instance;
-        var varName = this.varNames[valueZero[row].index(i)];
-
-        if (!nonLinearInfo) {
-          nonLinearInfo = 'The following constraint(s) do not appear to be linear:\n';
-        }
-
-        if (nonLinearCount <= 10) {
-          if (firstVar) {
-            nonLinearInfo += '\n' + this.constraintSummary[constraint];
-            if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-              nonLinearInfo += ' (instance ' + (instance + 1) + ')';
-            }
-            nonLinearInfo += ' is non-linear in variable(s): ' + varName;
-          } else {
-            nonLinearInfo += ', ' + varName;
+        if (firstVar) {
+          nonLinearInfo += '\n' + this.constraintSummary[constraint];
+          if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+            nonLinearInfo += ' (instance ' + (instance + 1) + ')';
           }
+          nonLinearInfo += ' is non-linear in variable(s): ' + varName;
+        } else {
+          nonLinearInfo += ', ' + varName;
         }
+
         firstVar = false;
         rowIsNonLinear[row] = true;
-        nonLinearCount++;
       }
     }
   }
-
-  if (nonLinearCount > 10) {
-    nonLinearInfo += '\n' + 'and ' + (nonLinearCount - 10) + ' other instances.';
+  if (nonLinearInfo) {
+    nonLinearInfo = 'The following constraint(s) do not appear to be linear: ' +
+                    '\n' + nonLinearInfo;
   }
 
+  // Check obj linearity
   var objNonLinear = false;
   for (var i = 0; i < this.numVars; i++) {
-    var c1 = costCoeffsZero[i];
+    var c1 = costCoeffsBase[i];
     var c2 = costCoeffsOne[i];
     var c3 = costCoeffsTen[i];
-    Logger.log([c1, c2, c3]);
-    var test1 = c1 && c2 && Math.abs(c1 - c2) / (1 + Math.abs(c1)) > EPSILON;
-    var test2 = c1 && c3 && Math.abs(c1 - c3) / (1 + Math.abs(c1)) > EPSILON;
-    var test3 = c2 && c3 && Math.abs(c2 - c3) / (1 + Math.abs(c2)) > EPSILON;
-
-    Logger.log([test1, test2, test3]);
-    if (test1 || test2 || test3) {
+    if (this.ratioTest(c1, c2, c3)) {
       // Objective is non-linear in this var
       var varName = this.varNames[i];
       if (!objNonLinear) {
@@ -868,22 +904,29 @@ OpenSolver.prototype.fullLinearityCheck = function() {
         if (nonLinearInfo !== "") {
           nonLinearInfo += '\n\n';
         }
-        nonLinearInfo += 'The objective function appears to be non-linear in variable(s): ' + varName;
+        nonLinearInfo += 'The objective function appears to be non-linear in ' +
+                         'variable(s): ' + varName;
       } else {
         nonLinearInfo += ', ' + varName;
       }
     }
   }
 
-  // TODO Put the solution back on the sheet
-
   if (nonLinearInfo) {
     if (!this.minimiseUserInteraction) {
       var ui = SpreadsheetApp.getUi();
-      ui.alert('OpenSolver Full Linearity Check', nonLinearInfo, ui.ButtonSet.OK);
+      ui.alert('OpenSolver Full Linearity Check', nonLinearInfo,
+               ui.ButtonSet.OK);
     }
   }
 
+};
+
+OpenSolver.prototype.ratioTest = function(v1, v2, v3) {
+  var test1 = v1 && v2 && Math.abs(v1 - v2) / (1 + Math.abs(v1)) > EPSILON;
+  var test2 = v1 && v3 && Math.abs(v1 - v3) / (1 + Math.abs(v1)) > EPSILON;
+  var test3 = v2 && v3 && Math.abs(v2 - v3) / (1 + Math.abs(v2)) > EPSILON;
+  return test1 || test2 || test3;
 };
 
 OpenSolver.prototype.updateCache = function() {

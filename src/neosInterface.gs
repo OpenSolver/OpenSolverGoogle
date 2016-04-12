@@ -26,11 +26,10 @@ function createMplModel(openSolver) {
     varString += ';';
     lines.push(varString);
 
-    costLine += openSolver.costCoeffs[i] + ' * v' + openSolver.varKeys[i];
-    if (i < openSolver.numVars - 1) {
-      costLine += ' + ';
-    }
+    costLine += openSolver.costCoeffs[i] + ' * v' + openSolver.varKeys[i] +
+                ' + ';
   }
+  costLine += openSolver.objectiveConstant;
 
   // Add in objective coefficients unless we are seeking a target value
   if (openSolver.objectiveSense === ObjectiveSenseType.TARGET) {
@@ -53,29 +52,28 @@ function createMplModel(openSolver) {
   for (var row = 0; row < openSolver.numRows; row++) {
     var currConstraint = openSolver.sparseA[row];
 
+    // Skip over any empty constraint, we have already verified it holds
     if (currConstraint.count() === 0) {
-      var invalid = openSolver.validateEmptyConstraint(row);
-      if (invalid !== false) {
-        return invalid;
-      }
-    } else {
-      var constraintHeader = 'subject to c' + row + ':';
-      lines.push(constraintHeader);
-
-      var constraintLine = '  ';
-      for (var i = 0; i < currConstraint.count(); i++) {
-        var index = currConstraint.index(i);
-        var coeff = currConstraint.coeff(i);
-        constraintLine += coeff + ' * v' + openSolver.varKeys[index];
-        if (i < currConstraint.count() - 1) {
-          constraintLine += ' + ';
-        }
-      }
-
-      constraintLine += ' ' + relationConstToAmpl(openSolver.relation[row]);
-      constraintLine += ' ' + openSolver.rhs[row] + ';';
-      lines.push(constraintLine);
+      continue;
     }
+
+    var constraintHeader = 'subject to c' + row + ':';
+    lines.push(constraintHeader);
+
+    var constraintLine = '  ';
+    for (var i = 0; i < currConstraint.count(); i++) {
+      var index = currConstraint.index(i);
+      var coeff = currConstraint.coeff(i);
+      constraintLine += coeff + ' * v' + openSolver.varKeys[index];
+      if (i < currConstraint.count() - 1) {
+        constraintLine += ' + ';
+      }
+    }
+
+    var rel = openSolver.relation[openSolver.rowToConstraint[row]];
+    constraintLine += ' ' + relationConstToAmpl(rel);
+    constraintLine += ' ' + openSolver.rhs[row] + ';';
+    lines.push(constraintLine);
   }
   return lines;
 }
