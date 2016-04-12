@@ -151,6 +151,8 @@ OpenSolver.prototype.solveModel = function() {
       this.deleteCache();
     }
   } catch (e) {
+    if (DEBUG) { throw e; }
+
     this.solveStatus = OpenSolverResult.ERROR_OCCURRED;
     if (!(e.title && e.title.length >= 10 && e.title.substring(0, 10) == 'OpenSolver')) {
       e.message = 'An unexpected error occurred:\n\n' + e.message + '\n\n' +

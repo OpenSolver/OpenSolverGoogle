@@ -1,3 +1,5 @@
+var DEBUG = false;
+
 function makeError(message) {
   return { title: 'OpenSolver Error', message: message };
 }
