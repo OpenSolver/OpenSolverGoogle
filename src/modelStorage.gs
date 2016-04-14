@@ -167,6 +167,7 @@ function splitHiddenSheetEntry(entry) {
 
 function getSavedBool(data, name, defaultValue) {
   var value = integerToBool(getSavedDouble(data, name));
+  Logger.log('Get bool: ' + name + ', got ' + value);
   if (value === null && defaultValue !== undefined) {
     value = defaultValue;
   }
@@ -177,6 +178,7 @@ function getSavedBool(data, name, defaultValue) {
 function getSavedInteger(data, name, defaultValue) {
   var value = getSavedDouble(data, name);
   if (!isInt(value)) {
+    Logger.log(defaultValue);
     if (defaultValue !== undefined) {
       value = defaultValue;
     } else {

@@ -13,7 +13,10 @@ Model = function(sheet, loadFromSheet) {
 
   this.assumeNonNeg =   getSavedBool(   data, solverName("neg"), true);
   this.showStatus =     getSavedBool(   data, solverName("sho"), true);
-  this.objective =      getSavedString( data, solverName("obj"), '');
+  // Fallback to "obj" for objective
+  // TODO: Added v2.1, remove eventually
+  this.objective =      getSavedString( data, solverName("opt"), '') ||
+                        getSavedString( data, solverName("obj"), '');
   this.objectiveVal =   getSavedDouble( data, solverName("val"), 0);
   this.objectiveSense = getSavedInteger(data, solverName("typ"),
                                         ObjectiveSenseType.MINIMISE);
@@ -24,7 +27,17 @@ Model = function(sheet, loadFromSheet) {
     var lhs = getSavedString( data, solverName("lhs" + i));
     var rel = getSavedInteger(data, solverName("rel" + i));
     var rhs = getSavedString( data, solverName("rhs" + i));
-    this.constraints.push(new Constraint(lhs, rhs, rel));
+    Logger.log('Loading constraint: ' + lhs + ' ' + rel + ' ' + rhs);
+    if (lhs && rel) {
+      this.constraints.push(new Constraint(lhs, rhs, rel));
+    } else {
+      // Maybe it was only the 0th constraint missing and they are 1-indexed
+      // Make sure we loop to nth constraint to make sure
+      // TODO: Added v2.1, remove eventually
+      if (i === 0) {
+        numConstraints++;
+      }
+    }
   }
 
   this.variables = [];
@@ -42,14 +55,14 @@ Model = function(sheet, loadFromSheet) {
   var solverShortName = getSavedString(data, openSolverName("ChosenSolver"),
                                        "Google");
   this.updateSolver(solverShortName);
-
+  Logger.log('Finished loading model');
   return this;
 };
 
 Model.prototype.save = function() {
   data = {};
   if (this.objective) {
-    setSavedString( data, solverName("obj"), this.objective);
+    setSavedString( data, solverName("opt"), this.objective);
   }
   setSavedInteger(  data, solverName("typ"), this.objectiveSense);
   setSavedDouble(   data, solverName("val"), this.objectiveVal);
@@ -58,9 +71,10 @@ Model.prototype.save = function() {
   setSavedInteger(  data, solverName("num"), this.constraints.length);
 
   for (var i = 0; i < this.constraints.length; i++) {
-    setSavedString( data, solverName('lhs' + i), this.constraints[i].lhs);
-    setSavedString( data, solverName('rhs' + i), this.constraints[i].rhs);
-    setSavedInteger(data, solverName('rel' + i), this.constraints[i].rel);
+    // NOTE: These are saved 1-indexed, to start at lhs1 etc.
+    setSavedString( data, solverName('lhs' + (i + 1)), this.constraints[i].lhs);
+    setSavedString( data, solverName('rhs' + (i + 1)), this.constraints[i].rhs);
+    setSavedInteger(data, solverName('rel' + (i + 1)), this.constraints[i].rel);
   }
 
   for (var j = 0; j < this.variables.length; j++) {
