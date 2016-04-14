@@ -48,6 +48,7 @@ OpenSolver = function(sheet) {
   this.relation = [];
   this.lhsString = [];
   this.lhsRange = [];
+  this.lhsRangeSizes = [];
   this.lhsType = [];
   this.rhsString = [];
   this.rhsRange = [];
@@ -245,6 +246,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   updateStatus('Processing constraints', 'Solving Model');
   this.numConstraints = model.constraints.length;
   this.numRows = 0;
+  this.lhsRangeSizes = [];
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
 
     if (constraint % 10 === 0) {
@@ -257,6 +259,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 
     this.lhsString[constraint] = model.constraints[constraint].lhs;
     var lhsRange = this.getConRangeFromString(this.lhsString[constraint]);
+    var lhsSize = getRangeDims(lhsRange);
+    this.lhsRangeSizes.push(lhsSize);
 
     var rel = model.constraints[constraint].rel;
     this.relation[constraint] = rel;
@@ -265,7 +269,6 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
     if (!relationConstHasRHS(rel)) {
       this.rhsString[constraint] = '';
 
-      var lhsSize = getRangeDims(lhsRange);
       for (var j = 0; j < lhsSize.rows; j++) {
         for (var k = 0; k < lhsSize.cols; k++) {
           var cellName = lhsRange.getCell(j + 1, k + 1).getA1Notation();
@@ -415,30 +418,21 @@ OpenSolver.prototype.processSolverModel = function(linearityOffset, checkLinear)
           (rel === Relation.LE && rhs < -EPSILON) ||
           (rel === Relation.EQ && Math.abs(rhs) > EPSILON)) {
         var instance = this.getConstraintInstance(row, constraint);
-        var position = this.getArrayPosition(instance,
-                                             lhsOriginalValues[constraint]);
+        var position = this.getArrayPosition(constraint, instance);
         var i = position.i - 1;
         var j = position.j - 1;
 
-        var lhsRange;
-        var lhsValue;
-        if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-          lhsRange = this.lhsRange[constraint].getCell(i + 1, j + 1);
-          lhsValue = lhsOriginalValues[constraint][i][j];
-        } else {
-          lhsRange = this.lhsRange[constraint].getCell(1, 1);
-          lhsValue = lhsOriginalValues[constraint][0][0];
-        }
+        var lhsRange = this.lhsRange[constraint].getCell(position.i,
+                                                         position.j);
+        var lhsValue = lhsRange.getValue();
 
         var rhsRange;
-        var rhsValue;
         if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
-          rhsRange = this.rhsRange[constraint].getCell(i + 1, j + 1);
-          rhsValue = rhsOriginalValues[constraint][i][j];
+          rhsRange = this.rhsRange[constraint].getCell(position.i, position.j);
         } else {
           rhsRange = this.rhsRange[constraint].getCell(1, 1);
-          rhsValue = rhsOriginalValues[constraint][0][0];
         }
+        var rhsValue = rhsRange.getValue();
 
         this.solveStatus = OpenSolverResult.INFEASIBLE;
         this.solveStatusString = 'Infeasible';
@@ -459,21 +453,26 @@ OpenSolver.prototype.processSolverModel = function(linearityOffset, checkLinear)
   // Check for explicit lower bounds
   for (var row = 0; row < this.numRows; row++) {
     if (this.sparseA[row].count() == 1) {
+      Logger.log('checking lower bound at row ' + row);
       var index = this.sparseA[row].index(0);
       var coeff = this.sparseA[row].coeff(0);
       var constraint = this.rowToConstraint[row];
       var rel = this.relation[constraint];
       if (coeff >= 0 && rel === Relation.GE) {
+        Logger.log('adding lower bound at row ' + row);
         var instance = this.getConstraintInstance(row, constraint);
-        var position = this.getArrayPosition(instance,
-                                             lhsOriginalValues[constraint]);
+        var position = this.getArrayPosition(constraint, instance);
         var lhsRange = this.lhsRange[constraint].getCell(position.i, position.j);
+        Logger.log(this.varNameMap);
+        Logger.log(lhsRange.getA1Notation());
         if (this.varNameMap[lhsRange.getA1Notation()] !== undefined) {
           this.lowerBoundedVariables[index] = true;
         }
       }
     }
   }
+  Logger.log('Lower bounded variables: ');
+  Logger.log(this.lowerBoundedVariables);
 
   if (checkLinear) {
     this.quickLinearityCheck();
@@ -618,6 +617,7 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
     currentCell.setValue(linearityOffset);
     this.startVariable = i + 1;
   }
+
   return true;
 };
 
@@ -672,8 +672,8 @@ OpenSolver.prototype.getConstraintInstance = function(row, constraint) {
   return row - this.constraintToRow[constraint];
 };
 
-OpenSolver.prototype.getArrayPosition = function(instance, values) {
-  var dim = values[0].length;
+OpenSolver.prototype.getArrayPosition = function(constraint, instance) {
+  var dim = this.lhsRangeSizes[constraint].cols;
   var i = 1 + parseInt(instance / dim, 10);
   var j = 1 + (instance % dim);
   return {
@@ -760,7 +760,7 @@ OpenSolver.prototype.quickLinearityCheck = function() {
         if (ratio > Math.max(EPSILON, EPSILON * maxValue)) {
           var constraint = this.rowToConstraint[row];
           var instance = this.getConstraintInstance(row, constraint);
-          var position = this.getArrayPosition(instance, currentLhsValues);
+          var position = this.getArrayPosition(constraint, instance);
           var lhsCell = this.lhsRange[constraint]
               .getCell(position.i, position.j)
               .getA1Notation();
