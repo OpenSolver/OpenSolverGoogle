@@ -102,6 +102,11 @@ function addOutput(output) {
 }
 
 function processResults(results) {
+  document.getElementById('terminate').disabled = true;
+  var closeButton = document.getElementById('close')
+  closeButton.disabled = false;
+  closeButton.onclick = close;
+
   console.log(results);
   google.script.run.withSuccessHandler(autoClose).insertResults(results);
 }
@@ -114,6 +119,11 @@ function autoClose() {
 
 function close() {
   google.script.host.close();
+}
+
+function terminate() {
+  console.log('Stopping');
+  google.script.run.withSuccessHandler(close).insertResults(bestSolution);
 }
 
 // Code for making an inline worker to run GLPK in the background
@@ -136,11 +146,19 @@ try {
 }
 var worker = new Worker(URL.createObjectURL(blob));
 
+var bestSolution;
+
 worker.onmessage = function(e) {
   if (typeof e.data === 'string') {
     addOutput(e.data);
   } else if (e.data) {
-    processResults(e.data);
+    console.log(e.data);
+    if (e.data.intermediate) {
+      bestSolution = e.data;
+    } else {
+      console.log('Sending results to sheet');
+      processResults(e.data);
+    }
   }
 };
 worker.postMessage('start');

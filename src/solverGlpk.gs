@@ -39,10 +39,13 @@ SolverGlpk.prototype.getStatus = function() {
         break;
       case GlpkStatus.GLP_FEAS:
         result = OpenSolverResult.TIME_LIMITED_SUB_OPTIMAL;
-        solveString = 'An optimal solution was not found. A feasible solution was loaded instead.';
+        solveString = 'An optimal solution was not found. The best feasible solution found was loaded instead.';
         loadSolution = true;
         break;
       case GlpkStatus.GLP_INFEAS:
+        result = OpenSolverResult.INFEASIBLE;
+        solveString = 'The model is infeasible.';
+        break;
       case GlpkStatus.GLP_NOFEAS:
         result = OpenSolverResult.INFEASIBLE;
         solveString = 'No feasible solution was found.';

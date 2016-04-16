@@ -3,9 +3,17 @@
 // Include the actual GLPK.js code
 <?!= include('glpk.min') ?>
 
+var bestObjVal = null;
+
 // Begin the solve when the worker receives a 'start' message
 self.onmessage = function(e) {
   if (e.data == 'start') {
+    // Store a default message
+    self.postMessage({
+      status: GLP_NOFEAS,
+      intermediate: true,
+    });
+
     var results = mathprog(GMPL_MODEL, self.postMessage);
     // Send results back to UI
     self.postMessage(results);
@@ -39,6 +47,13 @@ function mathprog(modelStr, logger) {
   var lp = glp_create_prob();
   glp_mpl_build_prob(tran, lp);
 
+  // Make a map of the names for the variables in the problem
+  var varNames = {};
+  for(var i = 1; i <= glp_get_num_cols(lp); i++){
+    var name = glp_get_col_name(lp, i).substring(1); // filter out the 'v'
+    varNames[i] = name;
+  }
+
   var isMip = glp_get_num_int(lp) > 0
 
   boldLogger('Starting solve...');
@@ -46,6 +61,27 @@ function mathprog(modelStr, logger) {
   if (isMip) {
     var iocp = new IOCP({
       presolve: GLP_ON,
+      // Callback to terminate if requested
+      cb_func: function(tree, info){
+        var tree_lp = glp_ios_get_prob(tree);
+        var currentObjVal = glp_mip_obj_val(tree_lp);
+        if (bestObjVal === null || Math.abs(bestObjVal - currentObjVal) > 1e-6) {
+          bestObjVal = currentObjVal;
+
+          var results = {
+            intermediate: true,
+            status: GLP_FEAS,
+            objectiveValue: currentObjVal,
+            variableValues: {},
+          };
+
+          for(var i = 1; i <= glp_get_num_cols(tree_lp); i++){
+            var value = glp_mip_col_val(tree_lp, i);
+            results.variableValues[varNames[i]] = value;
+          }
+          self.postMessage(results);
+        }
+      },
     });
     glp_intopt(lp, iocp);
   } else {
@@ -55,17 +91,19 @@ function mathprog(modelStr, logger) {
     glp_simplex(lp, smcp);
   }
 
-  // Extract results for sending back to OpenSolver
-  results = {};
-  results.variableValues = {};
-  results.status = isMip ? glp_mip_status(lp) : glp_get_status(lp);
-
   boldLogger('Processing optimal solution...');
   glp_mpl_postsolve(tran, lp, isMip ? GLP_MIP : GLP_SOL);
 
   var objectiveValue = isMip ? glp_mip_obj_val(lp) : glp_get_obj_val(lp);
-  results.objectiveValue = objectiveValue;
   logger('Objective value: ' + objectiveValue);
+
+  // Extract results for sending back to OpenSolver
+  var results = {
+    intermediate: false,
+    status: isMip ? glp_mip_status(lp) : glp_get_status(lp),
+    objectiveValue: objectiveValue,
+    variableValues: {},
+  };
 
   for(var i = 1; i <= glp_get_num_cols(lp); i++){
     var value = isMip ? glp_mip_col_val(lp, i) : glp_get_col_prim(lp, i);

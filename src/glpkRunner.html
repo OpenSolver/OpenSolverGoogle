@@ -17,10 +17,23 @@
       .heading:first-child {
         margin-top: 0;
       }
+      #output {
+        margin-bottom: 40px;
+      }
+      .button-bar {
+        width: 100%;
+        background-color: white;
+        padding-top: 5px;
+        position: fixed;
+      }
     </style>
   </head>
   <body>
     <div id="output"></div>
+    <section class="button-bar">
+      <button id="terminate" onclick="terminate()">Cancel solve and use current best solution</button>
+      <button id="close" onclick="close()" disabled>Close</button>
+    </section>
     <!-- Recursively evaluate template in the current context -->
     <?!= HtmlService.createTemplateFromFile('glpkWorkerJs').evaluate().getContent(); ?>
     <?!= HtmlService.createTemplateFromFile('glpkRunnerJs').evaluate().getContent(); ?>

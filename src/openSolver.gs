@@ -653,11 +653,10 @@ OpenSolver.prototype.solve = function() {
 
     for (var i = 0; i < this.numVars; i++) {
       var name = this.varKeys[i];
-      this.varValues[i] = this.solver.getVariableValue(name);
+      this.varValues[i] = this.solver.getVariableValue(name) || 0;
       var coeffs = name.split('_').map(Number);
       valuesToSet[coeffs[0]][coeffs[1]][coeffs[2]] = this.varValues[i];
     }
-
     Logger.log(valuesToSet);
     for (var i = 0; i < this.numVariableAreas; i++) {
       this.variableAreas[i].setValues(valuesToSet[i]);
