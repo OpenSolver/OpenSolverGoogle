@@ -122,15 +122,33 @@ SolverGoogle.prototype.solve = function(openSolver) {
     }
   }
 
-  // Add constraint forcing objective == target if we are seeking a value
+  // Minimize abs(objective - target) if we are seeking a value
   if (openSolver.objectiveSense == ObjectiveSenseType.TARGET) {
-    var targetValue = openSolver.objectiveTarget - openSolver.objectiveConstant;
-    Logger.log(targetValue);
-    var constraint = this.engine.addConstraint(targetValue, targetValue);
+    this.engine.addVariable('objValue', -Infinity, Infinity);
+    this.engine.addVariable('difference', 0, Infinity);
+
+    // Add constraint `objValue = <objective function>`
+    var constraint = this.engine.addConstraint(openSolver.objectiveConstant,
+                                               openSolver.objectiveConstant);
     for (var i = 0; i < openSolver.numVars; i++) {
       constraint.setCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
       Logger.log([openSolver.varKeys[i], openSolver.costCoeffs[i]]);
     }
+    constraint.setCoefficient('objValue', -1);
+
+    // Add constraint for `difference >= objValue - targetValue`
+    var constraint = this.engine.addConstraint(-this.objectiveTarget, Infinity);
+    constraint.setCoefficient('difference', 1);
+    constraint.setCoefficient('objValue', -1);
+
+    // Add constraint for `difference >= -objValue + targetValue`
+    var constraint = this.engine.addConstraint(this.objectiveTarget, Infinity);
+    constraint.setCoefficient('difference', 1);
+    constraint.setCoefficient('objValue', 1);
+
+    // Minimize `difference`
+    this.engine.setMinimization();
+    this.engine.setObjectiveCoefficient('difference', 1)
   }
 
   updateStatus('Solving model...', 'Solving Model');

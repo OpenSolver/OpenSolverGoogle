@@ -33,9 +33,16 @@ function createMplModel(openSolver) {
 
   // Add in objective coefficients unless we are seeking a target value
   if (openSolver.objectiveSense === ObjectiveSenseType.TARGET) {
-    lines.push('subject to TargetConstr:');
-    costLine += ' = ' + openSolver.objectiveTarget + ';';
+    lines.push('var objValue;');
+    lines.push('subject to set_objective:');
+    costLine += ' == objValue;';
     lines.push(costLine);
+    lines.push('var difference, >= 0;');
+    lines.push('subject to set_difference_1: difference >= + objValue - ' +
+               openSolver.objectiveTarget + ';');
+    lines.push('subject to set_difference_2: difference >= - objValue + ' +
+               openSolver.objectiveTarget + ';');
+    lines.push('minimize total_difference: difference;');
   } else {
     var objectiveLine = '';
     if (openSolver.objectiveSense === ObjectiveSenseType.MINIMISE) {
@@ -43,7 +50,7 @@ function createMplModel(openSolver) {
     } else {
       objectiveLine += 'maximize';
     }
-    objectiveLine += ' Total_Cost:';
+    objectiveLine += ' total_cost:';
     lines.push(objectiveLine);
     costLine += ';';
     lines.push(costLine);
@@ -88,7 +95,7 @@ function createAmplModel(openSolver) {
     lines.push('_display v' + openSolver.varKeys[i] + ';');
   }
   if (openSolver.objectiveSense !== ObjectiveSenseType.TARGET) {
-    lines.push('_display Total_Cost;');
+    lines.push('_display total_cost;');
   } else {
     lines.push('_display 1;');
   }
