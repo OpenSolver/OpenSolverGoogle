@@ -87,6 +87,7 @@ SolverNeos.prototype.solve = function(openSolver) {
   waitForCompletion(this.jobNumber, this.jobPassword);
 
   var finalResults = getFinalResults(this.jobNumber, this.jobPassword);
+  Logger.log(finalResults);
   this.extractResults(finalResults, openSolver.varKeys);
 
   return this.getStatus();
