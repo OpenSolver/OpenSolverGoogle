@@ -136,13 +136,16 @@ SolverGoogle.prototype.solve = function(openSolver) {
     }
     constraint.setCoefficient('objValue', -1);
 
+    var targetValue = openSolver.objectiveTarget;
+    Logger.log(targetValue);
+
     // Add constraint for `difference >= objValue - targetValue`
-    var constraint = this.engine.addConstraint(-this.objectiveTarget, Infinity);
+    var constraint = this.engine.addConstraint(-targetValue, Infinity);
     constraint.setCoefficient('difference', 1);
     constraint.setCoefficient('objValue', -1);
 
     // Add constraint for `difference >= -objValue + targetValue`
-    var constraint = this.engine.addConstraint(this.objectiveTarget, Infinity);
+    var constraint = this.engine.addConstraint(targetValue, Infinity);
     constraint.setCoefficient('difference', 1);
     constraint.setCoefficient('objValue', 1);
 
