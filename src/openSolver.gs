@@ -64,6 +64,7 @@ OpenSolver = function(sheet) {
   // Solver information
   this.solverShortName = null;
   this.solver = null;
+  this.solutionWasLoaded = false;
 };
 
 OpenSolver.prototype.toJSON = function() {
@@ -639,6 +640,7 @@ OpenSolver.prototype.solve = function() {
   this.solveStatusString = result.solveStatusString;
   Logger.log(this.solveStatus);
   Logger.log(this.solveStatusString);
+  this.solutionWasLoaded = result.loadSolution;
 
   // If we have a solution, even non-optimal, we load it into the sheet.
   if (result.loadSolution) {
