@@ -1,15 +1,8 @@
-<p>Version 2.1.0 (released 15 April 2016) contains the following changes:</p>
+<p>Version 2.2.0 (released 18 April 2016) contains the following changes:</p>
 
 <ul>
-  <li>Added GLPK solver. You can now solve problems in your browser using the open-source <a href="https://www.gnu.org/software/glpk/">GLPK</a> solver, via <a href="https://github.com/hgourvest/glpk.js">glpk.js</a> by Henri Gourvest. This solver runs in the browser on your computer rather than on a cloud server, so is typically much faster than the alternatives and we heavily recommend choosing it in place of Cbc via NEOS.</li>
-  <li>Linearity check occurs before solving to catch non-linearities before spending time solving the model.
-  <li>Bugfixes:
-  <ul>
-    <li>Fixed bug where dialogs could time out before they finished loading.</li>
-    <li>Fixed sheet-scoping issue when storing constraints</li>
-  </ul>
+  <li>Added support for early stopping in GLPK. If your problem is taking a while to solve and you are satisfied with the quality of the best solution that has been found so far, you can stop the solve and OpenSolver will load this solution into the sheet. To stop a solve early, just click the "Cancel solve and use current best solution" button.</li>
+  <li>When solving a "Target Objective" problem, we now try to minimize the deviation from the target rather than making the target a hard constraint. Previously, if the target was hard or impossible to reach, the solver may have taken a long time to finish. Coupled with the early stopping in GLPK, you can now stop the solve early if the solution is close enough to your desired target.
 </ul>
 
-<b>NOTE:</b> Google have fixed the bug in the LinearOptimizationService and so the Google Linear Solver should now be functional again.
-
-<p>For more information, please see the <a href="http://opensolver.org/opensolver-for-google-sheets-v2-1-0/">release post</a> for this release.</p>
+<p>For more information, please see the <a href="http://opensolver.org/opensolver-for-google-sheets-v2-2-0/">release post</a> for this release.</p>
