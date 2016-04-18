@@ -238,6 +238,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   this.objectiveSense = model.objectiveSense;
   if (model.objectiveSense == ObjectiveSenseType.TARGET) {
     this.objectiveTarget = model.objectiveVal;
+    Logger.log('Loaded target: ' + this.objectiveTarget);
   }
 
   // Model options
@@ -633,8 +634,13 @@ OpenSolver.prototype.solve = function() {
 
   // TODO set up duals
 
+  var t0 = new Date()
+
   this.solver = this.solver || createSolver(this.solverShortName);
   var result = this.solver.solve(this);
+
+  var t1 = new Date();
+  Logger.log("Solve took " + (t1 - t0) + " milliseconds.")
 
   this.solveStatus = result.solveStatus;
   this.solveStatusString = result.solveStatusString;
