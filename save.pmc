@@ -59,5 +59,4 @@
 58|Break||1|0|Break|||||
 59|[End If]|EndIf|1|0|If_Statement|||||
 60|[LoopEnd]|LoopEnd|1|0|Loop|||||
-61|WinActivate||1|333|WinActivate||OpenSolver Tester.xlsm - Excel ahk_class XLMAIN|||
 
