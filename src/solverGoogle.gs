@@ -69,10 +69,10 @@ SolverGoogle.prototype.solve = function(openSolver) {
     } else {
       // Check if explicit lower bound is present
       var tempLowerBound = lowerBound;
-      if (openSolver.lowerBoundedVariables[i] !== true && openSolver.assumeNonNegativeVars) {
+      if (openSolver.lowerBoundedVariables[i] !== undefined &&
+          openSolver.assumeNonNegativeVars) {
         tempLowerBound = 0;
       }
-      Logger.log(openSolver.lowerBoundedVariables[i] !== true);
       Logger.log('adding var ' + i + ' with lower bound ' + tempLowerBound);
 
       if (openSolver.varTypes[i] === VariableType.INTEGER) {
@@ -81,11 +81,6 @@ SolverGoogle.prototype.solve = function(openSolver) {
       } else { // VariableType.CONTINUOUS:
         this.engine.addVariable(openSolver.varKeys[i], tempLowerBound, upperBound);
       }
-    }
-
-    // Add in objective coefficients unless we are seeking a target value
-    if (openSolver.objectiveSense != ObjectiveSenseType.TARGET) {
-      this.engine.setObjectiveCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
     }
   }
 
@@ -122,17 +117,27 @@ SolverGoogle.prototype.solve = function(openSolver) {
     }
   }
 
-  // Minimize abs(objective - target) if we are seeking a value
-  if (openSolver.objectiveSense == ObjectiveSenseType.TARGET) {
+  if (openSolver.objectiveSense != ObjectiveSenseType.TARGET) {
+    // Add in objective coefficients unless we are seeking a target value
+    for (var objVar = 0; objVar < openSolver.costCoeffs.count(); objVar++) {
+      this.engine.setObjectiveCoefficient(
+          openSolver.varKeys[openSolver.costCoeffs.index(objVar)],
+          openSolver.costCoeffs.coeff(objVar)
+      );
+    }
+  } else {
+    // Minimize abs(objective - target) if we are seeking a value
     this.engine.addVariable('objValue', -Infinity, Infinity);
     this.engine.addVariable('difference', 0, Infinity);
 
     // Add constraint `objValue = <objective function>`
     var constraint = this.engine.addConstraint(openSolver.objectiveConstant,
                                                openSolver.objectiveConstant);
-    for (var i = 0; i < openSolver.numVars; i++) {
-      constraint.setCoefficient(openSolver.varKeys[i], openSolver.costCoeffs[i]);
-      Logger.log([openSolver.varKeys[i], openSolver.costCoeffs[i]]);
+    for (var objVar = 0; objVar < openSolver.costCoeffs.count(); objVar++) {
+      var objConVarKey = openSolver.varKeys[openSolver.costCoeffs.index(objVar)];
+      var objConVarCoeff = openSolver.costCoeffs.coeff(objVar);
+      constraint.setCoefficient(objConVarKey, objConVarCoeff);
+      Logger.log([objConVarKey, objConVarCoeff]);
     }
     constraint.setCoefficient('objValue', -1);
 

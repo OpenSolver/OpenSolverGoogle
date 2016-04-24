@@ -7,15 +7,13 @@ var TIME_BETWEEN_CHECKS = 10;
 function createMplModel(openSolver) {
   var lines = [];
 
-  var costLine = '  ';
-
   for (var i = 0; i < openSolver.numVars; i++) {
     var varString = 'var v' + openSolver.varKeys[i];
 
     if (openSolver.varTypes[i] === VariableType.BINARY) {
       varString += ', binary';
     } else {
-      if (openSolver.lowerBoundedVariables[i] !== true &&
+      if (openSolver.lowerBoundedVariables[i] !== undefined &&
           openSolver.assumeNonNegativeVars) {
         varString += ', >= 0';
       }
@@ -26,8 +24,13 @@ function createMplModel(openSolver) {
     varString += ';';
     lines.push(varString);
 
-    costLine += openSolver.costCoeffs[i] + ' * v' + openSolver.varKeys[i] +
-                ' + ';
+
+  }
+  var costLine = '  ';
+  for (var objVar = 0; objVar < openSolver.costCoeffs.count(); objVar++) {
+    var objConVarKey = openSolver.varKeys[openSolver.costCoeffs.index(objVar)];
+    var objConVarCoeff = openSolver.costCoeffs.coeff(objVar);
+    costLine += objConVarCoeff + ' * v' + objConVarKey + ' + ';
   }
   costLine += openSolver.objectiveConstant;
 
