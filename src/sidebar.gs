@@ -143,6 +143,11 @@ function updateCheckLinear(checkLinear, sheetId) {
   return currentModel.updateCheckLinear(checkLinear).getSidebarData();
 }
 
+function updateFastBuild(fastBuild, sheetId) {
+  currentModel = getModelFromSheetIdWithDefault(sheetId);
+  return currentModel.updateFastBuild(fastBuild).getSidebarData();
+}
+
 function updateSolver(solverShortName, sheetId) {
   currentModel = getModelFromSheetIdWithDefault(sheetId);
   return currentModel.updateSolver(solverShortName).getSidebarData();

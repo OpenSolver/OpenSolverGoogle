@@ -51,6 +51,7 @@ Model = function(sheet, loadFromSheet) {
   }
 
   this.checkLinear = getSavedBool(data, openSolverName("LinearityCheck"), true);
+  this.fastBuild   = getSavedBool(data, openSolverName("FastBuild"), false);
 
   var solverShortName = getSavedString(data, openSolverName("ChosenSolver"),
                                        "Google");
@@ -84,6 +85,7 @@ Model.prototype.save = function() {
 
   setSavedInteger(data, openSolverName("AdjNum"), this.variables.length);
   setSavedBool(   data, openSolverName("LinearityCheck"), this.checkLinear);
+  setSavedBool(   data, openSolverName("FastBuild"), this.fastBuild);
   setSavedString( data, openSolverName("ChosenSolver"), this.solver.shortName);
 
   insertHiddenSheetData(this.sheet, data);
@@ -256,6 +258,11 @@ Model.prototype.updateCheckLinear = function(checkLinear) {
   return this;
 };
 
+Model.prototype.updateFastBuild = function(fastBuild) {
+  this.fastBuild = fastBuild;
+  return this;
+};
+
 Model.prototype.updateSolver = function(solverShortName) {
   this.solver = getSolver(solverShortName);
   return this;
@@ -283,6 +290,7 @@ Model.prototype.getSidebarData = function() {
     assumeNonNeg:   this.assumeNonNeg,
     showStatus:     this.showStatus,
     checkLinear:    this.checkLinear,
+    fastBuild:      this.fastBuild,
     solverLongName: this.solver.sidebarName
   };
 };

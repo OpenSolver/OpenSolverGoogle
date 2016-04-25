@@ -6,6 +6,7 @@ OpenSolver = function(sheet) {
   this.minimiseUserInteraction = false;
   this.assumeNonNegativeVars = false;
   this.checkLinear = false;
+  this.fastBuild = false;
   this.linearityOffset = 10.423;  // An uncommon magic number!
 
   this.solveStatus = OpenSolverResult.UNSOLVED;
@@ -191,6 +192,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   var model = new Model(this.sheet);
   this.showStatus = model.showStatus;
   this.checkLinear = model.checkLinear;
+  this.fastBuild = model.fastBuild;
 
   this.solverShortName = model.solver.shortName;
 
@@ -355,11 +357,21 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 
   this.modelStatus = ModelStatus.INITIALISED;
 
-  if (!this.processSolverModel(this.linearityOffset, this.checkLinear)) {
-    // Building A failed
-    Logger.log('build A failed');
-    return;
+  Logger.log('Starting model builder');
+  if (this.fastBuild) {
+    if (!this.doFastBuild()) {
+      // Building A failed
+      Logger.log('fast build failed');
+      return;
+    }
+  } else {
+    if (!this.processSolverModel(this.linearityOffset, this.checkLinear)) {
+      // Building A failed
+      Logger.log('build A failed');
+      return;
+    }
   }
+  Logger.log("Finished building model");
 
   this.setAllVariableValues(0);
 
@@ -439,7 +451,6 @@ OpenSolver.prototype.processSolverModel = function(linearityOffset, checkLinear)
     this.quickLinearityCheck();
   }
 
-  Logger.log("Finished building model");
   return true;
 }
 
@@ -983,3 +994,81 @@ OpenSolver.prototype.updateCache = function() {
 OpenSolver.prototype.deleteCache = function() {
   deleteOpenSolverCache();
 };
+
+OpenSolver.prototype.doFastBuild = function() {
+  try {
+    // Load all formulae and values in first so they are batched
+    var objFormula = this.objective.getFormula();
+
+    var allLhsFormulas = [];
+    var allRhsValues = [];
+    var row = 0;
+    for (var constraint = 0; constraint < this.numConstraints; constraint++) {
+      // Skip Binary and Integer constraints
+      if (!this.lhsRange[constraint]) {
+        continue;
+      }
+
+      allLhsFormulas[constraint] = this.lhsRange[constraint].getFormulas();
+      allRhsValues[constraint] = this.getConstraintValues(constraint).rhsValues;
+    }
+
+    // Objective
+    this.costCoeffs = validateFormula(objFormula, this);
+
+    // Constraints
+    for (var constraint = 0; constraint < this.numConstraints; constraint++) {
+      // Skip Binary and Integer constraints
+      if (!this.lhsRange[constraint]) {
+        continue;
+      }
+
+      var lhsFormulas = allLhsFormulas[constraint];
+      var rhsValues = allRhsValues[constraint];
+
+      for (var m = 0; m < lhsFormulas.length; m++) {
+        for (var n = 0; n < lhsFormulas[m].length; n++) {
+          // Get coefficients from LHS
+          this.sparseA[row] = validateFormula(lhsFormulas[m][n], this);
+
+          // Get constant from RHS
+          var rhs;
+          if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+            // Making it work for column LHS with row RHS and vice versa
+            if (lhsFormulas.length === rhsValues.length) {
+              rhs = rhsValues[m][n];
+            } else {
+              rhs = rhsValues[n][m];
+            }
+          } else { // SolverInputType.SINGLE_CELL_RANGE
+            rhs = rhsValues[0][0];
+          }
+          this.rhs[row] = rhs;
+
+          row += 1;
+        }
+      }
+    }
+
+//    // Now go through and pull in all values for the sumproduct ranges so they
+//    // get batched
+//    // Any vector that needs processing is NOT an IndexedCoeffs, but instead
+//    // has properties `varIndices` and `constRange`. Use this to figure out
+//    // which to process.
+//
+//    // Objective
+//    if (this.costCoeffs.varIndices !== undefined) {
+//      this.costCoeffs = processSumProduct(this.costCoeffs, this);
+//    }
+//
+//    // Constraints
+//    for (var row = 0; row < this.numRows; row++) {
+//      if (this.sparseA[row].varIndices !== undefined) {
+//        this.sparseA[row] = processSumProduct(this.sparseA[row], this);
+//      }
+//    }
+  } catch(e) {
+    throw makeError('There was an error while running Fast Build:\n' + e);
+  }
+  return true;
+}

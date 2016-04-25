@@ -36,6 +36,7 @@
     $('#button-reset').click(checkResetModel);
     $('#checkbox-show-status').change(updateShowStatus);
     $('#checkbox-check-linear').change(updateCheckLinear);
+    $('#checkbox-fast-build').change(updateFastBuild);
 
     loadSidebar();
   });
@@ -268,7 +269,8 @@
     $('#select-sheet, #button-sheet-current, ' +
       '#button-update-objective, #button-clear-objective, input[type=radio][name=objective-sense], #text-objective-sense-target-value, ' +
       '#select-variable-cells, #button-add-variable, #button-update-variable, #button-delete-variable, ' +
-      '#checkbox-non-negative, #select-constraint-cells, #button-change-solver, #button-solve, #button-reset, #checkbox-show-status, #checkbox-check-linear')
+      '#checkbox-non-negative, #select-constraint-cells, #button-change-solver, #button-solve, #button-reset, ' +
+      '#checkbox-show-status, #checkbox-check-linear, #checkbox-fast-build')
         .prop('disabled', changed || disableAll);
 
     var disableRHS = $('#select-constraint-rel').val() >= 4;
@@ -450,6 +452,11 @@
     google.script.run.updateCheckLinear(checkLinear, curSheetId);
   }
 
+  function updateFastBuild() {
+    var fastBuild = $('#checkbox-fast-build').prop('checked');
+    google.script.run.updateFastBuild(fastBuild, curSheetId);
+  }
+
   function showWait() {
     $('#main').addClass('wait');
     enableUi(true);
@@ -495,6 +502,7 @@
       $('#checkbox-non-negative').prop('checked', model.assumeNonNeg);
       $('#checkbox-show-status').prop('checked', model.showStatus);
       $('#checkbox-check-linear').prop('checked', model.checkLinear);
+      $('#checkbox-fast-build').prop('checked', model.fastBuild);
       $('#current-solver').text(model.solverLongName);
     }
 
