@@ -69,7 +69,7 @@ SolverGoogle.prototype.solve = function(openSolver) {
     } else {
       // Check if explicit lower bound is present
       var tempLowerBound = lowerBound;
-      if (openSolver.lowerBoundedVariables[i] !== undefined &&
+      if (openSolver.lowerBoundedVariables[i] === undefined &&
           openSolver.assumeNonNegativeVars) {
         tempLowerBound = 0;
       }

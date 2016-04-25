@@ -13,7 +13,7 @@ function createMplModel(openSolver) {
     if (openSolver.varTypes[i] === VariableType.BINARY) {
       varString += ', binary';
     } else {
-      if (openSolver.lowerBoundedVariables[i] !== undefined &&
+      if (openSolver.lowerBoundedVariables[i] === undefined &&
           openSolver.assumeNonNegativeVars) {
         varString += ', >= 0';
       }
