@@ -174,7 +174,8 @@ OpenSolver.prototype.solveModel = function() {
 
     this.solveStatus = OpenSolverResult.ERROR_OCCURRED;
     if (!(e.title && e.title.length >= 10 && e.title.substring(0, 10) == 'OpenSolver')) {
-      e.message = 'An unexpected error occurred:\n\n' + e.message + '\n\n' +
+      e.message = 'An unexpected error occurred:\n\n' + e.message + '\n' +
+                  e.stack + '\n\n' +
                   'Let us know about this by using the "Report Issue" button from the OpenSolver Help menu. ' +
                   'Please include your contact details with the report so that we can follow up with you.';
       e.title = 'OpenSolver: Unexpected Error';
