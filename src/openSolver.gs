@@ -513,7 +513,8 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
     this.sparseA[row] = this.sparseA[row] || new IndexedCoeffs();
   }
   // Create CostCoeffs
-  this.costCoeffs = new IndexedCoeffs();
+  // Don't overwrite if already present, e.g. when resuming
+  this.costCoeffs = this.costCoeffs || new IndexedCoeffs();
 
   this.setAllVariableValues(linearityOffset);
 
