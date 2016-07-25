@@ -265,6 +265,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
 
     this.lhsString[constraint] = model.constraints[constraint].lhs;
     var lhsRange = this.getConRangeFromString(this.lhsString[constraint]);
+    this.lhsRange[constraint] = lhsRange;
     var lhsSize = getRangeDims(lhsRange);
     this.lhsRangeSizes.push(lhsSize);
 
@@ -324,8 +325,7 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
       // lhsType and rhsType tell us what is stored in each row
 
       // Left hand side:
-      this.lhsRange[constraint] = lhsRange;
-      if (rowCount === 1) {
+      if (lhsCount === 1) {
         this.lhsType[constraint] = SolverInputType.SINGLE_CELL_RANGE;
       } else {
         this.lhsType[constraint] = SolverInputType.MULTI_CELL_RANGE;
@@ -465,6 +465,14 @@ OpenSolver.prototype.setAllVariableValues = function(value) {
   }
 }
 
+OpenSolver.prototype.setAllBinaryVariableValues = function(value) {
+  for (var constraint = 0; constraint < this.numConstraints; constraint++) {
+    if (this.relation[constraint] === Relation.BIN) {
+      this.lhsRange[constraint].setValue(value);
+    }
+  }
+}
+
 OpenSolver.prototype.buildConstantTerms = function() {
   // Zero all values
   this.setAllVariableValues(0);
@@ -477,7 +485,7 @@ OpenSolver.prototype.buildConstantTerms = function() {
   var row = 0;
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
     // Skip Binary and Integer constraints
-    if (!this.lhsRange[constraint]) {
+    if (!this.rhsRange[constraint]) {
       continue;
     }
 
@@ -517,12 +525,13 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
   this.costCoeffs = this.costCoeffs || new IndexedCoeffs();
 
   this.setAllVariableValues(linearityOffset);
+  this.setAllBinaryVariableValues(0);
 
   // Get all values at the linearity offset
   var lhsOriginalValues = [];
   var rhsOriginalValues = [];
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
-    if (!this.lhsRange[constraint]) {
+    if (!this.rhsRange[constraint]) {
       continue;
     }
 
@@ -550,7 +559,9 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
     }
 
     var currentCell = this.getVariableByIndex(i);
-    currentCell.setValue(linearityOffset + 1);
+    var baseValue = this.varTypes[i] === VariableType.BINARY ? 0
+                                                             : linearityOffset;
+    currentCell.setValue(baseValue + 1);
 
     // The objective function value change
     if (this.objective) {
@@ -563,7 +574,7 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
     var row = 0;
     for (var constraint = 0; constraint < this.numConstraints; constraint++) {
       // Skip Binary and Integer constraints
-      if (!this.lhsRange[constraint]) {
+      if (!this.rhsRange[constraint]) {
         continue;
       }
 
@@ -597,7 +608,7 @@ OpenSolver.prototype.buildVariableTerms = function(linearityOffset) {
       }
     }
 
-    currentCell.setValue(linearityOffset);
+    currentCell.setValue(baseValue);
     this.startVariable = i + 1;
   }
 
@@ -763,9 +774,13 @@ OpenSolver.prototype.reportAnySubOptimality = function() {
 OpenSolver.prototype.quickLinearityCheck = function() {
   Logger.log('start linearity check');
 
+  // Do a better check for binary non-linearity - build from 0, check at 1
+  this.setAllBinaryVariableValues(1);
+
   var varValues = [];
   for (var i = 0; i < this.numVars; i++) {
-    varValues[i] = this.linearityOffset;
+    varValues[i] = this.varTypes[i] == VariableType.BINARY
+                       ? 1 : this.linearityOffset;
   }
 
   var nonLinearInfo = '';
@@ -773,7 +788,7 @@ OpenSolver.prototype.quickLinearityCheck = function() {
   var rowIsNonLinear = {}; // Object for sparse storage
   var row = 0;
   for (var constraint = 0; constraint < this.numConstraints; constraint++) {
-    if (!this.lhsRange[constraint]) {
+    if (!this.rhsRange[constraint]) {
       continue;
     }
 
@@ -948,13 +963,6 @@ OpenSolver.prototype.compareSparseVectors = function(v1, v2, v3) {
   var numEntries = Math.max(v1.count(), v2.count(), v3.count());
   var varIndices = [];
 
-  Logger.log(v1.indices)
-  Logger.log(v2.indices)
-  Logger.log(v3.indices)
-  Logger.log(v1.values)
-  Logger.log(v2.values)
-  Logger.log(v3.values)
-
   for (var i = 0; i < numEntries; i++) {
     var varIndex = -1;
     // Check existence in all vectors
@@ -1018,7 +1026,7 @@ OpenSolver.prototype.doFastBuild = function() {
     var row = 0;
     for (var constraint = 0; constraint < this.numConstraints; constraint++) {
       // Skip Binary and Integer constraints
-      if (!this.lhsRange[constraint]) {
+      if (!this.rhsRange[constraint]) {
         continue;
       }
 
@@ -1033,7 +1041,7 @@ OpenSolver.prototype.doFastBuild = function() {
     // Constraints
     for (var constraint = 0; constraint < this.numConstraints; constraint++) {
       // Skip Binary and Integer constraints
-      if (!this.lhsRange[constraint]) {
+      if (!this.rhsRange[constraint]) {
         continue;
       }
 
