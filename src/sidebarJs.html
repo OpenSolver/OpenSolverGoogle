@@ -409,8 +409,12 @@
   function solveModel(loadFromCache) {
     showWait();
     google.script.run
-      .withFailureHandler(hideWait)
-      .withSuccessHandler(hideWait)
+      .withFailureHandler(function(result) {
+        solveModel(true);
+      })
+      .withSuccessHandler(function(result) {
+        hideWait();
+      })
       .solveModel(curSheetId, loadFromCache);
   }
 
