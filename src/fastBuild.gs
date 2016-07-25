@@ -9,7 +9,7 @@ function myFunction() {
 //  validateFormula('=SUM(B8:C8)+2');
 }
 
-function validateFormula(formula, openSolver) {
+function validateFormula(formula, varNameMap, values) {
   var coeffs = new IndexedCoeffs();
 
 //  Logger.log(formula);
@@ -59,8 +59,9 @@ function validateFormula(formula, openSolver) {
             throw 'Valid SUMPRODUCT but there are other parts to the formula';
           }
 
-          var firstResult = checkVarRange(firstRange, openSolver);
-          var secondResult = checkVarRange(secondRange, openSolver);
+          Logger.log(firstRange + ' ' + secondRange)
+          var firstResult = checkVarRange(firstRange, varNameMap);
+          var secondResult = checkVarRange(secondRange, varNameMap);
 
           var varIndices;
           var constRange;
@@ -112,6 +113,9 @@ function validateFormula(formula, openSolver) {
 //          };
 //          break;
 
+          coeffs = processSumProduct(varIndices, constRange, values);
+          break;
+
           // Add the variables to the constraint with the right coeff
           // Vars are expanded in row-major order, so looping over cols inside
           // rows gives the correct order for the indices array.
@@ -147,7 +151,7 @@ function validateFormula(formula, openSolver) {
             throw 'Valid SUM but there are other parts to the formula';
           }
 
-          var result = checkVarRange(token.value, openSolver);
+          var result = checkVarRange(sumRange, varNameMap);
           if (!result.allVars) {
             throw 'The SUM range is not all adjustable cells';
           }
@@ -199,13 +203,12 @@ function validateFormula(formula, openSolver) {
   return coeffs;
 }
 
-function checkVarRange(rangeStr, openSolver) {
+function checkVarRange(rangeStr, varNameMap) {
   // Checks whether a range is all decision variables
   // Returns list of variable indices if so, otherwise empty list.
 
   // Get rid of $ in range
-  rangeStr = rangeStr.replace(/\$/g, '')
-//  Logger.log(rangeStr)
+  rangeStr = rangeStr.replace(/\$/g, '');
   // Break out any multi-cell range
   var expandedRange = rangeStr.indexOf(':') ? breakOutRanges(rangeStr)
                                             : [rangeStr];
@@ -214,7 +217,7 @@ function checkVarRange(rangeStr, openSolver) {
   var indices = [];
   var allVars = true;
   for (var i = 0; i < expandedRange.length; i++) {
-    var varIndex = openSolver.varNameMap[expandedRange[i]];
+    var varIndex = varNameMap[expandedRange[i]];
     if (varIndex === undefined) {
       allVars = false;
     } else {
@@ -228,19 +231,24 @@ function checkVarRange(rangeStr, openSolver) {
   };
 }
 
-function processSumProduct(result, openSolver) {
-  var varIndices = result.varIndices;
-  var constVals = openSolver.sheet.getRange(result.constRange).getValues();
+function processSumProduct(varIndices, constRange, values) {
+  Logger.log('Processing SUMPRODUCT: ' + constRange);
+  var constCells = constRange.indexOf(':') ? breakOutRanges(constRange)
+                                           : [constRange];
+
+  if (varIndices.length !== constCells.length) {
+    throw 'SUMPRODUCT argument sizes are mismatched';
+  }
 
   var coeffs = new IndexedCoeffs();
-  // Add the variables to the constraint with the right coeff
-  // Vars are expanded in row-major order, so looping over cols inside
-  // rows gives the correct order for the indices array.
-  var varIndex = 0;
-  for (var row = 0; row < constVals.length; row++) {
-    for (var col = 0; col < constVals[row].length; col++) {
-      coeffs.add(varIndices[varIndex], constVals[row][col]);
-      varIndex++;
+  for (var index = 0; index < constCells.length; index++) {
+    var constCell = constCells[index];
+    var row = parseInt(constCell.match(/[0-9]+/gi)[0]) - 1;  // Handle 1-index
+    var col = fromBase26(constCell.match(/[A-Z]+/gi)[0]);  // Already 0-indexed
+
+    var constValue = values[row][col];
+    if (isNumber(constValue) && Math.abs(constValue) > EPSILON) {
+      coeffs.add(varIndices[index], constValue);
     }
   }
   return coeffs;

@@ -358,6 +358,8 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
   this.modelStatus = ModelStatus.INITIALISED;
 
   Logger.log('Starting model builder');
+  var t0 = new Date();
+
   if (this.fastBuild) {
     if (!this.doFastBuild()) {
       // Building A failed
@@ -371,7 +373,9 @@ OpenSolver.prototype.buildModelFromSolverData = function(linearityOffset, minimi
       return;
     }
   }
-  Logger.log("Finished building model");
+
+  var t1 = new Date();
+  Logger.log('Finished building model in ' + (t1 - t0) + ' ms');
 
   this.setAllVariableValues(0);
 
@@ -669,7 +673,7 @@ OpenSolver.prototype.solve = function() {
 
   // TODO set up duals
 
-  var t0 = new Date()
+  var t0 = new Date();
 
   this.solver = this.solver || createSolver(this.solverShortName);
   var result = this.solver.solve(this);
@@ -997,9 +1001,16 @@ OpenSolver.prototype.deleteCache = function() {
 
 OpenSolver.prototype.doFastBuild = function() {
   try {
-    // Load all formulae and values in first so they are batched
+    // Pre-fetch all formulae and values at the same time so they are batched
+
+    // Fetch the sheet values first, this will batch everything afterwards
+    // Otherwise the smaller calls before this won't batch with it.
+    var values = this.sheet.getSheetValues(1, 1, -1, -1);
+
+    // Objective formula
     var objFormula = this.objective.getFormula();
 
+    // LHS formulae and RHS values
     var allLhsFormulas = [];
     var allRhsValues = [];
     var row = 0;
@@ -1012,9 +1023,10 @@ OpenSolver.prototype.doFastBuild = function() {
       allLhsFormulas[constraint] = this.lhsRange[constraint].getFormulas();
       allRhsValues[constraint] = this.getConstraintValues(constraint).rhsValues;
     }
+    // End of pre-fetching
 
     // Objective
-    this.costCoeffs = validateFormula(objFormula, this);
+    this.costCoeffs = validateFormula(objFormula, this.varNameMap, values);
 
     // Constraints
     for (var constraint = 0; constraint < this.numConstraints; constraint++) {
@@ -1029,7 +1041,8 @@ OpenSolver.prototype.doFastBuild = function() {
       for (var m = 0; m < lhsFormulas.length; m++) {
         for (var n = 0; n < lhsFormulas[m].length; n++) {
           // Get coefficients from LHS
-          this.sparseA[row] = validateFormula(lhsFormulas[m][n], this);
+          this.sparseA[row] = validateFormula(lhsFormulas[m][n],
+                                              this.varNameMap, values);
 
           // Get constant from RHS
           var rhs;
