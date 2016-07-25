@@ -1,28 +1,67 @@
-var _cache;
-var _cachedSheetName;
-var _cachedSheetId;
+var CACHE_SHEET_NAME = "__OpenSolverCache__";
+var _CACHE_SHEET;  // Used to cache the cache sheet
+var _CACHE_CELL_SIZE = 50000;  // Max chars in single cell
 
-var CACHE_KEY_OPENSOLVER = "CACHE_OPENSOLVER";
+/**
+ * Returns the cache sheet containing the cached model data, creating if needed.
+ * @return {Sheet}
+ */
+function getCacheSheet() {
+  // Load the results of any previous check
+  if (_CACHE_SHEET !== undefined) {
+    return _CACHE_SHEET;
+  }
 
-var CACHE_TIME = 3600;  // 1 hour
+  var book = SpreadsheetApp.getActiveSpreadsheet();
+  var cacheSheet = book.getSheetByName(CACHE_SHEET_NAME);
+
+  if (cacheSheet === null) {
+    // We didn't find the cache sheet, create it
+    cacheSheet = book.insertSheet(CACHE_SHEET_NAME);
+    cacheSheet.hideSheet();
+  }
+
+  // Save results for next call
+  _CACHE_SHEET = cacheSheet;
+
+  return cacheSheet;
+}
 
 function updateOpenSolverCache(openSolver) {
-  _cache = _cache || CacheService.getDocumentCache();
-//  Logger.log(JSON.stringify(openSolver));
-  _cache.put(CACHE_KEY_OPENSOLVER, JSON.stringify(openSolver), CACHE_TIME);
+  var data = JSON.stringify(openSolver);
+
+  var numCells = Math.ceil(data.length / _CACHE_CELL_SIZE);
+  var valuesToWrite = [];
+
+  for (i = 0; i < numCells; i++) {
+    var cellData = data.substr(_CACHE_CELL_SIZE * i, _CACHE_CELL_SIZE);
+    valuesToWrite.push([cellData]);
+  }
+
+  var cacheSheet = getCacheSheet();
+  cacheSheet.getRange(1, 1, numCells).setValues(valuesToWrite);
 }
 
 function deleteOpenSolverCache() {
-  _cache = _cache || CacheService.getDocumentCache();
-  _cache.remove(CACHE_KEY_OPENSOLVER);
+  var cacheSheet = getCacheSheet();
+  cacheSheet.clear();
 }
 
 function loadOpenSolverCache() {
-  _cache = _cache || CacheService.getDocumentCache();
-  var cached = _cache.get(CACHE_KEY_OPENSOLVER);
-//  Logger.log(cached);
-  return JSON.parse(cached);
+  var cacheSheet = getCacheSheet();
+  var lastRow = cacheSheet.getLastRow();
+  if (lastRow == 0) {
+    return null;
+  }
+  Logger.log('Last row of cache sheet: ' + lastRow);
+  var cacheValues = cacheSheet.getRange(1, 1, lastRow).getValues();
+  return JSON.parse(cacheValues.join(""));
 }
+
+// Saving current sheet
+
+var _cachedSheetName;
+var _cachedSheetId;
 
 function setCachedSheet(sheet) {
   _cachedSheetName = sheet.getName();
