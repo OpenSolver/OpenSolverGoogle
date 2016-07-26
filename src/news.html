@@ -1,8 +1,10 @@
-<p>Version 2.2.0 (released 18 April 2016) contains the following changes:</p>
+<p>Version 2.2.1 (released 25 July 2016) contains the following changes:</p>
 
 <ul>
-  <li>Added support for early stopping in GLPK. If your problem is taking a while to solve and you are satisfied with the quality of the best solution that has been found so far, you can stop the solve and OpenSolver will load this solution into the sheet. To stop a solve early, just click the "Cancel solve and use current best solution" button.</li>
-  <li>When solving a "Target Objective" problem, we now try to minimize the deviation from the target rather than making the target a hard constraint. Previously, if the target was hard or impossible to reach, the solver may have taken a long time to finish. Coupled with the early stopping in GLPK, you can now stop the solve early if the solution is close enough to your desired target.
+  <li>If the solve is stopped early by the internal 6-minute time limit in Google Sheets, it will now automatically resume instead of waiting for the Solve button to be clicked again.</li>
+  <li>The incomplete model that is used for resuming is now saved on a new hidden sheet to allow models larger than 100 KB to be saved.</li>
+  <li>A bug where the costs were not loading correctly when resuming the solve has been fixed.</li>
+  <li>Error messages now contain the stack trace for better debugging.</li>
 </ul>
 
-<p>For more information, please see the <a href="http://opensolver.org/opensolver-for-google-sheets-v2-2-0/">release post</a> for this release.</p>
+<p>For more information, please see the <a href="http://opensolver.org/opensolver-for-google-sheets-v2-2-1/">release post</a> for this release.</p>
