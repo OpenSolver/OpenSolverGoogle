@@ -822,18 +822,21 @@ OpenSolver.prototype.quickLinearityCheck = function() {
           var constraint = this.rowToConstraint[row];
           var instance = this.getConstraintInstance(row, constraint);
           var position = this.getArrayPosition(constraint, instance);
-          var lhsCell = this.lhsRange[constraint]
+          var lhsCellNotation = this.lhsRange[constraint]
               .getCell(position.i, position.j)
               .getA1Notation();
-          var rhsCell = this.rhsRange[constraint]
-              .getCell(position.i, position.j)
-              .getA1Notation();
+
+          var rhsCell = this.rhsRange[constraint];
+          if (this.rhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
+            rhsCell = rhsCell.getCell(position.i, position.j);
+          }
+          var rhsCellNotation = rhsCell.getA1Notation();
 
           nonLinearInfo += '\n' + this.constraintSummary[constraint];
           if (this.lhsType[constraint] === SolverInputType.MULTI_CELL_RANGE) {
             nonLinearInfo += ' (instance ' + (instance + 1) + ')';
           }
-          nonLinearInfo += ': LHS=' + lhsCell + ', RHS=' + rhsCell + ', ' +
+          nonLinearInfo += ': LHS=' + lhsCellNotation + ', RHS=' + rhsCellNotation + ', ' +
                            conExpectedValue.toPrecision(4)  + ' != ' +
                            conObservedValue.toPrecision(4);
           rowIsNonLinear[row] = true;
