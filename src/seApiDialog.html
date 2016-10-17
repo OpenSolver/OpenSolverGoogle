@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+    <style>
+      body {
+        margin: 0;
+      }
+      p {
+        margin: 0;
+      }
+      .heading {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .heading:first-child {
+        margin-top: 0;
+      }
+      #output {
+        margin-bottom: 40px;
+      }
+      .button-bar {
+        width: 100%;
+        background-color: white;
+        padding-top: 5px;
+        position: fixed;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+    <input type="text" id="api-field" class="text-constraint text-range">
+<p style="margin-top: 0;">
+  We found a model from a previous solve that did not finish solving.
+  This can happen if the solve exceeds the internal timelimit of Google Sheets,
+  or the solve is interrupted for any reason.
+</p>
+</div>
+    <section class="button-bar">
+      <button id="terminate" onclick="submit()">Submit</button>
+      <button id="close" onclick="cancel()" disabled>Cancel</button>
+    </section>
+  </body>
+
+
+  <script>
+  function submit() {
+    var apiKey = document.getElementById('api-field').value;
+    console.log(apiKey);
+    //todo: validate key
+    google.script.run
+        .withSuccessHandler(dialogDone)
+        .setCachedSolveEngineApiKey(apiKey);
+  }
+
+   function cancel() {
+    dialogAbort();
+  }
+</script>
+</html>

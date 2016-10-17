@@ -10,7 +10,8 @@ var OpenSolverResult = {
   UNBOUNDED: 4,
   INFEASIBLE: 5,
   TIME_LIMITED_SUB_OPTIMAL: 10, // Solver stopped before finding an optimal/feasible/integer solution
-  NOT_LINEAR: 7                 // Indicates non-linearity in model
+  NOT_LINEAR: 7,                // Indicates non-linearity in model
+  UNAUTHORIZED:401
 };
 
 var ModelStatus = {
@@ -105,6 +106,13 @@ var SolverType = {
                    'open-source project led by John Forrest.'
 
   },
+  SolveEngine: {
+      shortName:   'SolveEngine',
+      longName:    'Satalia Solve Engine',
+      sidebarName: 'Satalia Solve Engine',
+      description: 'Satalia Solve Engine'
+
+  },
 };
 
 function getSolver(solverType) {
@@ -119,6 +127,8 @@ function createSolver(solverType) {
       return new SolverGlpk();
     case 'NeosCBC':
       return new SolverNeos();
+    case 'SolveEngine':
+      return new SolveEngine();
     default:
       throw(makeError('Unknown solver: ' + solverType));
   }
