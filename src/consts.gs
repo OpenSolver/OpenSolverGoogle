@@ -110,7 +110,13 @@ var SolverType = {
       shortName:   'SolveEngine',
       longName:    'Satalia Solve Engine',
       sidebarName: 'Satalia Solve Engine',
-      description: 'Satalia Solve Engine'
+      description: 'The ' +
+                   '<a href="https://solve.satalia.com">Solve Egine</a> ' +
+                   'provides optimization as a service. It uses worlds ' +
+                   'best algorithms from industry and academia to deliver' +
+                   'rapid problem solving.  ' +
+                   'To use the Solve Engine <a href="https://solve.satalia.com/register">here</a> for an API key ' +
+                   ' and enter the key when prompted.'
 
   },
 };
