@@ -127,22 +127,35 @@ SolveEngine.prototype.solve = function(openSolver) {
 
   this.waitForCompletion();
   var finalResults = this.getFinalResults();
-  this.extractResults(finalResults, openSolver.varKeys);
+  this.extractResults(finalResults);
 
   return this.getStatus();
 };
 
-SolveEngine.prototype.extractResults = function(finalResults, varNames) {
-  var results = finalResults.results;
+SolveEngine.prototype.extractResults = function(finalResults) {
+  // TODO get rid of solve_result_num
+  if (finalResults.code == 200) {
+    this.solve_result_num = 100;
+  } else if (finalResults.code == 400) {
+    this.solve_result_num = 0;
+  } else {
+    this.solve_result_num = 400;
+  }
+
+  var message = JSON.parse(finalResults.message);
+  var results = message.results;
+
   this.objectiveValue = results.objval;
   this.status = results.status;
+
   Logger.log(results.variables[0]);
-  for (var i=0; i < results.variables.length; i++) {
-  var variable = results.variables[i]
+  for (var i = 0; i < results.variables.length; i++) {
+    var variable = results.variables[i];
     Logger.log("Variable object: "  + variable.name);
-    this.variableValues[variable.name.replace("v", "")]=variable.value;
+    this.variableValues[variable.name.replace("v", "")] = variable.value;
   }
   Logger.log(this.variableValues);
+
   return this;
 };
 
@@ -200,17 +213,8 @@ SolveEngine.prototype.loadFromCache = function(data) {
 };
 
 SolveEngine.prototype.getFinalResults = function() {
-  var resp = this.client.getResults()
-  if (resp.code == 200) {
-    this.solve_result_num = 100
-  } else if(resp.code == 400) {
-    this.solve_result_num = 0
-  } else {
-    this.solve_result_num = 400
-  }
-
-  return JSON.parse(resp.message);
-}
+  return this.client.getResults();
+};
 
 SolveEngine.prototype.waitForCompletion = function(){
  var timeElapsed = 0;
