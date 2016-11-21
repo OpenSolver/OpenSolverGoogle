@@ -1,4 +1,5 @@
-var SE_CHECK_TIME = 2;
+var SE_CHECK_TIME = 2;  // Time between update checks in seconds
+
 SolveEngine = function() {
   Solver.call(this);
 
@@ -199,7 +200,8 @@ SolveEngine.prototype.getFinalResults = function() {
 
 SolveEngine.prototype.waitForCompletion = function(){
  var timeElapsed = 0;
- updateStatus('Solving the model on the Solve Engine','Solving model on SolveEngine...', false, SE_CHECK_TIME);
+ updateStatus('Solving the model on the Solve Engine',
+              'Solving model on SolveEngine...', false, SE_CHECK_TIME);
   while (true) {
     var resp = this.client.getStatus();
     Logger.log(resp);
@@ -209,18 +211,20 @@ SolveEngine.prototype.waitForCompletion = function(){
     if (jobStatus == "completed") {
       break;
     } else if (jobStatus == "translating") {
-      updateStatus('Translating problem', 'Solving model on SolveEngine...', false, SE_CHECK_TIME);
+      updateStatus('Translating problem', 'Solving model on SolveEngine...',
+                   false, SE_CHECK_TIME);
     } else if (jobStatus == "failed") {
-    updateStatus('SolveEngine failed solving the problem','Solving model on SolveEngine...', false, SE_CHECK_TIME);
-    throw('SolveEngine failed solving the problem');
-    break;
+      updateStatus('SolveEngine failed solving the problem',
+                   'Solving model on SolveEngine...', false, SE_CHECK_TIME);
+      throw('SolveEngine failed solving the problem');
     } else if (jobStatus == "started" || jobStatus == "starting") {
-    updateStatus('Waiting for the SolveEngine; Time elapsed ' + timeElapsed + '\n', 'Solving model on SolveEngine...',
+      updateStatus('Waiting for the SolveEngine\n' +
+                   'Time elapsed: ' + timeElapsed + 'seconds',
+                   'Solving model on SolveEngine...',
                    false,
                    SE_CHECK_TIME);
     }
     Utilities.sleep(SE_CHECK_TIME * 1000);
-    timeElapsed += 1;
-
+    timeElapsed += SE_CHECK_TIME;
   }
-}
+};
