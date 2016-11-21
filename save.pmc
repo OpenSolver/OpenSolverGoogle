@@ -8,7 +8,7 @@ Groups=
 6|Enter|{Enter}|1|0|Send|||||
 7|[Assign Variable]|NumItems := Clipboard|1|0|Variable|Expression||||
 8|[Assign Variable]|counter := 0|1|0|Variable|||||
-9|[LoopStart]|LoopStart|42|0|Loop|||||
+9|[LoopStart]|LoopStart|45|0|Loop|||||
 10|WinActivate||1|0|WinActivate||OpenSolver - Google Chrome|||
 11|Left Move & Click|45, 1370 Left, Down|1|0|Click|||||
 12|Left Move & Click|45, 1370 Left, Up|1|0|Click|||||
