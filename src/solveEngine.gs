@@ -38,7 +38,7 @@ SolveEngine.prototype.getApiKey = function() {
   if(key){
     return key;
   } else {
-    var id = showDialog('seApiDialog', 'Enter API key', 200, 350);
+    var id = showDialog('dialogSolveEngineApi', 'Enter API key', 150, 350);
     var state = getDialogState(id, true);
     while(state == DialogState.OPEN || state == DialogState.PENDING) {
       // wait
