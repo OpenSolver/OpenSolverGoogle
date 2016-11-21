@@ -1,7 +1,6 @@
 var CACHE_SHEET_NAME = "__OpenSolverCache__";
 var _CACHE_SHEET;  // Used to cache the cache sheet
 var _CACHE_CELL_SIZE = 50000;  // Max chars in single cell
-var CACHE_KEY_SOLVEENGINE_APIKEY = "CACHE_SOLVEENGINE_API_KEY";
 
 /**
  * Returns the cache sheet containing the cached model data, creating if needed.
@@ -86,14 +85,15 @@ function setCachedSolverShortName(solverShortName) {
       .put(CACHE_KEY_SOLVERSHORTNAME, solverShortName);
 }
 
-// For solve engine api key
+// For Solve Engine API key
+// Uses UserCache to persist across all documents for the same user
+
+var CACHE_KEY_SOLVEENGINE_APIKEY = "CACHE_SOLVEENGINE_API_KEY";
 
 function getCachedSolveEngineApiKey() {
-  return CacheService.getDocumentCache().get(CACHE_KEY_SOLVEENGINE_APIKEY);
+  return CacheService.getUserCache().get(CACHE_KEY_SOLVEENGINE_APIKEY);
 }
 
 function setCachedSolveEngineApiKey(apiKey) {
-  CacheService
-      .getDocumentCache()
-      .put(CACHE_KEY_SOLVEENGINE_APIKEY, apiKey);
+  CacheService .getUserCache().put(CACHE_KEY_SOLVEENGINE_APIKEY, apiKey);
 }
