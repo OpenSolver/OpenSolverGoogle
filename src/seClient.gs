@@ -1,6 +1,6 @@
 var SE_SERVER = "https://solve.satalia.com/api/v1alpha";
 
-SEClient = function(authToken) {
+SolveEngineClient = function(authToken) {
   if (!authToken || authToken == "") {
     return null;
   }
@@ -10,11 +10,11 @@ SEClient = function(authToken) {
   return this;
 };
 
-SEClient.prototype.hashProblem = function(problem) {
+SolveEngineClient.prototype.hashProblem = function(problem) {
   return Utilities.base64Encode(problem);
 }
 
-SEClient.prototype.doRequest = function(url, options) {
+SolveEngineClient.prototype.doRequest = function(url, options) {
   options.muteHttpExceptions = true;
   resp = UrlFetchApp.fetch(SE_SERVER + url, options);
   return {
@@ -23,7 +23,7 @@ SEClient.prototype.doRequest = function(url, options) {
   }
 }
 
-SEClient.prototype.createJob = function(problem) {
+SolveEngineClient.prototype.createJob = function(problem) {
   var payload = {
     options: {
       translate: "lp"
@@ -44,7 +44,7 @@ SEClient.prototype.createJob = function(problem) {
   return this.doRequest("/jobs",  options);
 }
 
-SEClient.prototype.submitData = function(problem) {
+SolveEngineClient.prototype.submitData = function(problem) {
   var blob = Utilities.newBlob(problem, "multipart/form-data");
   var options = {
     method: "put",
@@ -60,7 +60,7 @@ SEClient.prototype.submitData = function(problem) {
                         options);
 }
 
-SEClient.prototype.startJob = function() {
+SolveEngineClient.prototype.startJob = function() {
   var options = {
     method: "post",
     headers: {
@@ -71,7 +71,7 @@ SEClient.prototype.startJob = function() {
   return this.doRequest("/jobs/" + this.jobId + "/start", options);
 }
 
-SEClient.prototype.getStatus = function() {
+SolveEngineClient.prototype.getStatus = function() {
   var options = {
     method: "get",
     headers: {
@@ -82,7 +82,7 @@ SEClient.prototype.getStatus = function() {
   return this.doRequest("/jobs/" + this.jobId + "/status", options);
 }
 
-SEClient.prototype.getResults = function() {
+SolveEngineClient.prototype.getResults = function() {
   var options = {
     method: "get",
     headers: {
