@@ -148,36 +148,38 @@ SolveEngine.prototype.extractResults = function(finalResults, varNames) {
 
 SolveEngine.prototype.submitJob = function(openSolver) {
   var gmplModel = createGmplModel(openSolver);
-  updateStatus('Sending model to the SolveEngine', 'Solving model on the SolveEngine',
-               true, TIME_BETWEEN_CHECKS);
+  updateStatus('Sending model to the SolveEngine',
+               'Solving model on the SolveEngine...', true, SE_CHECK_TIME);
 
   var resp = this.client.createJob(gmplModel);
   Logger.log("Create job response " + resp.code);
-  var content = JSON.parse(resp.message);
-  if(resp.code != 201) {
+  if (resp.code != 201) {
     return {
-       "error": "Unexpected response code, while creating a job",
-      "code":resp.code,
-      "payload":content
+      error: "Unexpected response code while creating a job",
+      code: resp.code,
+      payload: JSON.parse(resp.message)
     };
   }
 
-  this.client.jobId = content.job_id
+  this.client.jobId = content.job_id;
+
   resp = this.client.submitData(gmplModel);
-  if(resp.code != 200) {
+  Logger.log("Submit data response " + resp.code);
+  if (resp.code != 200) {
     return {
-       "error": "Unexpected response code, while sending job data",
-      "code":resp.code,
-      "payload":content
+      error: "Unexpected response code while sending job data",
+      code: resp.code,
+      payload: JSON.parse(resp.message)
     };
   }
 
   resp = this.client.startJob();
-  if(resp.code != 201) {
+  Logger.log("Start job response " + resp.code);
+  if (resp.code != 201) {
     return {
-       "error": "Unexpected response code, while sending job data",
-      "code":resp.GetResponseCode(),
-      "payload":content
+      error: "Unexpected response code while sending job data",
+      code: resp.code,
+      payload: JSON.parse(resp.message)
     };
   }
 
