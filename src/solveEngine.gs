@@ -36,22 +36,30 @@ Logger.log("Key: " + varKey + "Value: " + this.variableValues[varKey]);
 
 SolveEngine.prototype.getApiKey = function() {
   var key = getCachedSolveEngineApiKey();
-  if(key){
+  if (key) {
     return key;
   } else {
     var id = showDialog('dialogSolveEngineApi', 'Enter API key', 150, 350);
+
+    // Wait until dialog has loaded
     var state = getDialogState(id, true);
-    while(state == DialogState.OPEN || state == DialogState.PENDING) {
-      // wait
+    while (state == DialogState.PENDING) {
       state = getDialogState(id, true);
     }
-    if(state !== DialogState.DONE){
-     return null;
-     } else {
-       return getCachedSolveEngineApiKey();
-     }
+
+    // Wait for response
+    while (state == DialogState.OPEN) {
+      state = getDialogState(id, false);
+    }
+
+    // Exit if not properly loaded
+    if (state !== DialogState.DONE) {
+      return null;
+    } else {
+      return getCachedSolveEngineApiKey();
+    }
   }
-}
+};
 
 SolveEngine.prototype.getStatus = function() {
 var result;
