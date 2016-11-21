@@ -10,8 +10,7 @@ var OpenSolverResult = {
   UNBOUNDED: 4,
   INFEASIBLE: 5,
   TIME_LIMITED_SUB_OPTIMAL: 10, // Solver stopped before finding an optimal/feasible/integer solution
-  NOT_LINEAR: 7,                // Indicates non-linearity in model
-  UNAUTHORIZED:401
+  NOT_LINEAR: 7                 // Indicates non-linearity in model
 };
 
 var ModelStatus = {
@@ -111,18 +110,19 @@ var SolverType = {
       longName:    'Satalia Solve Engine',
       sidebarName: 'Satalia Solve Engine',
       description: 'The ' +
-                   '<a href="https://solve.satalia.com">Solve Egine</a> ' +
-                   'provides optimization as a service. It uses worlds ' +
-                   'best algorithms from industry and academia to deliver' +
-                   'rapid problem solving.  ' +
-                   'To use the Solve Engine <a href="https://solve.satalia.com/register">here</a> for an API key ' +
-                   ' and enter the key when prompted.'
+                   '<a href="https://solve.satalia.com">Solve Engine</a> ' +
+                   'provides optimization as a service. It uses the ' +
+                   'worlds\' best algorithms from industry and academia to ' +
+                   'deliver rapid problem solving. ' +
+                   'To use the Solve Engine, register ' +
+                   '<a href="https://solve.satalia.com/register">here</a> ' +
+                   'for an API key and enter the key when prompted.'
 
   },
 };
 
 function getSolver(solverType) {
-  return solver = SolverType[solverType] || SolverType.Google;
+  return SolverType[solverType] || SolverType.Google;
 }
 
 function createSolver(solverType) {
