@@ -3,10 +3,8 @@ var SE_CHECK_TIME = 2;  // Time between update checks in seconds
 SolveEngine = function() {
   Solver.call(this);
 
-  // solveEngine details
-  this.jobId = null;
-  this.authToken = null;
   this.client = null;
+  this.started = false;  // whether the job has been started on SolveEngine
 
   // Result details
   this.solve_result_num = -1;
@@ -95,41 +93,43 @@ var result;
 }
 
 SolveEngine.prototype.solve = function(openSolver) {
+  if (!this.client) {
+    var key = this.getApiKey();
+    if (!key) {
+      throw(makeError('SolveEngine API key not set'));
+    }
+    this.client = new SolveEngineClient(key);
+  }
+  Logger.log("Auth token: " + this.client.authToken);
+
   // Skip submission if the solver has already submitted the job.
   // This happens if we are resuming a solve from the cache after timeout.
-
-  if (!this.authToken) {
-  Logger.log("getting auth token");
-  var key = this.getApiKey();
-   if(!key) {
-     throw(makeError('Api key not set'));
-   }
-   this.authToken = key;
+  if (!this.started) {
+    var err = this.submitJob(openSolver);
+    if (err !== null) {
+      // Something went wrong while submitting the job
+      if (err.code == 401) {  // UNAUTHORIZED
+        // Clear the invalid API key from the cache
+        setCachedSolveEngineApiKey(null);
+        status = "The API key specified for the Solve Engine was invalid. " +
+                 "Please try again with a valid API key.";
+      } else {
+        status = err.error + ": " + err.code + "\n\nThe response was:\n" +
+                 JSON.stringify(err.payload, null, 4);
+      }
+      return {
+        solveStatus:       OpenSolverResult.ERROR_OCCURRED,
+        solveStatusString: status,
+        loadSolution:      false
+      };
+    }
   }
 
-  if(!this.client){
-  this.client = new SEClient(this.authToken);
-  }
-Logger.log("Auth token: " + this.authToken);
- var err = this.submitJob(openSolver);
- if (err != null) {
-   if(err.code == 401) {
-     this.authToken = "";
-     setCachedSolveEngineApiKey(null);
-     return {
-      solveStatus:       OpenSolverResult.UNAUTHORIZED,
-      solveStatusString: "unauthorized",
-      loadSolution:      false
-    };
-   }
-   return err;
- }
+  this.waitForCompletion();
+  var finalResults = this.getFinalResults();
+  this.extractResults(finalResults, openSolver.varKeys);
 
- this.waitForCompletion();
- var finalResults = this.getFinalResults();
- this.extractResults(finalResults, openSolver.varKeys);
-
- return this.getStatus();
+  return this.getStatus();
 };
 
 SolveEngine.prototype.extractResults = function(finalResults, varNames) {
@@ -183,6 +183,9 @@ SolveEngine.prototype.submitJob = function(openSolver) {
     };
   }
 
+  // This job has now been started successfully, so we shouldn't start it again
+  this.started = true;
+
   return null;
 };
 
@@ -192,6 +195,7 @@ SolveEngine.prototype.loadFromCache = function(data) {
     var key = keys[i];
     this[key] = data[key];
   }
+  this.client = new SolveEngineClient().loadFromCache(this.client);
   return this;
 };
 
