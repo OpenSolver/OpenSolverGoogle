@@ -10,6 +10,21 @@ SolveEngineClient = function(authToken) {
   return this;
 };
 
+SolveEngineClient.prototype.loadFromCache = function(data) {
+  var keys = data ? Object.keys(data) : [];
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    this[key] = data[key];
+  }
+
+  // Make sure we only load a valid client
+  if (!this.authToken || this.authToken == "") {
+    return null;
+  }
+
+  return this;
+};
+
 SolveEngineClient.prototype.hashProblem = function(problem) {
   return Utilities.base64Encode(problem);
 }
