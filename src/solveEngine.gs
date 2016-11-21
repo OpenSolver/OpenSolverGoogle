@@ -1,6 +1,6 @@
 var SE_CHECK_TIME = 2;  // Time between update checks in seconds
 
-SolveEngine = function() {
+SolverSolveEngine = function() {
   Solver.call(this);
 
   this.client = null;
@@ -15,16 +15,16 @@ SolveEngine = function() {
   return this;
 };
 
-SolveEngine.prototype = Object.create(Solver.prototype);
-SolveEngine.prototype.constructor = SolveEngine;
+SolverSolveEngine.prototype = Object.create(Solver.prototype);
+SolverSolveEngine.prototype.constructor = SolverSolveEngine;
 
 
-SolveEngine.prototype.getObjectiveValue = function() {
+SolverSolveEngine.prototype.getObjectiveValue = function() {
   return this.objectiveValue;
 };
 
-SolveEngine.prototype.getVariableValue = function(varKey) {
-Logger.log("Key: " + varKey + "Value: " + this.variableValues[varKey]);
+SolverSolveEngine.prototype.getVariableValue = function(varKey) {
+  Logger.log("Key: " + varKey + "Value: " + this.variableValues[varKey]);
   var value = this.variableValues[varKey];
   if (value === undefined) {
     value = null;
@@ -32,7 +32,7 @@ Logger.log("Key: " + varKey + "Value: " + this.variableValues[varKey]);
   return value;
 };
 
-SolveEngine.prototype.getApiKey = function() {
+SolverSolveEngine.prototype.getApiKey = function() {
   var key = getCachedSolveEngineApiKey();
   if (key) {
     return key;
@@ -59,7 +59,7 @@ SolveEngine.prototype.getApiKey = function() {
   }
 };
 
-SolveEngine.prototype.getStatus = function() {
+SolverSolveEngine.prototype.getStatus = function() {
 var result;
   var solveString;
   var loadSolution = false;
@@ -90,9 +90,9 @@ var result;
     loadSolution:      loadSolution
   };
 
-}
+};
 
-SolveEngine.prototype.solve = function(openSolver) {
+SolverSolveEngine.prototype.solve = function(openSolver) {
   if (!this.client) {
     var key = this.getApiKey();
     if (!key) {
@@ -132,7 +132,7 @@ SolveEngine.prototype.solve = function(openSolver) {
   return this.getStatus();
 };
 
-SolveEngine.prototype.extractResults = function(finalResults) {
+SolverSolveEngine.prototype.extractResults = function(finalResults) {
   // TODO get rid of solve_result_num
   if (finalResults.code == 200) {
     this.solve_result_num = 100;
@@ -159,7 +159,7 @@ SolveEngine.prototype.extractResults = function(finalResults) {
   return this;
 };
 
-SolveEngine.prototype.submitJob = function(openSolver) {
+SolverSolveEngine.prototype.submitJob = function(openSolver) {
   var gmplModel = createGmplModel(openSolver);
   updateStatus('Sending model to the SolveEngine',
                'Solving model on the SolveEngine...', true, SE_CHECK_TIME);
@@ -202,21 +202,22 @@ SolveEngine.prototype.submitJob = function(openSolver) {
   return null;
 };
 
-SolveEngine.prototype.loadFromCache = function(data) {
+SolverSolveEngine.prototype.loadFromCache = function(data) {
   var keys = data ? Object.keys(data) : [];
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     this[key] = data[key];
   }
+
   this.client = new SolveEngineClient().loadFromCache(this.client);
   return this;
 };
 
-SolveEngine.prototype.getFinalResults = function() {
+SolverSolveEngine.prototype.getFinalResults = function() {
   return this.client.getResults();
 };
 
-SolveEngine.prototype.waitForCompletion = function(){
+SolverSolveEngine.prototype.waitForCompletion = function() {
  var timeElapsed = 0;
  updateStatus('Solving the model on the Solve Engine',
               'Solving model on SolveEngine...', false, SE_CHECK_TIME);

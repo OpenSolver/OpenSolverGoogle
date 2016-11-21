@@ -134,7 +134,7 @@ function createSolver(solverType) {
     case 'NeosCBC':
       return new SolverNeos();
     case 'SolveEngine':
-      return new SolveEngine();
+      return new SolverSolveEngine();
     default:
       throw(makeError('Unknown solver: ' + solverType));
   }
