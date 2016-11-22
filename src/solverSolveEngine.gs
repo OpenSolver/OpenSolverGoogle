@@ -7,7 +7,6 @@ SolverSolveEngine = function() {
   this.started = false;  // whether the job has been started on SolveEngine
 
   // Result details
-  this.solve_result_num = -1;
   this.status = "";
   this.objectiveValue = null;
   this.variableValues = {};
@@ -63,25 +62,35 @@ SolverSolveEngine.prototype.getStatus = function() {
 var result;
   var solveString;
   var loadSolution = false;
-  if (this.solve_result_num < 0) {
-    result = OpenSolverResult.UNSOLVED;
-    solveString = 'The model has not yet been solved.';
+  switch(this.status) {
+    case '':
+      result = OpenSolverResult.UNSOLVED;
+      solveString = 'The model has not yet been solved.';
+      break;
 
-  } else if (this.solve_result_num = 100) {
-    result = OpenSolverResult.OPTIMAL;
-    solveString = 'Optimal';
-    loadSolution = true;
+    case 'optimal':
+      result = OpenSolverResult.OPTIMAL;
+      solveString = 'Optimal';
+      loadSolution = true;
+      break;
 
-  } else if (this.status == "infeasible") {
-    result = OpenSolverResult.INFEASIBLE;
-    solveString = 'No feasible solution was found.';
+    case 'infeasible':
+      result = OpenSolverResult.INFEASIBLE;
+      solveString = 'No feasible solution was found.';
+      break;
 
-  } else if (this.status == "interupted" || this.solve_result_num == 400) {
-    result = OpenSolverResult.ERROR_OCCURRED;
-    solveString = 'There was an error while solving the model.';
+    case 'interrupted':
+      result = OpenSolverResult.ABORTED_THRU_USER_ACTION;
+      solveString = 'Cancelled by user.';
+      break;
 
-  } else {
-    throw('Unknown solve result');
+    case 'failed':
+      result = OpenSolverResult.ERROR_OCCURRED;
+      solveString = 'There was an error while solving the model.';
+      break;
+
+    default:
+      throw('Unknown solve result: ' + this.status);
   }
 
   return {
@@ -133,28 +142,23 @@ SolverSolveEngine.prototype.solve = function(openSolver) {
 };
 
 SolverSolveEngine.prototype.extractResults = function(finalResults) {
-  // TODO get rid of solve_result_num
   if (finalResults.code == 200) {
-    this.solve_result_num = 100;
-  } else if (finalResults.code == 400) {
-    this.solve_result_num = 0;
+    var message = JSON.parse(finalResults.message);
+    var results = message.results;
+
+    this.objectiveValue = results.objval;
+    this.status = results.status;
+
+    Logger.log(results.variables[0]);
+    for (var i = 0; i < results.variables.length; i++) {
+      var variable = results.variables[i];
+      Logger.log("Variable object: "  + variable.name);
+      this.variableValues[variable.name.replace("v", "")] = variable.value;
+    }
+    Logger.log(this.variableValues);
   } else {
-    this.solve_result_num = 400;
+    this.status = 'failed';
   }
-
-  var message = JSON.parse(finalResults.message);
-  var results = message.results;
-
-  this.objectiveValue = results.objval;
-  this.status = results.status;
-
-  Logger.log(results.variables[0]);
-  for (var i = 0; i < results.variables.length; i++) {
-    var variable = results.variables[i];
-    Logger.log("Variable object: "  + variable.name);
-    this.variableValues[variable.name.replace("v", "")] = variable.value;
-  }
-  Logger.log(this.variableValues);
 
   return this;
 };
@@ -227,22 +231,24 @@ SolverSolveEngine.prototype.waitForCompletion = function() {
     Logger.log(resp);
     var content = JSON.parse(resp.message);
     Logger.log(content);
-    jobStatus = content.status;
-    if (jobStatus == "completed") {
+    var jobStatus = content.status;
+    if (jobStatus == "completed" || jobStatus == "failed") {
       break;
     } else if (jobStatus == "translating") {
       updateStatus('Translating problem', 'Solving model on SolveEngine...',
                    false, SE_CHECK_TIME);
-    } else if (jobStatus == "failed") {
-      updateStatus('SolveEngine failed solving the problem',
-                   'Solving model on SolveEngine...', false, SE_CHECK_TIME);
-      throw('SolveEngine failed solving the problem');
     } else if (jobStatus == "started" || jobStatus == "starting") {
       updateStatus('Waiting for the SolveEngine\n' +
                    'Time elapsed: ' + timeElapsed + ' seconds',
                    'Solving model on SolveEngine...',
                    false,
                    SE_CHECK_TIME);
+    } else if (jobStatus == "queued") {
+      updateStatus('Waiting in SolveEngine queue',
+                   'Solving model on SolveEngine...',
+                   false, SE_CHECK_TIME);
+    } else {
+      throw(MakeError('Unknown SolveEngine status: ' + jobStatus));
     }
     Utilities.sleep(SE_CHECK_TIME * 1000);
     timeElapsed += SE_CHECK_TIME;
