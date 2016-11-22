@@ -174,6 +174,7 @@ SolverSolveEngine.prototype.submitJob = function(openSolver) {
     };
   }
 
+  var content = JSON.parse(resp.message);
   this.client.jobId = content.job_id;
 
   resp = this.client.submitData(gmplModel);
@@ -238,7 +239,7 @@ SolverSolveEngine.prototype.waitForCompletion = function() {
       throw('SolveEngine failed solving the problem');
     } else if (jobStatus == "started" || jobStatus == "starting") {
       updateStatus('Waiting for the SolveEngine\n' +
-                   'Time elapsed: ' + timeElapsed + 'seconds',
+                   'Time elapsed: ' + timeElapsed + ' seconds',
                    'Solving model on SolveEngine...',
                    false,
                    SE_CHECK_TIME);
