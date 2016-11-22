@@ -86,6 +86,16 @@ SolveEngineClient.prototype.startJob = function() {
   return this.doRequest("/jobs/" + this.jobId + "/start", options);
 }
 
+/*
+Possible statuses:
+- queued: the job has been created, but not started
+- translating: the problem is being translated between formats
+- started: the problem is being solved
+- starting
+- completed: the problem has been solved
+- failed: failed to solve the problem
+- stopped: the problem solving has been stopped by the user
+*/
 SolveEngineClient.prototype.getStatus = function() {
   var options = {
     method: "get",
