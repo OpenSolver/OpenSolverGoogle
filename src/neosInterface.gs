@@ -1,5 +1,5 @@
-var NEOS_SERVER = 'http://www.neos-server.org';
-var NEOS_PORT = 3332;
+var NEOS_SERVER = 'https://www.neos-server.org';
+var NEOS_PORT = 3333;
 var NEOS_URL = NEOS_SERVER + ':' + NEOS_PORT;
 var TIME_BETWEEN_CHECKS = 10;
 
