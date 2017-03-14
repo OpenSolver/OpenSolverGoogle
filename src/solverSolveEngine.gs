@@ -68,7 +68,7 @@ var result;
       solveString = 'The model has not yet been solved.';
       break;
 
-    case 'optimal':
+    case 'optimal': 
       result = OpenSolverResult.OPTIMAL;
       solveString = 'Optimal';
       loadSolution = true;
@@ -87,6 +87,11 @@ var result;
     case 'failed':
       result = OpenSolverResult.ERROR_OCCURRED;
       solveString = 'There was an error while solving the model.';
+      break;
+
+    case 'unbounded':
+      result = OpenSolverResult.UNBOUNDED;
+      solveString = 'No solution found (Unbounded)';
       break;
 
     default:
