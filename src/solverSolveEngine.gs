@@ -33,7 +33,7 @@ SolverSolveEngine.prototype.getVariableValue = function(varKey) {
 
 SolverSolveEngine.prototype.getApiKey = function() {
   var key = getCachedSolveEngineApiKey();
-  if (key) {
+  if (key != '') {
     return key;
   } else {
     var id = showDialog('dialogSolveEngineApi', 'Enter API key', 150, 350);
@@ -104,7 +104,7 @@ var result;
 SolverSolveEngine.prototype.solve = function(openSolver) {
   if (!this.client) {
     var key = this.getApiKey();
-    if (!key) {
+    if (key == '') {
       throw(makeError('SolveEngine API key not set'));
     }
     this.client = new SolveEngineClient(key);
@@ -119,7 +119,7 @@ SolverSolveEngine.prototype.solve = function(openSolver) {
       // Something went wrong while submitting the job
       if (err.code == 401) {  // UNAUTHORIZED
         // Clear the invalid API key from the cache
-        setCachedSolveEngineApiKey(null);
+        setCachedSolveEngineApiKey('');
         status = "The API key specified for the Solve Engine was invalid. " +
                  "Please try again with a valid API key.";
       } else {
