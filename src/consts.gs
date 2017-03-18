@@ -115,7 +115,7 @@ var SolverType = {
                    'worlds\' best algorithms from industry and academia to ' +
                    'deliver rapid problem solving. ' +
                    'To use the Solve Engine, register ' +
-                   '<a href="https://solve.satalia.com/register">here</a> ' +
+                   '<a href="https://solve.satalia.com/#/register">here</a> ' +
                    'for an API key and enter the key when prompted.'
 
   },

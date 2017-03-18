@@ -68,7 +68,7 @@ var result;
       solveString = 'The model has not yet been solved.';
       break;
 
-    case 'optimal': 
+    case 'optimal':
       result = OpenSolverResult.OPTIMAL;
       solveString = 'Optimal';
       loadSolution = true;
@@ -148,6 +148,7 @@ SolverSolveEngine.prototype.solve = function(openSolver) {
 
 SolverSolveEngine.prototype.extractResults = function(finalResults) {
   if (finalResults.code == 200) {
+    Logger.log(finalResults)
     var message = JSON.parse(finalResults.message);
     var results = message.results;
 
@@ -174,7 +175,8 @@ SolverSolveEngine.prototype.submitJob = function(openSolver) {
                'Solving model on the SolveEngine...', true, SE_CHECK_TIME);
 
   var resp = this.client.createJob(gmplModel);
-  Logger.log("Create job response " + resp.code);
+  Logger.log("Create job response:");
+  Logger.log(resp)
   if (resp.code != 201) {
     return {
       error: "Unexpected response code while creating a job",
