@@ -1,0 +1,44 @@
+<base target="_blank">
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+<style>
+  body {
+    margin: 0;
+  }
+
+  #api-field {
+    width: 100%;
+  }
+
+</style>
+
+<div id="main">
+  <p style="margin: 0px;">
+    Please enter your SolveEngine API key:
+  </p>
+  <input type="text" id="api-field">
+  <p>
+    If you have an account, it can be found <a href="https://solve.satalia.com/api-keys">here</a>.
+  </p>
+  <p>
+    Don't have an account? <a href="https://solve.satalia.com/register">Register</a>
+  </p>
+</div>
+<section class="button-bar">
+  <button id="terminate" onclick="submit()">Submit</button>
+  <button id="close" onclick="cancel()">Cancel</button>
+</section>
+
+<script>
+  function submit() {
+    var apiKey = document.getElementById('api-field').value;
+    console.log(apiKey);
+    // TODO: validate key
+    google.script.run
+        .withSuccessHandler(dialogDone)
+        .setCachedSolveEngineApiKey(apiKey);
+  }
+
+   function cancel() {
+    dialogAbort();
+  }
+</script>

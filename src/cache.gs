@@ -84,3 +84,20 @@ function setCachedSolverShortName(solverShortName) {
       .getDocumentCache()
       .put(CACHE_KEY_SOLVERSHORTNAME, solverShortName);
 }
+
+// For Solve Engine API key
+// Uses UserProperties to persist across all documents for the same user
+
+var CACHE_KEY_SOLVEENGINE_APIKEY = "CACHE_SOLVEENGINE_API_KEY";
+
+function getCachedSolveEngineApiKey() {
+  return PropertiesService
+    .getUserProperties()
+    .getProperty(CACHE_KEY_SOLVEENGINE_APIKEY);
+}
+
+function setCachedSolveEngineApiKey(apiKey) {
+  PropertiesService
+    .getUserProperties()
+    .setProperty(CACHE_KEY_SOLVEENGINE_APIKEY, apiKey);
+}
