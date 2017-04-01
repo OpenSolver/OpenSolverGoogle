@@ -101,3 +101,9 @@ function setCachedSolveEngineApiKey(apiKey) {
     .getUserProperties()
     .setProperty(CACHE_KEY_SOLVEENGINE_APIKEY, apiKey);
 }
+
+function deleteCacheSolveEngineApiKey() {
+  PropertiesService
+    .getUserProperties()
+    .deleteProperty(CACHE_KEY_SOLVEENGINE_APIKEY)
+}
