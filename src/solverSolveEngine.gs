@@ -59,7 +59,7 @@ SolverSolveEngine.prototype.getApiKey = function() {
 };
 
 SolverSolveEngine.prototype.getStatus = function() {
-var result;
+  var result;
   var solveString;
   var loadSolution = false;
   switch(this.status) {
@@ -89,11 +89,19 @@ var result;
       solveString = 'There was an error while solving the model.';
       break;
 
+    case 'error':
+      result = OpenSolverResult.ERROR_OCCURRED;
+      solveString = 'There was an error while solving the model.';
+      break;
+
     case 'unbounded':
       result = OpenSolverResult.UNBOUNDED;
       solveString = 'No solution found (Unbounded)';
       break;
-
+    
+    case 'timeout':
+      result = OpenSolverResult.TIME_LIMITED_SUB_OPTIMAL;
+      solveString = 'The solver has timed out; Solution was not loaded';
     default:
       throw('Unknown solve result: ' + this.status);
   }
@@ -139,10 +147,11 @@ SolverSolveEngine.prototype.solve = function(openSolver) {
     }
   }
 
-  this.waitForCompletion();
-  var finalResults = this.getFinalResults();
-  this.extractResults(finalResults);
-
+  this.status = this.waitForCompletion()
+  if (this.status === "completed") {
+    var finalResults = this.getFinalResults();
+    this.extractResults(finalResults);
+  }
   return this.getStatus();
 };
 
@@ -150,21 +159,19 @@ SolverSolveEngine.prototype.extractResults = function(finalResults) {
   if (finalResults.code == 200) {
     Logger.log(finalResults)
     var message = JSON.parse(finalResults.message);
-    var results = message.results;
+    var results = message.result;
 
-    this.objectiveValue = results.objval;
+    this.objectiveValue = results.objective_value;
     this.status = results.status;
 
-    Logger.log(results.variables[0]);
-    for (var i = 0; i < results.variables.length; i++) {
-      var variable = results.variables[i];
-      Logger.log("Variable object: "  + variable.name);
-      this.variableValues[variable.name.replace("v", "")] = variable.value;
+    if (results.variables != null) {
+      for (var i = 0; i < results.variables.length; i++) {
+        var variable = results.variables[i];
+        Logger.log("Variable object: "  + variable.name);
+        this.variableValues[variable.name.replace("v", "")] = variable.value;
+      }
     }
-    Logger.log(this.variableValues);
-  } else {
-    this.status = 'failed';
-  }
+  } 
 
   return this;
 };
@@ -177,7 +184,7 @@ SolverSolveEngine.prototype.submitJob = function(openSolver) {
   var resp = this.client.createJob(gmplModel);
   Logger.log("Create job response:");
   Logger.log(resp)
-  if (resp.code != 201) {
+  if (resp.code != 200) {
     return {
       error: "Unexpected response code while creating a job",
       code: resp.code,
@@ -186,21 +193,11 @@ SolverSolveEngine.prototype.submitJob = function(openSolver) {
   }
 
   var content = JSON.parse(resp.message);
-  this.client.jobId = content.job_id;
-
-  resp = this.client.submitData(gmplModel);
-  Logger.log("Submit data response " + resp.code);
-  if (resp.code != 200) {
-    return {
-      error: "Unexpected response code while sending job data",
-      code: resp.code,
-      payload: JSON.parse(resp.message)
-    };
-  }
+  this.client.jobId = content.id;
 
   resp = this.client.startJob();
   Logger.log("Start job response " + resp.code);
-  if (resp.code != 201) {
+  if (resp.code != 200) {
     return {
       error: "Unexpected response code while sending job data",
       code: resp.code,
@@ -235,27 +232,23 @@ SolverSolveEngine.prototype.waitForCompletion = function() {
               'Solving model on SolveEngine...', false, SE_CHECK_TIME);
   while (true) {
     var resp = this.client.getStatus();
-    Logger.log(resp);
     var content = JSON.parse(resp.message);
-    Logger.log(content);
     var jobStatus = content.status;
-    if (jobStatus == "completed" || jobStatus == "failed") {
-      break;
+    
+    if (jobStatus == "completed" || jobStatus == "failed" || jobStatus == "timeout") {
+      return jobStatus;
     } else if (jobStatus == "translating") {
       updateStatus('Translating problem', 'Solving model on SolveEngine...',
                    false, SE_CHECK_TIME);
-    } else if (jobStatus == "started" || jobStatus == "starting") {
-      updateStatus('Waiting for the SolveEngine\n' +
-                   'Time elapsed: ' + timeElapsed + ' seconds',
-                   'Solving model on SolveEngine...',
-                   false,
-                   SE_CHECK_TIME);
-    } else if (jobStatus == "queued") {
-      updateStatus('Waiting in SolveEngine queue',
-                   'Solving model on SolveEngine...',
-                   false, SE_CHECK_TIME);
     } else {
-      throw(MakeError('Unknown SolveEngine status: ' + jobStatus));
+      // show the dialog every 10 seconds
+      if (timeElapsed % 10==0 || timeElapsed == 0) {
+        updateStatus('Waiting for the SolveEngine\n' +
+                    'Time elapsed: ' + timeElapsed + ' seconds',
+                    'Solving model on SolveEngine...',
+                    false,
+                    5);
+      }
     }
     Utilities.sleep(SE_CHECK_TIME * 1000);
     timeElapsed += SE_CHECK_TIME;
