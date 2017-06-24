@@ -194,7 +194,7 @@ function updateSEApiKey() {
     state = getDialogState(id, false);
   }
 
-  return;
+  return state;
 }
 
 function solveModel(sheetId, loadFromCache) {

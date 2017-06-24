@@ -36,18 +36,7 @@ SolverSolveEngine.prototype.getApiKey = function() {
   if (key != '') {
     return key;
   } else {
-    var id = showDialog('dialogSolveEngineApi', 'Enter API key', 150, 350);
-
-    // Wait until dialog has loaded
-    var state = getDialogState(id, true);
-    while (state == DialogState.PENDING) {
-      state = getDialogState(id, true);
-    }
-
-    // Wait for response
-    while (state == DialogState.OPEN) {
-      state = getDialogState(id, false);
-    }
+    var state = updateSEApiKey();
 
     // Exit if not properly loaded
     if (state !== DialogState.DONE) {
