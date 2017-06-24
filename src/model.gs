@@ -291,7 +291,8 @@ Model.prototype.getSidebarData = function() {
     showStatus:     this.showStatus,
     checkLinear:    this.checkLinear,
     fastBuild:      this.fastBuild,
-    solverLongName: this.solver.sidebarName
+    solverLongName: this.solver.sidebarName,
+    solverShortName: this.solver.shortName,
   };
 };
 

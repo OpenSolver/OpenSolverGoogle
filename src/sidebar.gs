@@ -181,6 +181,22 @@ function checkSolveModel() {
   return;
 }
 
+function updateSEApiKey() {
+  var id = showDialog('dialogSolveEngineApi', 'Enter API key', 150, 350);
+  // Wait until dialog has loaded
+  var state = getDialogState(id, true);
+  while (state == DialogState.PENDING) {
+    state = getDialogState(id, true);
+  }
+
+  // Wait for response
+  while (state == DialogState.OPEN) {
+    state = getDialogState(id, false);
+  }
+
+  return;
+}
+
 function solveModel(sheetId, loadFromCache) {
   openSolver = new OpenSolver(getSheetFromIdWithDefault(sheetId));
 

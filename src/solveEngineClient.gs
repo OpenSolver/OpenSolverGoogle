@@ -1,4 +1,4 @@
-var SE_SERVER = "https://solve.satalia.com/api/v1alpha";
+var SE_SERVER = "https://solve.satalia.com/api/v2";
 var TRACKING_ID = "bcf35f79de08ecaba1c470f31fca5ea97be72c37";
 SolveEngineClient = function(authToken) {
   if (!authToken || authToken == "") {
@@ -12,8 +12,8 @@ SolveEngineClient = function(authToken) {
 
 SolveEngineClient.prototype.makeHeaders = function() {
   return {
-    'Authorization': "Bearer " + this.authToken,
-    'User-Agent': "SEIntegration/" + TRACKING_ID,
+    'Authorization': "api-key " + this.authToken,
+    'X-tracking-id': TRACKING_ID,
   };
 };
 
@@ -50,8 +50,11 @@ SolveEngineClient.prototype.createJob = function(problem) {
     options: {
       translate: "lp"
     },
-    files: [
-      { name: this.fileName }
+    problems: [
+      { 
+        name: this.fileName,
+        data: this.hashProblem(problem),
+      }
     ]
   };
 
@@ -64,27 +67,13 @@ SolveEngineClient.prototype.createJob = function(problem) {
   return this.doRequest("/jobs",  options);
 }
 
-SolveEngineClient.prototype.submitData = function(problem) {
-  var blob = Utilities.newBlob(problem, "multipart/form-data");
-  var options = {
-    method: "put",
-    headers: this.makeHeaders(),
-    payload: {
-     "file": blob.getAs("multipart/form-data")
-    }
-  };
-
-  return this.doRequest("/jobs/" + this.jobId + "/files/" + this.fileName,
-                        options);
-}
-
 SolveEngineClient.prototype.startJob = function() {
   var options = {
     method: "post",
     headers: this.makeHeaders(),
   };
 
-  return this.doRequest("/jobs/" + this.jobId + "/start", options);
+  return this.doRequest("/jobs/" + this.jobId + "/schedule", options);
 }
 
 /*
@@ -96,6 +85,7 @@ Possible statuses:
 - completed: the problem has been solved
 - failed: failed to solve the problem
 - stopped: the problem solving has been stopped by the user
+- timeout: the job has timed out
 */
 SolveEngineClient.prototype.getStatus = function() {
   var options = {
@@ -112,5 +102,5 @@ SolveEngineClient.prototype.getResults = function() {
     headers: this.makeHeaders(),
   };
 
-  return this.doRequest("/jobs/" + this.jobId + "/solution", options);
+  return this.doRequest("/jobs/" + this.jobId + "/results", options);
 }
