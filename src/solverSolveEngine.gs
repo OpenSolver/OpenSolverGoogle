@@ -87,7 +87,7 @@ SolverSolveEngine.prototype.getStatus = function() {
       result = OpenSolverResult.UNBOUNDED;
       solveString = 'No solution found (Unbounded)';
       break;
-    
+
     case 'timeout':
       result = OpenSolverResult.TIME_LIMITED_SUB_OPTIMAL;
       solveString = 'The solver has timed out; Solution was not loaded';
@@ -160,7 +160,7 @@ SolverSolveEngine.prototype.extractResults = function(finalResults) {
         this.variableValues[variable.name.replace("v", "")] = variable.value;
       }
     }
-  } 
+  }
 
   return this;
 };
@@ -223,7 +223,7 @@ SolverSolveEngine.prototype.waitForCompletion = function() {
     var resp = this.client.getStatus();
     var content = JSON.parse(resp.message);
     var jobStatus = content.status;
-    
+
     if (jobStatus == "completed" || jobStatus == "failed" || jobStatus == "timeout") {
       return jobStatus;
     } else if (jobStatus == "translating") {
@@ -231,12 +231,12 @@ SolverSolveEngine.prototype.waitForCompletion = function() {
                    false, SE_CHECK_TIME);
     } else {
       // show the dialog every 10 seconds
-      if (timeElapsed % 10==0 || timeElapsed == 0) {
+      if (timeElapsed % 10 == 0) {
         updateStatus('Waiting for the SolveEngine\n' +
-                    'Time elapsed: ' + timeElapsed + ' seconds',
-                    'Solving model on SolveEngine...',
-                    false,
-                    5);
+                     'Time elapsed: ' + timeElapsed + ' seconds',
+                     'Solving model on SolveEngine...',
+                     false,
+                     5);
       }
     }
     Utilities.sleep(SE_CHECK_TIME * 1000);

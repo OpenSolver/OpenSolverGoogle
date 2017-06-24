@@ -51,7 +51,7 @@ SolveEngineClient.prototype.createJob = function(problem) {
       translate: "lp"
     },
     problems: [
-      { 
+      {
         name: this.fileName,
         data: this.hashProblem(problem),
       }

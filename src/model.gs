@@ -283,18 +283,17 @@ Model.prototype.getSidebarData = function() {
     variables: this.variables.map(function(variable) {
       return removeSheetNameFromRange(variable, escapedSheetName);
     }),
-    objective:      removeSheetNameFromRange(this.objective, escapedSheetName),
-    objectiveVal:   this.objectiveVal,
-    objectiveSense: this.objectiveSense,
-    disableVal:     this.objectiveSense != ObjectiveSenseType.TARGET,
-    assumeNonNeg:   this.assumeNonNeg,
-    showStatus:     this.showStatus,
-    checkLinear:    this.checkLinear,
-    fastBuild:      this.fastBuild,
-    solverLongName: this.solver.sidebarName,
+    objective:       removeSheetNameFromRange(this.objective, escapedSheetName),
+    objectiveVal:    this.objectiveVal,
+    objectiveSense:  this.objectiveSense,
+    disableVal:      this.objectiveSense != ObjectiveSenseType.TARGET,
+    assumeNonNeg:    this.assumeNonNeg,
+    showStatus:      this.showStatus,
+    checkLinear:     this.checkLinear,
+    fastBuild:       this.fastBuild,
+    solverLongName:  this.solver.sidebarName,
     solverShortName: this.solver.shortName,
   };
 };
-
 
 
