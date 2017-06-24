@@ -32,7 +32,7 @@
 
     $('#button-change-solver').click(checkChangeSolver);
     $('#button-update-api').click(updateSEApiKey);
-    
+
     $('#button-solve').click(checkSolveModel);
     $('#button-reset').click(checkResetModel);
     $('#checkbox-show-status').change(updateShowStatus);
@@ -321,10 +321,6 @@
             populateSheetSelect(data.sheets);
             selectSheet(data.sheetIndex);
             loadModel(data.model, keepWait);
-            if (data.model.solverShortName === `SolveEngine`) {
-              document.getElementById('solveengine-api-key').style.display = 'block';
-            }
-
             var t1 = performance.now();
             // console.log("Sidebar load took " + (t1 - t0) + " milliseconds.")
 
@@ -356,11 +352,7 @@
         .withSuccessHandler(
           function(solverShortName) {
             changeSolver(solverShortName);
-            if (solverShortName === `SolveEngine`) {
-              document.getElementById('solveengine-api-key').style.display = 'block';
-            } else {
-              document.getElementById('solveengine-api-key').style.display = 'none';
-            }
+
           })
         .getCachedSolverShortName();
     } else {
@@ -525,6 +517,9 @@
       $('#checkbox-check-linear').prop('checked', model.checkLinear);
       $('#checkbox-fast-build').prop('checked', model.fastBuild);
       $('#current-solver').text(model.solverLongName);
+
+      var display = model.solverShortName == 'SolveEngine' ? 'block' : 'none';
+      document.getElementById('solveengine-api-key').style.display = display;
     }
 
     if (keepWait === true) {
